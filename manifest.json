@@ -1,0 +1,10 @@
+{
+  "name": "Control de Fatiga y Somnolencia - Salfamontajes",
+  "short_name": "F&S Salfa",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#E31B23",
+  "orientation": "any"
+}

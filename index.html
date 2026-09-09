@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Fatiga y Somnolencia (F&S) - Salfamontajes</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#E31B23">
+
+    <!-- Librerías Externas -->
+    <!-- defer: para que NO bloqueen la carga de la página cuando no hay internet.
+         Sin "defer", el navegador espera (a veces mucho tiempo) a que estas
+         librerías respondan antes de mostrar el login/test, y eso es lo que
+         hacía que "el archivo no abra" sin conexión. Con "defer" la app se
+         muestra de inmediato; estas librerías solo se usan en el Panel Maestro
+         (gráficos, PDF, Excel, email), que de todas formas requieren internet. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js" defer></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
+
+    <style>
+        :root {
+            --salfa-red: #E31B23;
+            --salfa-red-dark: #b8141b;
+            --salfa-gray-logo: #8A8F93;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --input-dark: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --border-color: #475569;
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: var(--bg-dark); 
+            color: var(--text-main); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .container { max-width: 1100px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 15px; position: relative; }
+        
+        .fullscreen-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        .fullscreen-btn:active { background: var(--input-dark); }
+
+        .critical-alert-banner {
+            display: none;
+            background: rgba(227, 27, 35, 0.2);
+            border: 2px solid var(--salfa-red);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            animation: pulseBanner 2s infinite;
+        }
+        .critical-alert-title {
+            color: #f87171;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .critical-alert-item {
+            font-size: 14px;
+            color: #ffffff;
+            margin-top: 4px;
+            padding: 4px 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 6px;
+        }
+
+        @keyframes pulseBanner {
+            0% { box-shadow: 0 0 0 0 rgba(227, 27, 35, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(227, 27, 35, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(227, 27, 35, 0); }
+        }
+
+        .brand-header { text-align: center; margin-bottom: 20px; margin-top: 20px; }
+        .logo-container { font-family: "Arial Narrow", "Arial Black", sans-serif; font-weight: 900; font-size: 42px; letter-spacing: -0.5px; text-transform: uppercase; line-height: 1; display: inline-block; }
+        .logo-salfa { color: var(--salfa-red); }
+        .logo-montajes { color: var(--salfa-gray-logo); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .logo-registered { font-size: 16px; vertical-align: super; font-weight: bold; color: var(--salfa-gray-logo); margin-left: 2px; }
+        .brand-subtitle { font-size: 16px; color: var(--text-muted); font-weight: 600; margin-top: 8px; letter-spacing: 0.5px; }
+
+        .card { background: var(--card-dark); padding: 25px; border-radius: 16px; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.6); border: 1px solid var(--border-color); margin-bottom: 20px; }
+        h1, h2, h3, h4 { margin-top: 0; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        h2 { text-align: center; font-size: 24px; margin-bottom: 15px; }
+        p { color: var(--text-muted); line-height: 1.5; font-size: 15px; }
+        
+        .btn { width: 100%; padding: 16px; background: var(--salfa-red); color: #ffffff; border: none; border-radius: 10px; font-size: 18px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .btn:active { background: var(--salfa-red-dark); transform: scale(0.99); }
+        .btn-danger { background: #ef4444; margin-top: 0; padding: 8px 12px; font-size: 13px; font-weight: 600; width: auto; }
+        .btn-info { background: #0284c7; margin-top: 0; padding: 8px 12px; font-size: 13px; font-weight: 600; width: auto; }
+        .btn-success { background: #16a34a; margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
+        .btn-pdf { background: var(--salfa-red); margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
+        .btn-secondary { background: #475569; color: #ffffff; }
+        .btn-purple { background: #8b5cf6; margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 10px; font-size: 16px; color: #f8fafc; font-weight: 600; }
+        input[type="text"], input[type="password"], input[type="number"], input[type="date"], select { 
+            width: 100%; padding: 14px; background: var(--input-dark); border: 2px solid var(--border-color); color: #ffffff; border-radius: 10px; font-size: 18px; text-align: center; font-weight: bold; letter-spacing: 1px;
+        }
+        input:focus { border-color: var(--salfa-red); outline: none; }
+
+        .keypad-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 360px;
+            margin: 15px auto 0 auto;
+        }
+        .key-btn {
+            background: var(--input-dark);
+            border: 2px solid var(--border-color);
+            color: #ffffff;
+            font-size: 26px !important;
+            font-weight: bold;
+            height: 60px;
+            min-height: 60px;
+            line-height: 56px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: background 0.1s, transform 0.1s;
+        }
+        .key-btn:active {
+            background: var(--salfa-red);
+            border-color: var(--salfa-red);
+            transform: scale(0.95);
+        }
+        .key-btn-del { background: #94a3b8; color: #0f172a; line-height: 56px; }
+        .key-btn-hidden { visibility: hidden; pointer-events: none; }
+
+        .slider-touch-container { display: flex; align-items: center; gap: 15px; }
+        .btn-step {
+            background: var(--input-dark);
+            border: 2px solid var(--border-color);
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: bold;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .btn-step:active { background: var(--salfa-red); border-color: var(--salfa-red); }
+
+        .option-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .opt-btn {
+            background: var(--input-dark);
+            border: 2px solid var(--border-color);
+            color: #ffffff;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+        .opt-btn.selected {
+            border-color: var(--salfa-red);
+            background: rgba(227, 27, 35, 0.25);
+            box-shadow: 0 0 0 2px rgba(227, 27, 35, 0.5);
+        }
+
+        .user-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; padding: 5px; }
+        .user-card { background: var(--input-dark); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; text-align: center; cursor: pointer; }
+        .user-card-active { border-color: var(--salfa-red) !important; background: rgba(227, 27, 35, 0.35) !important; }
+        .user-card-name { font-size: 14px; font-weight: bold; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-card-rut { font-size: 12px; color: #cbd5e1; margin-top: 2px; }
+
+        .table-responsive { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--border-color); color: #f8fafc; }
+        th { background: #0f172a; color: #ffffff; }
+
+        .badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; text-align: center; }
+        .badge-normal { background: rgba(22, 163, 74, 0.25); color: #4ade80; border: 1px solid #16a34a; }
+        .badge-leve { background: rgba(2, 132, 199, 0.25); color: #38bdf8; border: 1px solid #0284c7; }
+        .badge-moderado { background: rgba(202, 138, 4, 0.25); color: #facc15; border: 1px solid #ca8a04; }
+        .badge-severo { background: rgba(227, 27, 35, 0.3); color: #f87171; border: 1px solid var(--salfa-red); animation: pulse 1.5s infinite; }
+        .badge-role { background: #475569; color: #ffffff; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        #testScreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 100; user-select: none; }
+        .bg-prep { background-color: #334155; color: white; }
+        .bg-red { background-color: var(--salfa-red); color: white; }
+        .bg-green { background-color: #16a34a; color: white; }
+        .timer-badge { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; border-radius: 20px; font-size: 18px; font-weight: bold; }
+
+        .target-button {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 8px solid rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 30px;
+            cursor: pointer;
+        }
+
+        .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+        .modal-content { background-color: var(--card-dark); padding: 24px; border-radius: 16px; width: 95%; max-width: 850px; border: 1px solid var(--border-color); max-height: 92vh; display: flex; flex-direction: column; overflow-y: auto; }
+
+        .kpi-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .kpi-card { background: var(--input-dark); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color); text-align: center; }
+        .kpi-val { font-size: 24px; font-weight: bold; color: #ffffff; }
+        .kpi-title { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        /* ESTILOS DE IMPRESIÓN/PDF LIMPIO */
+        @media print {
+            body { background: #ffffff !important; color: #000000 !important; }
+            .container, #viewAdmin, #viewLogin, #viewQuiz, #viewResult, .fullscreen-btn, #userReportModal { 
+                display: none !important; 
+            }
+            #weeklyDashboardModal {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                background: #ffffff !important;
+            }
+            .modal-content { 
+                background: #ffffff !important; 
+                color: #000000 !important; 
+                border: none !important; 
+                box-shadow: none !important; 
+                width: 100% !important; 
+                max-width: 100% !important;
+                padding: 0 !important;
+                /* FIX: sin esto, el informe se recortaba a los 92vh de alto
+                   que usa el modal en pantalla (max-height + overflow-y:auto),
+                   y todo lo que sobraba (tabla de trabajadores, pie de página,
+                   a veces un gráfico) no salía en el PDF. Al imprimir debe
+                   fluir libremente en tantas páginas como haga falta. */
+                max-height: none !important;
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            .no-print { display: none !important; }
+            /* Evita que una fila de tabla, una tarjeta KPI o un gráfico
+               queden partidos entre una página y la siguiente. */
+            .kpi-card-grid, .kpi-card { page-break-inside: avoid; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; }
+            canvas { max-width: 100% !important; page-break-inside: avoid; }
+            h3, h4, .kpi-val, table, th, td { color: #000000 !important; text-shadow: none !important; }
+            th { background: #f1f5f9 !important; color: #000000 !important; border-bottom: 2px solid #000 !important; }
+            td { border-bottom: 1px solid #cbd5e1 !important; color: #000000 !important; }
+            .kpi-card, div[style*="background: var(--input-dark)"] { 
+                background: #f8fafc !important; 
+                border: 1px solid #cbd5e1 !important; 
+            }
+            .kpi-title { color: #475569 !important; }
+            .badge-normal { background: #dcfce7 !important; color: #15803d !important; border-color: #16a34a !important; }
+            .badge-leve { background: #e0f2fe !important; color: #0369a1 !important; border-color: #0284c7 !important; }
+            .badge-moderado { background: #fef9c3 !important; color: #a16207 !important; border-color: #ca8a04 !important; }
+            .badge-severo { background: #fee2e2 !important; color: #b91c1c !important; border-color: #ef4444 !important; animation: none !important; }
+        }
+
+        @media (min-width: 600px) and (orientation: landscape), (min-height: 400px) and (orientation: landscape) {
+            .login-grid-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 25px;
+                align-items: center;
+            }
+            .keypad-container {
+                margin-top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <button class="fullscreen-btn" id="btnToggleFS" onclick="toggleFullScreen()">
+        <span id="fsIcon">⛶</span> <span id="fsText">Pantalla Completa</span>
+    </button>
+
+    <div class="brand-header">
+        <div class="logo-container">
+            <span class="logo-salfa">SALFA</span><span class="logo-montajes">MONTAJES</span><span class="logo-registered">®</span>
+        </div>
+        <div class="brand-subtitle">Control de Fatiga y Somnolencia (F&S) - Estándar PVT</div>
+    </div>
+
+    <!-- 1. LOGIN -->
+    <div id="viewLogin" class="card">
+
+        <div id="mainAlertBanner" class="critical-alert-banner">
+            <div class="critical-alert-title">
+                ⚠️ ALERTA OPERACIONAL DE SEGURIDAD (EVALUACIONES CRÍTICAS HOY)
+            </div>
+            <p style="margin: 0 0 10px 0; font-size: 13px; color: #cbd5e1;">
+                Se han detectado evaluaciones con estado MODERADO o SEVERO durante la jornada. Los supervisores deben revisar el panel maestro.
+            </p>
+            <div id="alertListContainer"></div>
+        </div>
+
+        <h2>Acceso al Sistema</h2>
+        <p style="text-align: center; margin-bottom: 12px;">Selecciona un usuario o ingresa con el teclado táctil:</p>
+        
+        <div id="quickUserGrid" class="user-grid"></div>
+
+        <form onsubmit="handleLogin(event)">
+            <div class="login-grid-container">
+                <div>
+                    <div class="form-group">
+                        <label>RUT / Usuario</label>
+                        <input type="text" id="loginRut" placeholder="Toca para ingresar RUT" readonly onclick="setActiveInput('loginRut')">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña (Solo números)</label>
+                        <input type="password" id="loginPass" pattern="[0-9]*" inputmode="numeric" placeholder="Toca para ingresar Clave" readonly onclick="setActiveInput('loginPass')">
+                    </div>
+                    <button type="submit" class="btn" style="margin-top:10px;">Ingresar al Sistema</button>
+                </div>
+
+                <div class="keypad-container">
+                    <div class="key-btn" onclick="pressKey('1')">1</div>
+                    <div class="key-btn" onclick="pressKey('2')">2</div>
+                    <div class="key-btn" onclick="pressKey('3')">3</div>
+                    <div class="key-btn" onclick="pressKey('4')">4</div>
+                    <div class="key-btn" onclick="pressKey('5')">5</div>
+                    <div class="key-btn" onclick="pressKey('6')">6</div>
+                    <div class="key-btn" onclick="pressKey('7')">7</div>
+                    <div class="key-btn" onclick="pressKey('8')">8</div>
+                    <div class="key-btn" onclick="pressKey('9')">9</div>
+                    <div class="key-btn key-btn-hidden" id="keyK">K</div>
+                    <div class="key-btn" onclick="pressKey('0')">0</div>
+                    <div class="key-btn key-btn-del" onclick="pressKey('DEL')">⌫</div>
+                </div>
+            </div>
+        </form>
+        <button type="button" onclick="resetMasterCredentials()" style="background:none; border:none; color:var(--text-muted); text-decoration:underline; font-size:13px; margin-top:15px; width:100%; cursor:pointer;">
+            Restablecer Acceso Maestro
+        </button>
+    </div>
+
+    <!-- 2. CUESTIONARIO -->
+    <div id="viewQuiz" class="card" style="display: none;">
+        <h2>Evaluación de Estado Personal (F&S)</h2>
+        <p id="welcomeUser" style="text-align: center; color: #f87171; font-weight: bold; font-size: 16px; margin-bottom: 20px;"></p>
+        
+        <div class="form-group">
+            <label>1. ¿Cuántas horas dormiste anoche?</label>
+            <div class="option-group" id="grpSleep">
+                <div class="opt-btn selected" onclick="selectOpt('grpSleep', this, 'good')">7 hrs o más</div>
+                <div class="opt-btn" onclick="selectOpt('grpSleep', this, 'medium')">5 a 6 hrs</div>
+                <div class="opt-btn" onclick="selectOpt('grpSleep', this, 'poor')">Menos de 5 hrs</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>2. Nivel de somnolencia percibido (1 = Despierto / 9 = Muy somnoliento):</label>
+            <div class="slider-touch-container">
+                <button type="button" class="btn-step" onclick="adjustAlert(-1)">-</button>
+                <input type="range" id="qAlert" min="1" max="9" value="3" oninput="document.getElementById('alertVal').innerText = this.value" style="accent-color: var(--salfa-red); flex-grow: 1;">
+                <button type="button" class="btn-step" onclick="adjustAlert(1)">+</button>
+            </div>
+            <div style="text-align: center; font-size: 28px; font-weight: bold; color: var(--salfa-red); margin-top: 5px;" id="alertVal">3</div>
+        </div>
+
+        <div class="form-group">
+            <label>3. ¿Sientes algún malestar físico o dolor en este momento?</label>
+            <div class="option-group" id="grpPain">
+                <div class="opt-btn selected" onclick="selectOpt('grpPain', this, 'none')">Sin dolor / Bien</div>
+                <div class="opt-btn" onclick="selectOpt('grpPain', this, 'mild')">Malestar leve</div>
+                <div class="opt-btn" onclick="selectOpt('grpPain', this, 'severe')">Dolor intenso</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>4. ¿Has consumido medicamentos que causen somnolencia o energizantes?</label>
+            <div class="option-group" id="grpMeds">
+                <div class="opt-btn selected" onclick="selectOpt('grpMeds', this, 'none')">Ninguno</div>
+                <div class="opt-btn" onclick="selectOpt('grpMeds', this, 'caffeine')">Café / Energéticas</div>
+                <div class="opt-btn" onclick="selectOpt('grpMeds', this, 'meds')">Medicamentos</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>5. Estado de estrés o carga mental actual:</label>
+            <div class="option-group" id="grpStress">
+                <div class="opt-btn selected" onclick="selectOpt('grpStress', this, 'low')">Bajo / Normal</div>
+                <div class="opt-btn" onclick="selectOpt('grpStress', this, 'medium')">Moderado</div>
+                <div class="opt-btn" onclick="selectOpt('grpStress', this, 'high')">Alto / Cansado</div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="startPhotoCountdownSequence()">Iniciar Test PVT (Captura Automática)</button>
+        <button class="btn btn-secondary" id="btnAdminBack" onclick="showAdminDashboard()" style="display:none;">Volver al Panel Maestro</button>
+        <button class="btn btn-secondary" onclick="logout()">Cerrar Sesión</button>
+    </div>
+
+    <!-- 3. RESULTADO INDIVIDUAL (VENTANA EMERGENTE) -->
+    <div id="viewResult" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                <h2 style="margin: 0; text-align: left;">Resultado de Evaluación F&S (PVT)</h2>
+                <button type="button" class="btn-danger" onclick="closeResultModal()" aria-label="Cerrar" style="width: 36px; height: 36px; min-width: 36px; padding: 0; font-size: 18px; border-radius: 8px; flex-shrink: 0;">✕</button>
+            </div>
+            <div id="statusBadgeContainer" style="text-align: center; margin: 15px 0;"></div>
+            <p id="resultMsg" style="text-align: center; font-size: 16px; line-height: 1.6; color: #ffffff;"></p>
+            <button class="btn" onclick="showQuiz()">Volver a Evaluar</button>
+            <button class="btn btn-secondary" id="btnAdminBack2" onclick="showAdminDashboard()" style="display:none;">Volver al Panel Maestro</button>
+            <button class="btn btn-secondary" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- 4. DASHBOARD MAESTRO -->
+    <div id="viewAdmin" class="card" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin:0; text-align: left;">Panel Maestro F&S</h2>
+            <div>
+                <button class="btn" onclick="showQuiz()" style="width: auto; margin: 0; padding: 10px 16px; font-size: 14px;">Rendir Test</button>
+                <button class="btn btn-secondary" onclick="logout()" style="width: auto; margin: 0; padding: 10px 16px; font-size: 14px;">Salir</button>
+            </div>
+        </div>
+
+        <div id="adminAlertNotice" style="display:none; background: rgba(227, 27, 35, 0.25); border: 1px solid var(--salfa-red); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 style="margin:0; color:#f87171;">⚠️ Alertas de Seguridad Pendientes de Confirmación</h4>
+                <button class="btn btn-success" onclick="markAlertsAsRead()" style="padding: 6px 12px; font-size: 12px;">Marcar como Leídas</button>
+            </div>
+            <div id="adminAlertList" style="margin-top: 10px;"></div>
+        </div>
+
+        <div style="background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+            <h3 style="text-align: left; margin-bottom: 10px; font-size: 15px; color: #38bdf8;">Mi Cuenta - Cambiar Contraseña</h3>
+            <form onsubmit="handleChangePassword(event)" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px;">
+                <input type="password" id="currentPass" pattern="[0-9]*" inputmode="numeric" placeholder="Contraseña Actual (Números)" style="text-align:left;" required>
+                <input type="password" id="newPass" pattern="[0-9]*" inputmode="numeric" placeholder="Nueva Contraseña (Números)" style="text-align:left;" required>
+                <button type="submit" class="btn btn-info" style="margin: 0; width: auto; height: 100%;">Actualizar Clave</button>
+            </form>
+        </div>
+
+        <div style="background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+            <h3 style="text-align: left; margin-bottom: 10px; font-size: 15px; color: #f87171;">+ Crear Nuevo Perfil de Usuario</h3>
+            <form onsubmit="handleAddUser(event)" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;">
+                <input type="text" id="newRut" placeholder="RUT (ej: 12345678-9)" style="text-align:left;" required>
+                <input type="text" id="newName" placeholder="Nombre Completo" style="text-align:left;" required>
+                <select id="newRole">
+                    <option value="worker">Trabajador</option>
+                    <option value="admin">Supervisor / Admin</option>
+                </select>
+                <button type="submit" class="btn" style="margin: 0; width: auto;">Crear</button>
+            </form>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-dark); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; border: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label style="margin: 0; font-weight: bold; color: #ffffff;">Filtrar:</label>
+                <select id="dateFilter" onchange="renderDashboard()" style="width: auto; padding: 8px 14px;">
+                    <option value="all">Todo el Historial</option>
+                    <option value="today">Solo Hoy</option>
+                    <option value="week">Esta Semana</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-purple" onclick="openWeeklyDashboardModal()">📊 Reporte Semanal</button>
+                <button class="btn btn-info" onclick="forceManualSync(event)" style="width: auto; margin: 0; padding: 10px 16px; font-size: 14px;">🔄 Sincronizar</button>
+                <button class="btn btn-success" onclick="exportToExcel()">Descargar Excel</button>
+                <button class="btn btn-pdf" onclick="exportToPDF()">Descargar PDF</button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div>
+                <div style="background: var(--input-dark); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 26px; font-weight: bold; color: #f87171;" id="cntCritical">0</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Alertas Moderado / Severo</div>
+                </div>
+                <div style="background: var(--input-dark); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border-color);">
+                    <div style="font-size: 26px; font-weight: bold; color: #ffffff;" id="cntUsers">0</div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Usuarios Registrados</div>
+                </div>
+            </div>
+            <div style="background: var(--input-dark); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
+                <canvas id="fatigueChart" style="max-height: 130px;"></canvas>
+                <button class="btn btn-info" onclick="downloadChart()" style="margin-top: 8px; padding: 4px 8px; font-size: 12px;">Descargar Gráfico PNG</button>
+            </div>
+        </div>
+
+        <h3>Perfiles Registrados</h3>
+        <div class="table-responsive" style="margin-bottom: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>RUT</th>
+                        <th>Nombre</th>
+                        <th>Tipo</th>
+                        <th>Clave</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+            </table>
+        </div>
+
+        <h3>Historial General de Evaluaciones</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Trabajador</th>
+                        <th>RUT</th>
+                        <th>Reacción</th>
+                        <th>Estado F&S</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL REPORTES INDIVIDUALES -->
+<div id="userReportModal" class="modal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 id="modalUserName" style="color: #f87171; margin: 0;">Reporte de Usuario</h3>
+            <button class="btn btn-pdf" id="btnModalExportPDF" onclick="exportUserPDF()" style="padding: 6px 12px;">Descargar PDF</button>
+        </div>
+        <p id="modalUserRut" style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;"></p>
+        
+        <div id="modalSummaryBox" style="background: var(--input-dark); padding: 15px; border-radius: 8px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; border: 1px solid var(--border-color);">
+            <div>
+                <div style="font-size: 12px; color: var(--text-muted);">Total Evaluaciones</div>
+                <div style="font-size: 20px; font-weight: bold; color: #ffffff;" id="modalTotalTests">0</div>
+            </div>
+            <div>
+                <div style="font-size: 12px; color: var(--text-muted);">Promedio Reacción PVT</div>
+                <div style="font-size: 20px; font-weight: bold; color: #ffffff;" id="modalAvgReaction">0 ms</div>
+            </div>
+        </div>
+
+        <h4 id="modalHistoryTitle" style="margin-bottom: 8px; font-size: 15px; text-align: left; color: #ffffff;">Historial de Evaluaciones:</h4>
+        <div id="modalTableContainer" class="table-responsive" style="flex-grow: 1; overflow-y: auto; margin-bottom: 15px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Reacción PVT</th>
+                        <th>Estado F&S</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="modalUserHistoryBody"></tbody>
+            </table>
+        </div>
+
+        <div id="singleDetailView" style="display:none; padding:15px; background:var(--input-dark); border-radius:8px; border:1px solid var(--border-color); margin-bottom:15px; line-height:1.8;"></div>
+
+        <button class="btn btn-secondary" onclick="closeUserReportModal()">Cerrar</button>
+    </div>
+</div>
+
+<!-- MODAL DASHBOARD SEMANAL DINÁMICO -->
+<div id="weeklyDashboardModal" class="modal">
+    <div class="modal-content" id="weeklyReportPrintableArea">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--salfa-red); padding-bottom: 12px; margin-bottom: 15px;">
+            <div>
+                <div class="logo-container" style="font-size: 28px;">
+                    <span class="logo-salfa">SALFA</span><span class="logo-montajes">MONTAJES</span><span class="logo-registered" style="font-size:12px;">®</span>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); font-weight: bold;">Informe Ejecutivo Semanal de Fatiga y Somnolencia (F&S)</div>
+            </div>
+            <div class="no-print" style="display: flex; gap: 8px;">
+                <!-- Botón único para descargar el Dashboard en PDF -->
+                <button class="btn btn-pdf" onclick="window.print()" style="padding: 8px 14px; font-size: 13px;">📥 Descargar PDF</button>
+                <button class="btn btn-secondary" onclick="closeWeeklyDashboardModal()" style="padding: 8px 14px; font-size: 13px;">Cerrar</button>
+            </div>
+        </div>
+
+        <div class="no-print" style="display: flex; align-items: center; gap: 10px; background: var(--input-dark); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+            <label style="margin: 0; font-size: 14px; white-space: nowrap;">Seleccionar Semana:</label>
+            <input type="date" id="weeklyPicker" onchange="renderWeeklyDashboard()" style="padding: 6px 12px; font-size: 14px; width: auto;">
+            <span style="font-size: 12px; color: var(--text-muted);">(Lunes a Domingo)</span>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <h3 id="weeklyRangeTitle" style="color: #38bdf8; margin-bottom: 4px; text-align: left; font-size: 18px;">Semana del Del DD/MM/AAAA al DD/MM/AAAA</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Estándar Metodológico: Test de Vigilancia Psicomotora (PVT) - Salfamontajes®</p>
+        </div>
+
+        <div class="kpi-card-grid">
+            <div class="kpi-card">
+                <div class="kpi-val" id="wkTotalTests">0</div>
+                <div class="kpi-title">Tests Realizados</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-val" style="color:#4ade80;" id="wkComplianceRate">100%</div>
+                <div class="kpi-title">% Apto Operacional</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-val" style="color:#38bdf8;" id="wkAvgReaction">0 ms</div>
+                <div class="kpi-title">Promedio Reacción</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-val" style="color:#f87171;" id="wkCriticalAlerts">0</div>
+                <div class="kpi-title">Alertas Moderado/Severo</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div style="background: var(--input-dark); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <h4 style="margin-top:0; font-size: 14px; color: #ffffff; text-align: center;">Evolución Diaria de Evaluaciones (Lun - Dom)</h4>
+                <canvas id="weeklyBarChart" style="max-height: 200px;"></canvas>
+            </div>
+            <div style="background: var(--input-dark); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <h4 style="margin-top:0; font-size: 14px; color: #ffffff; text-align: center;">Distribución de Fatiga</h4>
+                <canvas id="weeklyPieChart" style="max-height: 180px;"></canvas>
+            </div>
+        </div>
+
+        <h4 style="margin-bottom: 8px; font-size: 15px; text-align: left; color: #ffffff;">Resumen de Trabajadores Evaluados en el Periodo</h4>
+        <div class="table-responsive" style="margin-bottom: 15px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trabajador</th>
+                        <th>RUT</th>
+                        <th>Tests Rendidos</th>
+                        <th>Promedio PVT</th>
+                        <th>Estado Predominante / Peor Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="weeklyUserSummaryBody"></tbody>
+            </table>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 8px; text-align: center;">
+            Documento generado por el Sistema de Control de Fatiga y Somnolencia (F&S) de Salfamontajes® | Fecha de emisión: <span id="wkPrintDate"></span>
+        </div>
+    </div>
+</div>
+
+<!-- TEST FULLSCREEN PVT -->
+<div id="testScreen" class="bg-prep">
+    <video id="hiddenCameraVideo" autoplay playsinline style="display:none; width:320px; height:240px;"></video>
+    <canvas id="hiddenCameraCanvas" style="display:none;" width="320" height="240"></canvas>
+
+    <div class="timer-badge" id="timerBadge">60s</div>
+    <div style="font-size: 28px; font-weight: bold; max-width: 80%; line-height: 1.4;" id="testInstruction">PREPÁRATE...</div>
+    <div class="target-button" id="targetBtn">PRESIONA AQUÍ</div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbww7gjcyNGTlSgK5qU81KoLEHbm6_9CZjuaeqqp8OMOZpYM28Ytvq3C8fL6t60JeBri/exec";
+
+    // ===== Super Administrador =====
+    // Diego Moreno es el único perfil "superadmin": es el único que puede ver las
+    // claves de todos los usuarios. El resto de los perfiles admin/supervisor
+    // mantienen todas sus funciones actuales (crear/ver usuarios, eliminar test,
+    // sacar informes) pero NO ven las claves de otros usuarios.
+    const MASTER_RUT = '16582525K';
+    const MASTER_NAME = 'Diego Moreno';
+    const MASTER_DEFAULT_PASS = '200687';
+
+    function normRole(role) {
+        return String(role || '').trim().toLowerCase();
+    }
+    // Roles con acceso al Panel Maestro (admin, supervisor y el super admin)
+    function isAdminLevel(user) {
+        const r = normRole(user && user.role);
+        return r === 'admin' || r === 'supervisor' || r === 'superadmin';
+    }
+    // Solo Diego Moreno (superadmin) puede ver claves ajenas
+    function isSuperAdmin(user) {
+        return normRole(user && user.role) === 'superadmin';
+    }
+    function roleLabel(role) {
+        const r = normRole(role);
+        if (r === 'superadmin') return 'Super Admin';
+        if (r === 'admin' || r === 'supervisor') return 'Supervisor';
+        return 'Trabajador';
+    }
+    // Garantiza que el RUT maestro siempre exista y siempre tenga rol 'superadmin',
+    // sin importar lo que devuelva la planilla de Google Sheets (que puede no conocer
+    // este rol nuevo). Así Diego Moreno nunca pierde sus permisos tras sincronizar.
+    function enforceMasterSuperAdmin(usersArray) {
+        const list = Array.isArray(usersArray) ? usersArray.slice() : [];
+        let found = false;
+        const result = list.map(u => {
+            if (formatRut(u.rut) === MASTER_RUT) {
+                found = true;
+                return { ...u, name: u.name || MASTER_NAME, role: 'superadmin' };
+            }
+            return u;
+        });
+        if (!found) {
+            result.unshift({ rut: MASTER_RUT, pass: MASTER_DEFAULT_PASS, name: MASTER_NAME, role: 'superadmin' });
+        }
+        return result;
+    }
+
+    // ===== Cola de sincronización pendiente (modo sin conexión) =====
+    // Si el dispositivo se queda sin internet, las acciones (guardar test, crear
+    // usuario, eliminar test, etc.) se guardan igual en localStorage, y además se
+    // encolan aquí para reintentarse automáticamente en cuanto vuelva la señal,
+    // sin que el usuario tenga que hacer nada.
+    const PENDING_QUEUE_KEY = 'pendingSyncQueue';
+    let isFlushingQueue = false;
+
+    function getPendingQueue() {
+        try {
+            return JSON.parse(localStorage.getItem(PENDING_QUEUE_KEY)) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function setPendingQueue(queue) {
+        localStorage.setItem(PENDING_QUEUE_KEY, JSON.stringify(queue));
+    }
+
+    // Envía una acción al backend. Si falla (sin internet, error de red, servidor
+    // caído, etc.) la deja encolada para reintentarla más adelante, en vez de
+    // perderla en silencio.
+    function postToSheets(action, payload) {
+        return fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({ action, ...payload })
+        }).catch(err => {
+            console.warn(`[Sync] Sin conexión al enviar "${action}". Se reintentará automáticamente cuando vuelva la señal.`, err);
+            const queue = getPendingQueue();
+            queue.push({
+                qid: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                action,
+                payload
+            });
+            setPendingQueue(queue);
+        });
+    }
+
+    // Reintenta enviar todo lo que quedó pendiente por falta de señal. Se llama
+    // al recuperar conexión y también periódicamente, por si el dispositivo
+    // recupera señal celular sin disparar el evento "online" del navegador.
+    async function flushPendingQueue() {
+        if (isFlushingQueue) return;
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+
+        const queue = getPendingQueue();
+        if (queue.length === 0) return;
+
+        isFlushingQueue = true;
+        const remaining = [];
+
+        for (const item of queue) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: item.action, ...item.payload })
+                });
+                console.log(`[Sync] Reenviado correctamente tras recuperar señal: ${item.action}`);
+            } catch (err) {
+                remaining.push(item);
+            }
+        }
+
+        setPendingQueue(remaining);
+        isFlushingQueue = false;
+
+        if (remaining.length < queue.length) {
+            syncDataFromCloud();
+        }
+    }
+
+    window.addEventListener('online', flushPendingQueue);
+    setInterval(flushPendingQueue, 20000);
+    // ===== Fin cola de sincronización pendiente =====
+
+    // ===== Service Worker (modo sin internet) =====
+    // Registra la copia local de la app para que, después de la primera vez
+    // que se abre con conexión, la página siga "abriendo" aunque no haya
+    // internet (login, cuestionario y test funcionan igual). Requiere que
+    // sw.js y manifest.json estén subidos junto a este archivo en el servidor.
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('[SW] Registrado correctamente. La app ya puede funcionar sin conexión.'))
+                .catch((err) => console.warn('[SW] No se pudo registrar (revisa que sw.js esté en el servidor):', err));
+        });
+    }
+    // ===== Fin Service Worker =====
+
+    const EMAILJS_PUBLIC_KEY = "TU_PUBLIC_KEY_AQUI"; 
+    const EMAILJS_SERVICE_ID = "TU_SERVICE_ID_AQUI"; 
+    const EMAILJS_TEMPLATE_ID = "TU_TEMPLATE_ID_AQUI"; 
+    const ALERT_EMAILS = "prevencion@salfamontajes.cl, supervisor@salfamontajes.cl";
+
+    // Se inicializa recién cuando la página termina de cargar (evento "load"),
+    // porque la librería de EmailJS ahora carga con "defer" (para no bloquear
+    // el login/test sin internet) y puede no estar lista todavía en este punto.
+    window.addEventListener('load', function () {
+        if (EMAILJS_PUBLIC_KEY !== "TU_PUBLIC_KEY_AQUI" && typeof emailjs !== 'undefined') {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+        }
+    });
+
+    let currentUser = null;
+    let selectedReportUser = null;
+    let selectedSingleLog = null;
+    // ===== Utilidades de Hora de Chile =====
+    // Estas funciones fuerzan que la hora usada por la app sea SIEMPRE la de Chile
+    // (America/Santiago), sin importar cómo esté configurada la zona horaria o el reloj de la tablet.
+
+    // Diferencia (ms) entre la hora real (obtenida de un servidor de internet) y el reloj del dispositivo.
+    // Si el reloj de la tablet está mal, esto lo corrige. Si no hay internet, queda en 0 y se usa el reloj local.
+    let chileTimeOffsetMs = 0;
+
+    function fetchWithTimeout(url, ms) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), ms);
+        return fetch(url, { signal: controller.signal, cache: 'no-store' }).finally(() => clearTimeout(id));
+    }
+
+    // Consulta la hora real de Chile a un servidor de internet y calcula el desfase
+    // respecto al reloj de la tablet, para corregirlo aunque el reloj esté mal configurado.
+    async function syncChileTimeFromNetwork() {
+        try {
+            const res = await fetchWithTimeout('https://worldtimeapi.org/api/timezone/America/Santiago', 6000);
+            if (!res.ok) throw new Error('respuesta no OK');
+            const data = await res.json();
+            const realNowMs = new Date(data.utc_datetime).getTime();
+            if (!isNaN(realNowMs)) {
+                chileTimeOffsetMs = realNowMs - Date.now();
+                console.log('[Hora Chile] Sincronizado con servidor de internet. Desfase detectado (ms):', chileTimeOffsetMs);
+            }
+        } catch (err) {
+            console.warn('[Hora Chile] No se pudo sincronizar con internet, se usará el reloj de la tablet + zona horaria de Chile.', err);
+        }
+    }
+    // Intentar sincronizar apenas carga la app
+    syncChileTimeFromNetwork();
+
+    function getChileParts(date) {
+        const d = date || new Date(Date.now() + chileTimeOffsetMs);
+        const fmt = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'America/Santiago',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+        const parts = {};
+        fmt.formatToParts(d).forEach(p => { if (p.type !== 'literal') parts[p.type] = p.value; });
+        if (parts.hour === '24') parts.hour = '00';
+        return parts;
+    }
+    // Devuelve un objeto Date cuyos getters locales (getHours, getDate, toDateString, etc.)
+    // reflejan la hora real de Chile, para poder usarlo en comparaciones y cálculos.
+    function getChileDate(date) {
+        const p = getChileParts(date);
+        return new Date(`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`);
+    }
+    // Devuelve el string "dd/mm/aaaa hh:mm" en hora de Chile, para guardar/mostrar.
+    function formatChileDateTime(date) {
+        const p = getChileParts(date);
+        return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
+    }
+    // Devuelve el string en formato legible largo (para pies de página de reportes), en hora de Chile.
+    function formatChileLocaleString(date) {
+        const p = getChileParts(date);
+        return `${p.day}-${p.month}-${p.year} ${p.hour}:${p.minute}:${p.second}`;
+    }
+    // ===== Fin utilidades de Hora de Chile =====
+
+    let testState = 'PREP', startTime, mainTimer, roundTimer, secondsLeft = 60;
+    let reactionTimes = [], totalStimuli = 0;
+    let fatigueChartInstance = null;
+    let weeklyBarChartInstance = null;
+    let weeklyPieChartInstance = null;
+    let activeInputId = 'loginRut';
+    let syncInterval = null;
+
+    let mediaStream = null;
+    let photo1Data = null;
+    let photo2Data = null;
+
+    let quizAnswers = { sleep: 'good', pain: 'none', meds: 'none', stress: 'low' };
+
+    const FATIGUE_LEGEND = [
+        ['Estado', 'Significado Operacional F&S'],
+        ['NORMAL', 'Sin signos de fatiga; apto para laborar.'],
+        ['LEVE', 'Cansancio menor; requiere atención o monitoreo, apto para laborar.'],
+        ['MODERADO', 'Alerta disminuida; requiere pausa o supervisión antes de laborar.'],
+        ['SEVERO', 'Alto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.']
+    ];
+
+    const PVT_METRIC_INFO = "Metodología del Test: Test de Vigilancia Psicomotora (PVT - Psychomotor Vigilance Task) que evalúa sostenimiento de la atención visual y velocidad de respuesta neuromotora ante estímulos visuales aleatorios.";
+
+    function getFormattedImageUrl(url) {
+        if (!url || url === "Sin foto" || url.startsWith("Error")) return null;
+        if (url.startsWith('data:image')) return url;
+
+        const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+            return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+        }
+        return url;
+    }
+
+    function saveLocalPhoto(id, photoBase64) {
+        if (!photoBase64 || !photoBase64.startsWith('data:image')) return;
+        try {
+            localStorage.setItem('img_base64_' + id, photoBase64);
+        } catch (e) {
+            console.error("Storage lleno:", e);
+        }
+    }
+
+    function getLocalPhoto(id) {
+        if (!id) return null;
+        return localStorage.getItem('img_base64_' + id);
+    }
+
+    function convertUrlToBase64(url) {
+        return new Promise((resolve) => {
+            if (!url) return resolve(null);
+            if (url.startsWith('data:image')) return resolve(url);
+
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = this.naturalWidth || 320;
+                canvas.height = this.naturalHeight || 240;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(this, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.onerror = function () {
+                resolve(null);
+            };
+            img.src = url;
+        });
+    }
+
+    async function startSilentCamera() {
+        try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, 
+                audio: false 
+            });
+            const video = document.getElementById('hiddenCameraVideo');
+            video.srcObject = mediaStream;
+            await video.play();
+            return true;
+        } catch (err) {
+            console.error("Error accediendo a la cámara silenciosa:", err);
+            return false;
+        }
+    }
+
+    function captureSilentFrame() {
+        try {
+            const video = document.getElementById('hiddenCameraVideo');
+            const canvas = document.getElementById('hiddenCameraCanvas');
+            
+            canvas.width = 320;
+            canvas.height = 240;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            return canvas.toDataURL('image/jpeg', 0.3);
+        } catch (e) {
+            console.error("Error al capturar cuadro de cámara:", e);
+            return null;
+        }
+    }
+
+    function stopSilentCamera() {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+    }
+
+    function requestFullScreen() {
+        const el = document.documentElement;
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (el.requestFullscreen) {
+                el.requestFullscreen().catch(() => {});
+            } else if (el.msRequestFullscreen) {
+                el.msRequestFullscreen();
+            } else if (el.mozRequestFullScreen) {
+                el.mozRequestFullScreen();
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen();
+            }
+        }
+    }
+
+    function toggleFullScreen() {
+        if (!currentUser) return;
+        const role = String(currentUser.role).trim().toLowerCase();
+        if (role !== 'admin' && role !== 'supervisor' && role !== 'superadmin') return;
+
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            requestFullScreen();
+            document.getElementById('fsText').innerText = "Salir de Pantalla Completa";
+            document.getElementById('fsIcon').innerText = "🗗";
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            document.getElementById('fsText').innerText = "Pantalla Completa";
+            document.getElementById('fsIcon').innerText = "⛶";
+        }
+    }
+
+    function getUnreadAlerts() {
+        const logs = JSON.parse(localStorage.getItem('logs')) || [];
+        const readAlertIds = JSON.parse(localStorage.getItem('readAlertIds')) || [];
+        const todayStr = getChileDate().toDateString();
+
+        return logs.filter(log => {
+            const logDate = getChileDate(new Date(log.timestamp || log.date));
+            const isToday = logDate.toDateString() === todayStr;
+            const isCritical = log.status === 'MODERADO' || log.status === 'SEVERO';
+            const logId = log.id || log.timestamp || log.date;
+            return isToday && isCritical && !readAlertIds.includes(logId);
+        });
+    }
+
+    function checkAndRenderMainBanner() {
+        const unreadAlerts = getUnreadAlerts();
+        const banner = document.getElementById('mainAlertBanner');
+        const listContainer = document.getElementById('alertListContainer');
+
+        if (unreadAlerts.length > 0) {
+            banner.style.display = 'block';
+            listContainer.innerHTML = '';
+            unreadAlerts.forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'critical-alert-item';
+                item.innerHTML = `<b>${log.name}</b> (${log.rut}) - Estado: <span style="color:#f87171; font-weight:bold;">${log.status}</span> [${log.date.split(' ')[1] || log.date}]`;
+                listContainer.appendChild(item);
+            });
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    function markAlertsAsRead() {
+        const unreadAlerts = getUnreadAlerts();
+        let readAlertIds = JSON.parse(localStorage.getItem('readAlertIds')) || [];
+
+        unreadAlerts.forEach(log => {
+            const logId = log.id || log.timestamp || log.date;
+            if (!readAlertIds.includes(logId)) readAlertIds.push(logId);
+        });
+
+        localStorage.setItem('readAlertIds', JSON.stringify(readAlertIds));
+        checkAndRenderMainBanner();
+        if (currentUser && isAdminLevel(currentUser)) {
+            renderDashboard();
+        }
+    }
+
+    function setActiveInput(inputId) {
+        activeInputId = inputId;
+        const keyK = document.getElementById('keyK');
+        if (inputId === 'loginPass') {
+            keyK.classList.add('key-btn-hidden');
+        } else {
+            keyK.classList.remove('key-btn-hidden');
+        }
+    }
+
+    function pressKey(val) {
+        const input = document.getElementById(activeInputId);
+        if (!input) return;
+
+        if (val === 'DEL') {
+            input.value = input.value.slice(0, -1);
+        } else {
+            if (activeInputId === 'loginPass') {
+                if (val === 'K') return; 
+                if (!/^[0-9]$/.test(val)) return; 
+            }
+            input.value += val;
+        }
+    }
+
+    async function syncDataFromCloud() {
+        try {
+            const res = await fetch(SCRIPT_URL + "?action=getInitialData");
+            const data = await res.json();
+
+            // La cola pendiente es la que nos dice qué cambios locales todavía
+            // NO han llegado al servidor (por falta de señal). Se usa para no
+            // confundir "recién creado, aún sin sincronizar" con "borrado en
+            // otro dispositivo", que es lo que causaba que un borrado hecho
+            // sin conexión (o justo antes de sincronizar) "resucitara" al
+            // presionar Sincronizar.
+            const pendingQueueNow = getPendingQueue();
+            const pendingAddUserRuts = new Set(
+                pendingQueueNow.filter(i => i.action === 'addUser' && i.payload && i.payload.user)
+                    .map(i => formatRut(i.payload.user.rut))
+            );
+            const pendingDeleteUserRuts = new Set(
+                pendingQueueNow.filter(i => i.action === 'deleteUser' && i.payload)
+                    .map(i => formatRut(i.payload.rut))
+            );
+            const pendingAddLogIds = new Set(
+                pendingQueueNow.filter(i => i.action === 'addLog' && i.payload && i.payload.log)
+                    .map(i => String(i.payload.log.id))
+            );
+            const pendingDeleteLogIds = new Set(
+                pendingQueueNow.filter(i => i.action === 'deleteLog' && i.payload)
+                    .map(i => String(i.payload.id))
+            );
+
+            if (data.users && data.users.length > 0) {
+                const formattedUsers = data.users.map(u => ({
+                    rut: String(u.rut).trim().toUpperCase(),
+                    name: String(u.name).trim(),
+                    role: String(u.role).trim().toLowerCase(),
+                    pass: String(u.pass).trim().replace(/\D/g, '')
+                }));
+
+                const localUsersNow = JSON.parse(localStorage.getItem('users')) || [];
+
+                // 1) No mostrar usuarios cuya eliminación está pendiente de
+                //    sincronizar (para que un borrado offline no "resucite").
+                let mergedUsers = formattedUsers.filter(u => !pendingDeleteUserRuts.has(formatRut(u.rut)));
+
+                // 2) Mantener usuarios creados offline que aún no llegan al
+                //    servidor, para no perderlos mientras se sincronizan.
+                localUsersNow.forEach(lu => {
+                    if (pendingAddUserRuts.has(formatRut(lu.rut)) && !mergedUsers.some(u => formatRut(u.rut) === formatRut(lu.rut))) {
+                        mergedUsers.push(lu);
+                    }
+                });
+
+                localStorage.setItem('users', JSON.stringify(enforceMasterSuperAdmin(mergedUsers)));
+            } else {
+                // Aunque la nube no entregue usuarios (p.ej. error temporal), nunca
+                // dejamos que el maestro pierda su rol de superadmin localmente.
+                const localUsers = JSON.parse(localStorage.getItem('users')) || [];
+                localStorage.setItem('users', JSON.stringify(enforceMasterSuperAdmin(localUsers)));
+            }
+
+            if (data.logs) {
+                const localLogs = JSON.parse(localStorage.getItem('logs')) || [];
+                const cloudIds = new Set(data.logs.map(l => String(l.id)));
+
+                // Solo se conservan localmente los tests que aún están
+                // pendientes de enviarse (no confirmados por el servidor).
+                // Un test que no está en la nube NI está pendiente significa
+                // que fue eliminado en otro dispositivo: no se debe mostrar.
+                const localOnlyLogs = localLogs.filter(l => {
+                    const id = String(l.id || l.timestamp || l.date);
+                    return !cloudIds.has(id) && pendingAddLogIds.has(id);
+                });
+
+                // No se muestran los tests cuya eliminación está pendiente de
+                // sincronizar (para que un borrado offline no "resucite" al
+                // presionar Sincronizar antes de que el servidor lo reciba).
+                const mergedCloudLogs = data.logs
+                    .filter(cloudLog => !pendingDeleteLogIds.has(String(cloudLog.id)))
+                    .map(cloudLog => {
+                        const match = localLogs.find(l => String(l.id) === String(cloudLog.id));
+                        const img1 = (match && match.photo1) || getFormattedImageUrl(cloudLog.photo1);
+                        const img2 = (match && match.photo2) || getFormattedImageUrl(cloudLog.photo2);
+                        return {
+                            ...cloudLog,
+                            photo1: img1,
+                            photo2: img2,
+                            causes: (match && match.causes) || cloudLog.causes
+                        };
+                    });
+
+                const mergedLogs = [...localOnlyLogs, ...mergedCloudLogs].sort((a, b) => {
+                    const ta = new Date(a.timestamp || a.date || 0).getTime() || 0;
+                    const tb = new Date(b.timestamp || b.date || 0).getTime() || 0;
+                    return tb - ta;
+                });
+
+                localStorage.setItem('logs', JSON.stringify(mergedLogs));
+            }
+
+            renderQuickUserGrid();
+            checkAndRenderMainBanner();
+            if (currentUser && isAdminLevel(currentUser)) {
+                renderDashboard();
+            }
+        } catch (e) {
+            console.error("Error al sincronizar con Google Sheets:", e);
+        }
+    }
+
+    async function forceManualSync(e) {
+        const btn = e ? e.target : null;
+        let oldText = "";
+        if (btn) {
+            oldText = btn.innerText;
+            btn.innerText = "⏳ Cargando...";
+            btn.disabled = true;
+        }
+
+        await syncDataFromCloud();
+
+        if (btn) {
+            btn.innerText = "✅ Actualizado";
+            setTimeout(() => {
+                btn.innerText = oldText;
+                btn.disabled = false;
+            }, 1500);
+        }
+    }
+
+    function startAutoSync() {
+        if (!syncInterval) {
+            syncInterval = setInterval(() => {
+                if (currentUser && isAdminLevel(currentUser)) {
+                    syncDataFromCloud();
+                }
+            }, 15000);
+        }
+    }
+
+    function stopAutoSync() {
+        if (syncInterval) {
+            clearInterval(syncInterval);
+            syncInterval = null;
+        }
+    }
+
+    function downloadChart() {
+        if (!fatigueChartInstance) return;
+        const link = document.createElement('a');
+        link.download = `Grafico_Fatiga_${(() => { const p = getChileParts(); return `${p.year}-${p.month}-${p.day}`; })()}.png`;
+        link.href = fatigueChartInstance.toBase64Image();
+        link.click();
+    }
+
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        if (!currentUser) return;
+
+        const currentPass = document.getElementById('currentPass').value.trim();
+        const newPass = document.getElementById('newPass').value.trim();
+
+        if (!/^\d+$/.test(newPass)) {
+            alert('La nueva contraseña debe contener únicamente números.');
+            return;
+        }
+
+        if (currentUser.pass !== currentPass) {
+            alert('La contraseña actual es incorrecta.');
+            return;
+        }
+
+        if (newPass.length < 4) {
+            alert('La nueva contraseña debe tener al menos 4 dígitos.');
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        const index = users.findIndex(u => formatRut(u.rut) === formatRut(currentUser.rut));
+
+        if (index !== -1) {
+            users[index].pass = newPass;
+            currentUser.pass = newPass;
+            localStorage.setItem('users', JSON.stringify(users));
+
+            postToSheets("updatePass", { rut: currentUser.rut, newPass: newPass });
+
+            alert('Contraseña actualizada correctamente.');
+            document.getElementById('currentPass').value = '';
+            document.getElementById('newPass').value = '';
+            renderDashboard();
+        }
+    }
+
+    function adjustAlert(delta) {
+        const slider = document.getElementById('qAlert');
+        let newVal = parseInt(slider.value) + delta;
+        if (newVal >= 1 && newVal <= 9) {
+            slider.value = newVal;
+            document.getElementById('alertVal').innerText = newVal;
+        }
+    }
+
+    function selectOpt(groupId, element, value) {
+        const container = document.getElementById(groupId);
+        container.querySelectorAll('.opt-btn').forEach(btn => btn.classList.remove('selected'));
+        element.classList.add('selected');
+
+        if (groupId === 'grpSleep') quizAnswers.sleep = value;
+        if (groupId === 'grpPain') quizAnswers.pain = value;
+        if (groupId === 'grpMeds') quizAnswers.meds = value;
+        if (groupId === 'grpStress') quizAnswers.stress = value;
+    }
+
+    function formatRut(rutStr) {
+        if (!rutStr) return '';
+        return rutStr.toString().replace(/[^0-9kK]/g, '').toUpperCase();
+    }
+
+    function forceInitMaster() {
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        users = enforceMasterSuperAdmin(users);
+        localStorage.setItem('users', JSON.stringify(users));
+
+        if (!localStorage.getItem('logs')) {
+            localStorage.setItem('logs', JSON.stringify([]));
+        }
+        renderQuickUserGrid();
+        checkAndRenderMainBanner();
+        syncDataFromCloud();
+        flushPendingQueue(); // reintenta lo que haya quedado pendiente de una sesión anterior sin señal
+    }
+
+    function renderQuickUserGrid() {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const container = document.getElementById('quickUserGrid');
+        container.innerHTML = '';
+
+        users.forEach(u => {
+            const card = document.createElement('div');
+            card.className = 'user-card';
+            card.onclick = () => selectQuickUser(u.rut, card);
+            card.innerHTML = `
+                <div class="user-card-name">${u.name}</div>
+                <div class="user-card-rut">${u.rut}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function selectQuickUser(rut, element) {
+        document.querySelectorAll('.user-card').forEach(c => c.classList.remove('user-card-active'));
+        if (element) element.classList.add('user-card-active');
+        document.getElementById('loginRut').value = rut;
+        setActiveInput('loginPass');
+    }
+
+    function resetMasterCredentials() {
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        users = users.filter(u => formatRut(u.rut) !== MASTER_RUT);
+        users.unshift({
+            rut: MASTER_RUT,
+            pass: MASTER_DEFAULT_PASS,
+            name: MASTER_NAME,
+            role: 'superadmin'
+        });
+        localStorage.setItem('users', JSON.stringify(users));
+        renderQuickUserGrid();
+        alert(`Credenciales maestras restablecidas.\n\nRUT: ${MASTER_RUT}\nClave: ${MASTER_DEFAULT_PASS}`);
+    }
+
+    function handleLogin(e) {
+        e.preventDefault();
+        const inputRut = formatRut(document.getElementById('loginRut').value);
+        const inputPass = document.getElementById('loginPass').value.trim();
+
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => formatRut(u.rut) === inputRut && String(u.pass).trim() === inputPass);
+
+        if (!user) {
+            alert('RUT o contraseña incorrectos.');
+            return;
+        }
+
+        currentUser = user;
+        document.getElementById('viewLogin').style.display = 'none';
+
+        requestFullScreen();
+
+        const fsBtn = document.getElementById('btnToggleFS');
+        const userRole = String(user.role).trim().toLowerCase();
+
+        if (userRole === 'admin' || userRole === 'supervisor' || userRole === 'superadmin') {
+            fsBtn.style.display = 'flex';
+            showAdminDashboard();
+        } else {
+            fsBtn.style.display = 'none'; 
+            showQuiz();
+        }
+    }
+
+    function showQuiz() {
+        stopAutoSync();
+        hideAllViews();
+        document.getElementById('viewQuiz').style.display = 'block';
+        document.getElementById('welcomeUser').innerText = `Hola, ${currentUser.name} (RUT: ${currentUser.rut})`;
+        
+        photo1Data = null;
+        photo2Data = null;
+
+        syncChileTimeFromNetwork(); // refresca la hora real de Chile antes de iniciar el test
+
+        const userRole = String(currentUser.role).trim().toLowerCase();
+        if (userRole === 'admin' || userRole === 'supervisor' || userRole === 'superadmin') {
+            document.getElementById('btnAdminBack').style.display = 'block';
+        } else {
+            document.getElementById('btnAdminBack').style.display = 'none';
+        }
+    }
+
+    function showAdminDashboard() {
+        stopSilentCamera();
+        hideAllViews();
+        document.getElementById('viewAdmin').style.display = 'block';
+        renderDashboard();
+        startAutoSync();
+    }
+
+    function renderDashboard() {
+        renderUsersTable();
+        renderLogsTable();
+        renderQuickUserGrid();
+
+        const unreadAlerts = getUnreadAlerts();
+        const adminNotice = document.getElementById('adminAlertNotice');
+        const adminList = document.getElementById('adminAlertList');
+
+        if (unreadAlerts.length > 0) {
+            adminNotice.style.display = 'block';
+            adminList.innerHTML = '';
+            unreadAlerts.forEach(log => {
+                const item = document.createElement('div');
+                item.style.cssText = "font-size:13px; color:#ffffff; margin-top:4px; padding:4px 8px; background:rgba(15, 23, 42, 0.6); border-radius:6px;";
+                item.innerHTML = `<b>${log.name}</b> (${log.rut}) - Estado: <b style="color:#f87171">${log.status}</b> [${log.date}] - Reacción: ${log.avg} ms`;
+                adminList.appendChild(item);
+            });
+        } else {
+            adminNotice.style.display = 'none';
+        }
+    }
+
+    function renderUsersTable() {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+
+        // Solo Diego Moreno (superadmin) puede ver las claves de otros usuarios.
+        // Los demás perfiles admin/supervisor ven la clave oculta, pero conservan
+        // todas sus demás funciones (crear/ver usuarios, eliminar test, informes).
+        const canSeePasswords = isSuperAdmin(currentUser);
+
+        users.forEach(u => {
+            const isMaster = formatRut(u.rut) === MASTER_RUT;
+            const userRole = String(u.role).trim().toLowerCase();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${u.rut}</b></td>
+                <td>${u.name}</td>
+                <td><span class="badge badge-role">${roleLabel(userRole)}</span></td>
+                <td><code style="color:#f87171;">${canSeePasswords ? u.pass : '••••••'}</code></td>
+                <td>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-info" onclick="openUserReport('${u.rut}')">Ver Reporte</button>
+                        ${!isMaster ? `<button class="btn btn-danger" onclick="deleteUser('${u.rut}')">Eliminar</button>` : ''}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('cntUsers').innerText = users.length;
+    }
+
+    function getFilteredLogs() {
+        const logs = JSON.parse(localStorage.getItem('logs')) || [];
+        const filter = document.getElementById('dateFilter').value;
+        const now = getChileDate();
+
+        if (filter === 'all') return logs;
+
+        return logs.filter(log => {
+            const logDate = getChileDate(new Date(log.timestamp || log.date));
+            if (filter === 'today') {
+                return logDate.toDateString() === now.toDateString();
+            } else if (filter === 'week') {
+                const oneWeekAgo = getChileDate();
+                oneWeekAgo.setDate(now.getDate() - 7);
+                return logDate >= oneWeekAgo;
+            }
+            return true;
+        });
+    }
+
+    function getBadgeClass(status) {
+        switch (status) {
+            case 'NORMAL': return 'badge-normal';
+            case 'LEVE': return 'badge-leve';
+            case 'MODERADO': return 'badge-moderado';
+            case 'SEVERO': return 'badge-severo';
+            default: return 'badge-normal';
+        }
+    }
+
+    function renderLogsTable() {
+        const logs = getFilteredLogs();
+        const tbody = document.getElementById('adminTableBody');
+        tbody.innerHTML = '';
+
+        let statusCounts = { NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 };
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No hay registros para este filtro.</td></tr>';
+        } else {
+            logs.forEach(log => {
+                if (statusCounts[log.status] !== undefined) statusCounts[log.status]++;
+                
+                const badgeClass = getBadgeClass(log.status);
+                const logIdentifier = log.id || log.timestamp || log.date;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${log.date}</td>
+                    <td><b>${log.name}</b></td>
+                    <td>${log.rut}</td>
+                    <td>${log.avg} ms</td>
+                    <td><span class="badge ${badgeClass}">${log.status}</span></td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn-info" onclick="openSingleReport('${logIdentifier}')">Ver</button>
+                            <button class="btn btn-danger" onclick="deleteReport('${logIdentifier}')">Eliminar</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('cntCritical').innerText = statusCounts['MODERADO'] + statusCounts['SEVERO'];
+        updateChart(statusCounts);
+    }
+
+    function openSingleReport(logIdentifier) {
+        const logs = JSON.parse(localStorage.getItem('logs')) || [];
+        const log = logs.find(l => String(l.id || l.timestamp || l.date) === String(logIdentifier));
+
+        if (!log) {
+            alert('No se encontró el registro seleccionado.');
+            return;
+        }
+
+        selectedSingleLog = log;
+        selectedReportUser = null;
+
+        const badgeClass = getBadgeClass(log.status);
+
+        document.getElementById('modalUserName').innerText = `Evaluación F&S (PVT) - ${log.name}`;
+        document.getElementById('modalUserRut').innerText = `RUT: ${log.rut} | Fecha: ${log.date}`;
+        
+        document.getElementById('modalSummaryBox').style.display = 'none';
+        document.getElementById('modalTableContainer').style.display = 'none';
+        document.getElementById('modalHistoryTitle').style.display = 'none';
+
+        const p1Local = getLocalPhoto(log.id + '_1') || getFormattedImageUrl(log.photo1);
+        const p2Local = getLocalPhoto(log.id + '_2') || getFormattedImageUrl(log.photo2);
+
+        const detailBox = document.getElementById('singleDetailView');
+        detailBox.style.display = 'block';
+        detailBox.innerHTML = `
+            <div style="display:flex; justify-content:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                ${p1Local ? `<div style="text-align:center;"><span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Inicio del Test</span><img src="${p1Local}" style="width:140px; height:105px; object-fit:cover; border-radius:8px; border:2px solid var(--salfa-red);" /></div>` : ''}
+                ${p2Local ? `<div style="text-align:center;"><span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Mitad del Test (30s)</span><img src="${p2Local}" style="width:140px; height:105px; object-fit:cover; border-radius:8px; border:2px solid #0284c7;" /></div>` : ''}
+            </div>
+            <div style="text-align:center; margin-bottom:15px;">
+                <span class="badge ${badgeClass}" style="font-size:18px; padding:8px 20px;">ESTADO: ${log.status}</span>
+            </div>
+            <p style="margin:5px 0;"><b>Nombre:</b> ${log.name}</p>
+            <p style="margin:5px 0;"><b>RUT:</b> ${log.rut}</p>
+            <p style="margin:5px 0;"><b>Fecha/Hora:</b> ${log.date}</p>
+            <p style="margin:5px 0;"><b>Tiempo Promedio Reacción (PVT):</b> ${log.avg} ms</p>
+            <p style="margin:10px 0 5px 0; font-size:12px; color:var(--text-muted);"><b>Norma Técnica:</b> Test de Vigilancia Psicomotora (PVT).</p>
+            ${(log.status === 'MODERADO' || log.status === 'SEVERO') ? `
+                <div style="margin-top:15px; padding:10px; background:rgba(227, 27, 35, 0.2); border:1px solid var(--salfa-red); border-radius:6px; color:#f87171; font-weight:bold; font-size:13px; text-align:center;">
+                    ⚠️ ADVERTENCIA: TRABAJADOR NO APTO PARA OPERAR. DEBE DETENER SUS LABORES INMEDIATAMENTE.
+                </div>
+                <div style="margin-top:12px; padding:10px 14px; background:var(--input-dark); border:1px solid var(--border-color); border-radius:6px;">
+                    <b style="font-size:13px; color:#f8fafc;">Causas / Factores de Riesgo Detectados:</b>
+                    <ul style="margin:6px 0 0 0; padding-left:18px; font-size:13px; color:var(--text-muted);">
+                        ${(log.causes && log.causes.length ? log.causes : ['Sin detalle de causas disponible para este registro.']).map(c => `<li>${c}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+        `;
+
+        document.getElementById('userReportModal').style.display = 'flex';
+    }
+
+    async function deleteReport(logIdentifier) {
+        const userRole = String(currentUser ? currentUser.role : '').trim().toLowerCase();
+        if (!currentUser || (userRole !== 'admin' && userRole !== 'supervisor' && userRole !== 'superadmin')) {
+            alert('Solo los administradores pueden eliminar reportes.');
+            return;
+        }
+
+        if (!confirm('¿Estás seguro de que deseas eliminar esta evaluación?')) return;
+
+        let logs = JSON.parse(localStorage.getItem('logs')) || [];
+        logs = logs.filter(l => String(l.id || l.timestamp || l.date) !== String(logIdentifier));
+        localStorage.setItem('logs', JSON.stringify(logs));
+
+        postToSheets("deleteLog", { id: logIdentifier });
+
+        renderDashboard();
+
+        if (selectedReportUser) {
+            openUserReport(selectedReportUser.user.rut);
+        }
+    }
+
+    // Agrega una hoja/página adicional al PDF con el detalle de causas y factores
+    // de riesgo de cada evaluación MODERADA o SEVERA. Se usa tanto en el informe
+    // general como en los informes individuales (evaluación única e histórico).
+    function addCausesAppendixToPDF(doc, criticalLogs) {
+        if (!criticalLogs || criticalLogs.length === 0) return;
+
+        doc.addPage();
+        doc.setFontSize(14);
+        doc.setTextColor(227, 27, 35);
+        doc.text("Anexo: Detalle de Causas / Factores de Riesgo", 14, 20);
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text("Desglose de causas para cada evaluación con resultado MODERADO o SEVERO.", 14, 26, { maxWidth: 180 });
+
+        const rows = criticalLogs.map(l => [
+            l.date,
+            l.name,
+            l.rut,
+            l.status,
+            (l.causes && l.causes.length ? l.causes.map(c => '• ' + c).join('\n') : 'Sin detalle de causas disponible para este registro.')
+        ]);
+
+        doc.autoTable({
+            startY: 32,
+            head: [['Fecha y Hora', 'Trabajador', 'RUT', 'Estado', 'Causas / Factores de Riesgo Detectados']],
+            body: rows,
+            theme: 'grid',
+            headStyles: { fillColor: [227, 27, 35] },
+            styles: { fontSize: 8, cellPadding: 3, valign: 'top' },
+            columnStyles: { 4: { cellWidth: 90 } }
+        });
+    }
+
+    function updateChart(counts) {
+        // Si no hay internet, Chart.js puede no haber terminado de cargar (o no
+        // cargar nunca). En ese caso se omite el gráfico en vez de romper el
+        // resto del panel de administración.
+        if (typeof Chart === 'undefined') {
+            console.warn('[Panel] Chart.js no está disponible (sin conexión); se omite el gráfico.');
+            return;
+        }
+
+        const ctx = document.getElementById('fatigueChart').getContext('2d');
+        if (fatigueChartInstance) fatigueChartInstance.destroy();
+
+        fatigueChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Normal', 'Leve', 'Moderado', 'Severo'],
+                datasets: [{
+                    data: [counts.NORMAL, counts.LEVE, counts.MODERADO, counts.SEVERO],
+                    backgroundColor: ['#16a34a', '#0284c7', '#ca8a04', '#E31B23'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    function openUserReport(rut) {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => formatRut(u.rut) === formatRut(rut));
+        const logs = (JSON.parse(localStorage.getItem('logs')) || []).filter(l => formatRut(l.rut) === formatRut(rut));
+
+        if (!user) return;
+        selectedReportUser = { user, logs };
+        selectedSingleLog = null;
+
+        const userRole = String(user.role).trim().toLowerCase();
+        document.getElementById('modalUserName').innerText = user.name;
+        document.getElementById('modalUserRut').innerText = `RUT: ${user.rut} | Rol: ${roleLabel(userRole)}`;
+        document.getElementById('modalTotalTests').innerText = logs.length;
+
+        document.getElementById('modalSummaryBox').style.display = 'grid';
+        document.getElementById('modalTableContainer').style.display = 'block';
+        document.getElementById('modalHistoryTitle').style.display = 'block';
+        document.getElementById('singleDetailView').style.display = 'none';
+
+        const modalHistoryBody = document.getElementById('modalUserHistoryBody');
+        modalHistoryBody.innerHTML = '';
+
+        if (logs.length > 0) {
+            const sum = logs.reduce((acc, curr) => acc + curr.avg, 0);
+            const avg = Math.round(sum / logs.length);
+            document.getElementById('modalAvgReaction').innerText = `${avg} ms`;
+
+            logs.forEach(log => {
+                const badgeClass = getBadgeClass(log.status);
+                const logIdentifier = log.id || log.timestamp || log.date;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${log.date}</td>
+                    <td>${log.avg} ms</td>
+                    <td><span class="badge ${badgeClass}">${log.status}</span></td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteReport('${logIdentifier}')">Eliminar</button>
+                    </td>
+                `;
+                modalHistoryBody.appendChild(tr);
+            });
+        } else {
+            document.getElementById('modalAvgReaction').innerText = 'N/A';
+            modalHistoryBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">El usuario no tiene evaluaciones registradas.</td></tr>';
+        }
+
+        document.getElementById('userReportModal').style.display = 'flex';
+    }
+
+    function closeUserReportModal() {
+        document.getElementById('userReportModal').style.display = 'none';
+        selectedReportUser = null;
+        selectedSingleLog = null;
+    }
+
+    // LÓGICA DEL REPORTE SEMANAL DINÁMICO
+    function openWeeklyDashboardModal() {
+        const picker = document.getElementById('weeklyPicker');
+        if (!picker.value) {
+            const today = getChileDate();
+            const p = getChileParts();
+            picker.value = `${p.year}-${p.month}-${p.day}`;
+        }
+        document.getElementById('weeklyDashboardModal').style.display = 'flex';
+        renderWeeklyDashboard();
+    }
+
+    function closeWeeklyDashboardModal() {
+        document.getElementById('weeklyDashboardModal').style.display = 'none';
+    }
+
+    function getWeekRange(dateObj) {
+        const d = new Date(dateObj);
+        const day = d.getDay();
+        const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
+        
+        const monday = new Date(d.setDate(diffToMonday));
+        monday.setHours(0, 0, 0, 0);
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+
+        return { monday, sunday };
+    }
+
+    function renderWeeklyDashboard() {
+        const pickerVal = document.getElementById('weeklyPicker').value;
+        const selectedDate = pickerVal ? new Date(pickerVal + 'T00:00:00') : getChileDate();
+        const { monday, sunday } = getWeekRange(selectedDate);
+
+        const formatDateStr = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        document.getElementById('weeklyRangeTitle').innerText = `Semana del ${formatDateStr(monday)} al ${formatDateStr(sunday)}`;
+        document.getElementById('wkPrintDate').innerText = formatChileLocaleString();
+
+        const allLogs = JSON.parse(localStorage.getItem('logs')) || [];
+        const weeklyLogs = allLogs.filter(log => {
+            const logDate = getChileDate(new Date(log.timestamp || log.date));
+            return logDate >= monday && logDate <= sunday;
+        });
+
+        // KPIs
+        const totalTests = weeklyLogs.length;
+        document.getElementById('wkTotalTests').innerText = totalTests;
+
+        let criticalAlerts = 0;
+        let sumAvg = 0;
+        let normalLeveCount = 0;
+
+        let statusCounts = { NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 };
+        let daysData = [
+            { dayName: 'Lun', NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 },
+            { dayName: 'Mar', NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 },
+            { dayName: 'Mié', NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 },
+            { dayName: 'Jue', NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 },
+            { dayName: 'Vie', NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 },
+            { dayName: 'Sáb', NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 },
+            { dayName: 'Dom', NORMAL: 0, LEVE: 0, MODERADO: 0, SEVERO: 0 }
+        ];
+
+        let userStats = {};
+
+        weeklyLogs.forEach(log => {
+            if (statusCounts[log.status] !== undefined) statusCounts[log.status]++;
+            if (log.status === 'MODERADO' || log.status === 'SEVERO') criticalAlerts++;
+            if (log.status === 'NORMAL' || log.status === 'LEVE') normalLeveCount++;
+            sumAvg += (log.avg || 0);
+
+            // Mapeo por día de la semana
+            const logDate = getChileDate(new Date(log.timestamp || log.date));
+            let dayIdx = logDate.getDay() - 1; 
+            if (dayIdx === -1) dayIdx = 6;
+            if (daysData[dayIdx] && daysData[dayIdx][log.status] !== undefined) {
+                daysData[dayIdx][log.status]++;
+            }
+
+            // Mapeo por trabajador
+            const rutKey = formatRut(log.rut);
+            if (!userStats[rutKey]) {
+                userStats[rutKey] = { name: log.name, rut: log.rut, tests: 0, totalAvg: 0, statuses: [] };
+            }
+            userStats[rutKey].tests++;
+            userStats[rutKey].totalAvg += (log.avg || 0);
+            userStats[rutKey].statuses.push(log.status);
+        });
+
+        const complianceRate = totalTests > 0 ? Math.round((normalLeveCount / totalTests) * 100) : 100;
+        const avgReaction = totalTests > 0 ? Math.round(sumAvg / totalTests) : 0;
+
+        document.getElementById('wkComplianceRate').innerText = `${complianceRate}%`;
+        document.getElementById('wkAvgReaction').innerText = `${avgReaction} ms`;
+        document.getElementById('wkCriticalAlerts').innerText = criticalAlerts;
+
+        // GRÁFICO DE BARRAS POR DÍA
+        // Si no hay internet, Chart.js puede no estar disponible; se omiten los
+        // gráficos del reporte semanal en vez de romper el resto del modal.
+        if (typeof Chart === 'undefined') {
+            console.warn('[Panel] Chart.js no está disponible (sin conexión); se omiten los gráficos del reporte semanal.');
+        } else {
+            const ctxBar = document.getElementById('weeklyBarChart').getContext('2d');
+            if (weeklyBarChartInstance) weeklyBarChartInstance.destroy();
+
+            weeklyBarChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: daysData.map(d => d.dayName),
+                    datasets: [
+                        { label: 'Normal', data: daysData.map(d => d.NORMAL), backgroundColor: '#16a34a' },
+                        { label: 'Leve', data: daysData.map(d => d.LEVE), backgroundColor: '#0284c7' },
+                        { label: 'Moderado', data: daysData.map(d => d.MODERADO), backgroundColor: '#ca8a04' },
+                        { label: 'Severo', data: daysData.map(d => d.SEVERO), backgroundColor: '#E31B23' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+                    plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, font: { size: 10 } } } }
+                }
+            });
+
+            // GRÁFICO CIRCULAR DE FATIGA
+            const ctxPie = document.getElementById('weeklyPieChart').getContext('2d');
+            if (weeklyPieChartInstance) weeklyPieChartInstance.destroy();
+
+            weeklyPieChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Normal', 'Leve', 'Moderado', 'Severo'],
+                    datasets: [{
+                        data: [statusCounts.NORMAL, statusCounts.LEVE, statusCounts.MODERADO, statusCounts.SEVERO],
+                        backgroundColor: ['#16a34a', '#0284c7', '#ca8a04', '#E31B23'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, font: { size: 10 } } } }
+                }
+            });
+        }
+
+        // TABLA RESUMEN POR TRABAJADOR
+        const tbody = document.getElementById('weeklyUserSummaryBody');
+        tbody.innerHTML = '';
+
+        const userKeys = Object.keys(userStats);
+        if (userKeys.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No hay evaluaciones registradas en esta semana.</td></tr>';
+        } else {
+            userKeys.forEach(k => {
+                const u = userStats[k];
+                const userAvg = Math.round(u.totalAvg / u.tests);
+                
+                let worstStatus = 'NORMAL';
+                if (u.statuses.includes('SEVERO')) worstStatus = 'SEVERO';
+                else if (u.statuses.includes('MODERADO')) worstStatus = 'MODERADO';
+                else if (u.statuses.includes('LEVE')) worstStatus = 'LEVE';
+
+                const badgeClass = getBadgeClass(worstStatus);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${u.name}</b></td>
+                    <td>${u.rut}</td>
+                    <td>${u.tests}</td>
+                    <td>${userAvg} ms</td>
+                    <td><span class="badge ${badgeClass}">${worstStatus}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    }
+
+    async function handleAddUser(e) {
+        e.preventDefault();
+        const rawRut = document.getElementById('newRut').value;
+        const name = document.getElementById('newName').value.trim();
+        const role = document.getElementById('newRole').value;
+        const formattedRut = formatRut(rawRut);
+
+        if (formattedRut.length < 5) {
+            alert('El RUT debe tener al menos 5 dígitos.');
+            return;
+        }
+
+        const defaultPass = formattedRut.replace(/\D/g, '').substring(0, 5) || "12345";
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+
+        if (users.some(u => formatRut(u.rut) === formattedRut)) {
+            alert('Este RUT ya existe.');
+            return;
+        }
+
+        const newUser = { rut: rawRut.trim().toUpperCase(), pass: defaultPass, name: name, role: role };
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+
+        postToSheets("addUser", { user: newUser });
+
+        document.getElementById('newRut').value = '';
+        document.getElementById('newName').value = '';
+
+        renderDashboard();
+    }
+
+    async function deleteUser(rutToDelete) {
+        if (formatRut(rutToDelete) === MASTER_RUT) {
+            alert('No se puede eliminar al Super Administrador.');
+            return;
+        }
+        if (!confirm(`¿Eliminar al usuario ${rutToDelete}?`)) return;
+
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        users = users.filter(u => formatRut(u.rut) !== formatRut(rutToDelete));
+        localStorage.setItem('users', JSON.stringify(users));
+
+        postToSheets("deleteUser", { rut: rutToDelete });
+
+        renderDashboard();
+    }
+
+    function exportToExcel() {
+        const logs = getFilteredLogs();
+        if (logs.length === 0) return alert('No hay datos para exportar.');
+
+        if (typeof XLSX === 'undefined') {
+            alert('La función de exportar a Excel requiere conexión a internet para cargar (no está disponible sin conexión).');
+            return;
+        }
+
+        const data = logs.map(l => ({
+            'Fecha y Hora': l.date,
+            'Nombre Trabajador': l.name,
+            'RUT': l.rut,
+            'Tiempo Reacción PVT (ms)': l.avg,
+            'Estado de Fatiga (F&S)': l.status
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+
+        XLSX.utils.sheet_add_aoa(worksheet, [[]], { origin: -1 });
+        XLSX.utils.sheet_add_aoa(worksheet, [["--- ESTÁNDAR Y LEYENDA DE ESTADOS F&S (PVT) - SALFAMONTAJES ---"]], { origin: -1 });
+        XLSX.utils.sheet_add_aoa(worksheet, [[PVT_METRIC_INFO]], { origin: -1 });
+        XLSX.utils.sheet_add_aoa(worksheet, [[]], { origin: -1 });
+        XLSX.utils.sheet_add_aoa(worksheet, FATIGUE_LEGEND, { origin: -1 });
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Evaluaciones_FS");
+
+        // Si hay trabajadores con resultado MODERADO o SEVERO, se agrega una
+        // hoja nueva al libro con el detalle de causas/errores de cada caso.
+        const criticalLogs = logs.filter(l => l.status === 'MODERADO' || l.status === 'SEVERO');
+        if (criticalLogs.length > 0) {
+            const causesData = criticalLogs.map(l => ({
+                'Fecha y Hora': l.date,
+                'Nombre Trabajador': l.name,
+                'RUT': l.rut,
+                'Estado F&S': l.status,
+                'Causas / Factores de Riesgo Detectados': (l.causes && l.causes.length ? l.causes.join(' | ') : 'Sin detalle de causas disponible para este registro.')
+            }));
+            const causesSheet = XLSX.utils.json_to_sheet(causesData);
+            XLSX.utils.book_append_sheet(workbook, causesSheet, "Causas_Severo_Moderado");
+        }
+
+        XLSX.writeFile(workbook, `Reporte_FS_Salfamontajes_${(() => { const p = getChileParts(); return `${p.year}-${p.month}-${p.day}`; })()}.xlsx`);
+    }
+
+    async function exportToPDF() {
+        const logs = getFilteredLogs();
+        if (logs.length === 0) return alert('No hay datos para exportar.');
+
+        const btnExport = document.querySelector(".btn-pdf");
+        const originalText = btnExport ? btnExport.innerText : "";
+        if (btnExport) {
+            btnExport.innerText = "Generando PDF...";
+            btnExport.disabled = true;
+        }
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.setTextColor(227, 27, 35);
+            doc.text("SALFAMONTAJES - Reporte de Fatiga y Somnolencia (F&S)", 14, 20);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Fecha de emisión: ${formatChileLocaleString()}`, 14, 26);
+            doc.text("Estándar Metodológico: Test de Vigilancia Psicomotora (PVT)", 14, 31);
+
+            // Los informes en PDF no incluyen fotografías (quedan almacenadas
+            // solo internamente, para la verificación de rostro y auditoría).
+            const tableData = logs.map(l => [
+                l.date,
+                l.name,
+                l.rut,
+                `${l.avg} ms`,
+                l.status
+            ]);
+
+            doc.autoTable({
+                startY: 37,
+                head: [['Fecha y Hora', 'Trabajador', 'RUT', 'Reacción', 'Estado F&S']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [227, 27, 35] },
+                styles: { minCellHeight: 10, verticalAlign: 'middle', fontSize: 8 }
+            });
+
+            let finalY = doc.lastAutoTable.finalY + 10;
+            const hasCritical = logs.some(l => l.status === 'MODERADO' || l.status === 'SEVERO');
+
+            if (hasCritical) {
+                if (finalY > 210) { doc.addPage(); finalY = 20; }
+                doc.setFillColor(254, 226, 226);
+                doc.setDrawColor(227, 27, 35);
+                doc.rect(14, finalY, 182, 18, 'FD');
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(185, 28, 28);
+                doc.text("ADVERTENCIA DE SEGURIDAD OPERACIONAL:", 18, finalY + 6);
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                doc.text("En evaluaciones con resultado MODERADO o SEVERO, el trabajador DEBE DETENER SUS LABORES INMEDIATAMENTE,", 18, finalY + 11);
+                doc.text("no puede continuar operando ni realizar tareas críticas de alto riesgo y debe ser derivado a descanso.", 18, finalY + 15);
+                finalY += 24;
+            }
+
+            if (finalY > 220) { doc.addPage(); finalY = 20; }
+
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(15, 23, 42);
+            doc.text("Leyenda de Clasificación F&S y Fundamentos PVT", 14, finalY);
+
+            doc.autoTable({
+                startY: finalY + 4,
+                head: [FATIGUE_LEGEND[0]],
+                body: FATIGUE_LEGEND.slice(1),
+                theme: 'plain',
+                headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' } }
+            });
+
+            finalY = doc.lastAutoTable.finalY + 6;
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100);
+            doc.text(PVT_METRIC_INFO, 14, finalY, { maxWidth: 180 });
+
+            // Si hay trabajadores con resultado MODERADO o SEVERO, se agrega una
+            // nueva hoja al informe con el detalle de las causas/errores.
+            const criticalLogsForAppendix = logs.filter(l => l.status === 'MODERADO' || l.status === 'SEVERO');
+            addCausesAppendixToPDF(doc, criticalLogsForAppendix);
+
+            doc.save(`Reporte_FS_Salfamontajes_${(() => { const p = getChileParts(); return `${p.year}-${p.month}-${p.day}`; })()}.pdf`);
+
+        } catch (err) {
+            console.error("Error al generar PDF general:", err);
+            alert("Ocurrió un error al armar el PDF.");
+        } finally {
+            if (btnExport) {
+                btnExport.innerText = originalText;
+                btnExport.disabled = false;
+            }
+        }
+    }
+
+    async function exportUserPDF() {
+        if (typeof window.jspdf === 'undefined') {
+            alert('La función de exportar a PDF requiere conexión a internet para cargar (no está disponible sin conexión).');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+
+        if (selectedSingleLog) {
+            const log = selectedSingleLog;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.setTextColor(227, 27, 35);
+            doc.text(`SALFAMONTAJES - Reporte de Evaluación Individual F&S`, 14, 20);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text("Evaluación basada en Test de Vigilancia Psicomotora (PVT)", 14, 26);
+
+            // El informe individual no incluye fotografías (quedan almacenadas
+            // solo internamente, para la verificación de rostro y auditoría).
+            let startYText = 35;
+            doc.setFontSize(11);
+            doc.setTextColor(15, 23, 42);
+            doc.text(`Trabajador: ${log.name}`, 14, startYText);
+            doc.text(`RUT: ${log.rut}`, 14, startYText + 6);
+            doc.text(`Fecha y Hora: ${log.date}`, 14, startYText + 12);
+            doc.text(`Tiempo Promedio de Reacción (PVT): ${log.avg} ms`, 14, startYText + 18);
+            doc.text(`Estado Obtenido: ${log.status}`, 14, startYText + 24);
+            startYText += 32;
+
+            let finalY = startYText;
+
+            if (log.status === 'MODERADO' || log.status === 'SEVERO') {
+                doc.setFillColor(254, 226, 226);
+                doc.setDrawColor(227, 27, 35);
+                doc.rect(14, finalY, 182, 18, 'FD');
+
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(185, 28, 28);
+                doc.text("ADVERTENCIA DE SEGURIDAD OPERACIONAL:", 18, finalY + 6);
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                doc.text("El resultado MODERADO/SEVERO exige DETENER LABORES INMEDIATAMENTE.", 18, finalY + 11);
+                doc.text("El trabajador no está apto para operar ni realizar tareas críticas en esta jornada.", 18, finalY + 15);
+
+                finalY += 24;
+            }
+
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(15, 23, 42);
+            doc.text("Leyenda de Clasificación F&S y Fundamentos PVT", 14, finalY);
+
+            doc.autoTable({
+                startY: finalY + 4,
+                head: [FATIGUE_LEGEND[0]],
+                body: FATIGUE_LEGEND.slice(1),
+                theme: 'plain',
+                headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' } }
+            });
+
+            finalY = doc.lastAutoTable.finalY + 6;
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100);
+            doc.text(PVT_METRIC_INFO, 14, finalY, { maxWidth: 180 });
+
+            // Si esta evaluación es MODERADA o SEVERA, se agrega una nueva hoja
+            // al informe con el detalle de las causas/errores detectados.
+            if (log.status === 'MODERADO' || log.status === 'SEVERO') {
+                addCausesAppendixToPDF(doc, [log]);
+            }
+
+            doc.save(`Reporte_FS_${log.rut}_${log.date.replace(/[/ :]/g, '_')}.pdf`);
+            return;
+        }
+
+        if (!selectedReportUser) return;
+        const { user, logs } = selectedReportUser;
+
+        const doc = new jsPDF();
+        const userRole = String(user.role).trim().toLowerCase();
+        doc.setFontSize(16);
+        doc.setTextColor(227, 27, 35);
+        doc.text(`SALFAMONTAJES - Reporte Histórico F&S (PVT)`, 14, 20);
+        doc.setFontSize(11);
+        doc.setTextColor(15, 23, 42);
+        doc.text(`Nombre: ${user.name}`, 14, 28);
+        doc.text(`RUT: ${user.rut}`, 14, 34);
+        doc.text(`Rol: ${roleLabel(userRole)}`, 14, 40);
+
+        let finalY = 50;
+
+        if (logs.length > 0) {
+            const sum = logs.reduce((acc, curr) => acc + curr.avg, 0);
+            const avg = Math.round(sum / logs.length);
+            doc.text(`Promedio Histórico PVT: ${avg} ms`, 14, 46);
+
+            const tableData = logs.map(l => [l.date, `${l.avg} ms`, l.status]);
+
+            doc.autoTable({
+                startY: 52,
+                head: [['Fecha y Hora', 'Reacción PVT', 'Estado F&S']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [227, 27, 35] }
+            });
+
+            finalY = doc.lastAutoTable.finalY + 10;
+        } else {
+            doc.text("Sin registros de evaluación.", 14, 50);
+            finalY = 65;
+        }
+
+        if (finalY > 210) { doc.addPage(); finalY = 20; }
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text("Leyenda de Clasificación F&S y Fundamentos PVT", 14, finalY);
+
+        doc.autoTable({
+            startY: finalY + 4,
+            head: [FATIGUE_LEGEND[0]],
+            body: FATIGUE_LEGEND.slice(1),
+            theme: 'plain',
+            headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' } }
+        });
+
+        finalY = doc.lastAutoTable.finalY + 6;
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100);
+        doc.text(PVT_METRIC_INFO, 14, finalY, { maxWidth: 180 });
+
+        // Si el trabajador tiene evaluaciones MODERADAS o SEVERAS en su historial,
+        // se agrega una nueva hoja al informe con el detalle de causas/errores.
+        const criticalHistoryLogs = logs.filter(l => l.status === 'MODERADO' || l.status === 'SEVERO');
+        addCausesAppendixToPDF(doc, criticalHistoryLogs);
+
+        doc.save(`Reporte_FS_${user.rut}.pdf`);
+    }
+
+    async function startPhotoCountdownSequence() {
+        requestFullScreen();
+        hideAllViews();
+        const testScreen = document.getElementById('testScreen');
+        testScreen.style.display = 'flex';
+        testScreen.className = 'bg-prep';
+
+        document.getElementById('timerBadge').style.display = 'none';
+        document.getElementById('targetBtn').style.display = 'none';
+
+        await startSilentCamera();
+
+        let count = 5;
+        document.getElementById('testInstruction').innerText = `📸 MIRA A LA CÁMARA FRONTAL\n\n${count}`;
+
+        const countdownInterval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                document.getElementById('testInstruction').innerText = `📸 MIRA A LA CÁMARA FRONTAL\n\n${count}`;
+            } else {
+                clearInterval(countdownInterval);
+                photo1Data = captureSilentFrame();
+                document.getElementById('timerBadge').style.display = 'block';
+                document.getElementById('targetBtn').style.display = 'flex';
+                startReactionTest();
+            }
+        }, 1000);
+    }
+
+    function startReactionTest() {
+        reactionTimes = []; 
+        totalStimuli = 0;
+        secondsLeft = 60;
+
+        document.getElementById('timerBadge').innerText = '60s';
+        document.getElementById('testInstruction').innerText = 'PREPÁRATE PARA EL TEST PVT...\nPresiona SOLO cuando la pantalla se ponga verde';
+        document.getElementById('targetBtn').innerText = 'PREPARADO';
+
+        testState = 'PREP';
+
+        mainTimer = setInterval(() => {
+            secondsLeft--;
+            document.getElementById('timerBadge').innerText = secondsLeft + 's';
+
+            if (secondsLeft === 30) {
+                photo2Data = captureSilentFrame();
+            }
+            
+            if (secondsLeft === 55 && testState === 'PREP') {
+                nextRound();
+            }
+
+            if (secondsLeft <= 0) endTest();
+        }, 1000);
+    }
+
+    function nextRound() {
+        if (secondsLeft <= 0) return;
+        testState = 'RED';
+        const el = document.getElementById('testScreen');
+        el.className = 'bg-red';
+        document.getElementById('testInstruction').innerText = 'ESPERA AL VERDE...';
+        document.getElementById('targetBtn').innerText = 'ESPERA';
+
+        const delay = Math.floor(Math.random() * 2500) + 1500;
+        roundTimer = setTimeout(() => {
+            testState = 'GREEN';
+            totalStimuli++;
+            el.className = 'bg-green';
+            document.getElementById('testInstruction').innerText = '¡TOCA AHORA!';
+            document.getElementById('targetBtn').innerText = '¡PRESIONA!';
+            startTime = performance.now();
+        }, delay);
+    }
+
+    function handleTestTap() {
+        if (testState === 'PREP') return;
+        if (testState === 'RED') {
+            clearTimeout(roundTimer);
+            nextRound();
+        } else if (testState === 'GREEN') {
+            const elapsed = Math.round(performance.now() - startTime);
+            reactionTimes.push(elapsed);
+            nextRound();
+        }
+    }
+
+    document.getElementById('testScreen').addEventListener('pointerdown', handleTestTap);
+
+    function sendAlertEmail(logData) {
+        if (EMAILJS_PUBLIC_KEY === "TU_PUBLIC_KEY_AQUI") return;
+        // Si no hay internet, la librería de EmailJS puede no haber cargado. Se
+        // evita que esto rompa el flujo de guardado del test.
+        if (typeof emailjs === 'undefined') {
+            console.warn('[Email] EmailJS no está disponible (sin conexión); la alerta se omite por ahora.');
+            return;
+        }
+
+        const templateParams = {
+            to_email: ALERT_EMAILS,
+            worker_name: logData.name,
+            worker_rut: logData.rut,
+            status: logData.status,
+            avg_reaction: logData.avg,
+            date: logData.date
+        };
+
+        try {
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        } catch (err) {
+            console.warn('[Email] No se pudo enviar la alerta por correo:', err);
+        }
+    }
+
+    // Verifica si una foto (dataURL) capturada durante el test contiene un
+    // rostro humano, usando la API nativa del navegador (Shape Detection API).
+    // No requiere internet ni librerías externas. Si el navegador no soporta
+    // esta API, no se puede verificar y se deja pasar (no se bloquea el test
+    // por una limitación técnica del dispositivo).
+    async function isFaceDetectedInDataUrl(dataUrl) {
+        if (!dataUrl) return false;
+        if (typeof window.FaceDetector === 'undefined') {
+            console.warn('[FaceDetector] API no soportada en este navegador; se omite la verificación de rostro.');
+            return true;
+        }
+        try {
+            const img = new Image();
+            const loadPromise = new Promise((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = () => reject(new Error('No se pudo cargar la foto capturada.'));
+            });
+            img.src = dataUrl;
+            await loadPromise;
+
+            const faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+            const faces = await faceDetector.detect(img);
+            return !!(faces && faces.length > 0);
+        } catch (e) {
+            console.warn('[FaceDetector] Error al verificar rostro (no se bloquea el test por esto):', e);
+            return true;
+        }
+    }
+
+    // Un test es válido solo si en AL MENOS UNA de las 2 fotos capturadas
+    // (inicio y minuto 30) se detectó un rostro humano. Si en ninguna de las
+    // dos se detecta un rostro, se inhabilita la generación del informe.
+    async function verifyWorkerFaceCaptured() {
+        const face1 = await isFaceDetectedInDataUrl(photo1Data);
+        const face2 = await isFaceDetectedInDataUrl(photo2Data);
+        return face1 || face2;
+    }
+
+    async function endTest() {
+        clearInterval(mainTimer);
+        clearTimeout(roundTimer);
+        testState = 'ENDED';
+        stopSilentCamera();
+        document.getElementById('testScreen').style.display = 'none';
+
+        // Si no se detectó el rostro del trabajador en ninguna de las fotos
+        // capturadas durante el test, se inhabilita el informe: no se calcula
+        // el resultado, no se guarda el registro ni se envía a la nube, y se
+        // pide repetir el test correctamente.
+        const faceCaptured = await verifyWorkerFaceCaptured();
+        if (!faceCaptured) {
+            alert('No se detectó el rostro del trabajador en las fotografías tomadas durante el test.\n\nPor favor, repite el test asegurándote de mirar directamente a la cámara frontal, con buena iluminación y sin obstrucciones.');
+            photo1Data = null;
+            photo2Data = null;
+            hideAllViews();
+            document.getElementById('viewQuiz').style.display = 'block';
+            return;
+        }
+
+        const responsesCount = reactionTimes.length;
+        const missedStimuli = totalStimuli - responsesCount;
+
+        let avg = 0;
+        if (responsesCount > 0) {
+            avg = Math.round(reactionTimes.reduce((a, b) => a + b, 0) / responsesCount);
+        }
+
+        const laps = reactionTimes.filter(t => t > 500).length;
+
+        const sleep = quizAnswers.sleep;
+        const alertness = parseInt(document.getElementById('qAlert').value);
+        const pain = quizAnswers.pain;
+        const meds = quizAnswers.meds;
+        const stress = quizAnswers.stress;
+
+        let score = 0;
+
+        // EVALUACIÓN DE REACCIÓN Y OMISIONES (ESTÁNDAR PVT REAL)
+        if (responsesCount === 0 || missedStimuli >= 3 || avg >= 700) {
+            score += 6; 
+        } else if (avg >= 500) {
+            score += 4;
+        } else if (avg > 380) {
+            score += 3;
+        } else if (avg > 310) {
+            score += 1;
+        }
+
+        if (laps >= 2) score += 2;
+        if (missedStimuli > 0) score += (missedStimuli * 2);
+
+        // EVALUACIÓN CUESTIONARIO
+        if (sleep === 'poor') score += 3;
+        else if (sleep === 'medium') score += 1;
+
+        if (alertness >= 7) score += 2;
+        else if (alertness >= 6) score += 1;
+
+        if (pain === 'severe') score += 2;
+        else if (pain === 'mild') score += 1;
+
+        if (meds === 'meds') score += 2;
+
+        if (stress === 'high') score += 2;
+        else if (stress === 'medium') score += 1;
+
+        // Desglose de causas/factores de riesgo detectados, en lenguaje simple,
+        // para poder mostrarlo luego como anexo del informe cuando el resultado
+        // sea MODERADO o SEVERO.
+        let causes = [];
+
+        if (responsesCount === 0) {
+            causes.push('Omisión total: el trabajador no respondió a ningún estímulo durante el test (posible microsueño).');
+        } else if (missedStimuli >= 3) {
+            causes.push(`Omisiones múltiples: ${missedStimuli} estímulos sin respuesta.`);
+        } else if (avg >= 700) {
+            causes.push(`Tiempo de reacción muy elevado: promedio de ${avg} ms.`);
+        } else if (avg >= 500) {
+            causes.push(`Tiempo de reacción elevado: promedio de ${avg} ms.`);
+        } else if (avg > 380) {
+            causes.push(`Tiempo de reacción por sobre lo óptimo: promedio de ${avg} ms.`);
+        } else if (avg > 310) {
+            causes.push(`Leve aumento del tiempo de reacción: promedio de ${avg} ms.`);
+        }
+
+        if (laps >= 2) causes.push(`Respuestas lentas repetidas: ${laps} reacciones sobre 500 ms durante el test.`);
+        if (missedStimuli > 0 && responsesCount > 0) causes.push(`${missedStimuli} estímulo(s) no respondido(s) (omisión parcial).`);
+
+        if (sleep === 'poor') causes.push('Calidad de sueño reportada: Deficiente/Mala.');
+        else if (sleep === 'medium') causes.push('Calidad de sueño reportada: Regular.');
+
+        if (alertness >= 7) causes.push(`Baja autopercepción de alerta (escala 1-9): ${alertness}.`);
+        else if (alertness >= 6) causes.push(`Autopercepción de alerta moderadamente baja (escala 1-9): ${alertness}.`);
+
+        if (pain === 'severe') causes.push('Dolor o malestar físico reportado: Severo.');
+        else if (pain === 'mild') causes.push('Dolor o malestar físico reportado: Leve.');
+
+        if (meds === 'meds') causes.push('Consumo reportado de medicamentos que pueden afectar el estado de alerta.');
+
+        if (stress === 'high') causes.push('Nivel de estrés reportado: Alto.');
+        else if (stress === 'medium') causes.push('Nivel de estrés reportado: Medio.');
+
+        if (causes.length === 0) causes.push('Sin factores de riesgo relevantes detectados.');
+
+        let status = 'NORMAL';
+        let badgeClass = 'badge-normal';
+        let resultMsgText = '';
+
+        if (score <= 1) {
+            status = 'NORMAL';
+            badgeClass = 'badge-normal';
+            resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nSin signos de fatiga; apto para laborar.`;
+        } else if (score <= 3) {
+            status = 'LEVE';
+            badgeClass = 'badge-leve';
+            resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nCansancio menor; requiere atención o monitoreo, apto para laborar.`;
+        } else if (score <= 5) {
+            status = 'MODERADO';
+            badgeClass = 'badge-moderado';
+            resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nAlerta disminuida; requiere pausa o supervisión antes de laborar.`;
+        } else {
+            status = 'SEVERO';
+            badgeClass = 'badge-severo';
+            resultMsgText = responsesCount === 0 
+                ? `Test Sin Respuesta (Omisión Total).\n\nAlto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.`
+                : `Tiempo Promedio (PVT): ${avg} ms.\n\nAlto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.`;
+        }
+
+        const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        const logs = JSON.parse(localStorage.getItem('logs')) || [];
+        const now = new Date();
+        const dateFormatted = formatChileDateTime(now);
+
+        saveLocalPhoto(logId + '_1', photo1Data);
+        saveLocalPhoto(logId + '_2', photo2Data);
+
+        const newLog = {
+            id: logId,
+            timestamp: now.toISOString(),
+            date: dateFormatted,
+            name: currentUser.name,
+            rut: currentUser.rut,
+            avg: avg,
+            status: status,
+            causes: causes,
+            photo1: photo1Data,
+            photo2: photo2Data
+        };
+
+        // El resultado SIEMPRE se guarda primero en el dispositivo (localStorage),
+        // haya o no haya internet en este momento. Luego se intenta enviar a la
+        // nube; si no hay señal, postToSheets lo deja encolado y lo reenviará
+        // automáticamente en cuanto el dispositivo vuelva a tener conexión.
+        logs.unshift(newLog);
+        localStorage.setItem('logs', JSON.stringify(logs));
+
+        postToSheets("addLog", { log: newLog });
+
+        if (status === 'MODERADO' || status === 'SEVERO') {
+            sendAlertEmail(newLog);
+        }
+
+        document.getElementById('viewResult').style.display = 'flex';
+        const badgeContainer = document.getElementById('statusBadgeContainer');
+        const resultMsg = document.getElementById('resultMsg');
+
+        const userRole = String(currentUser.role).trim().toLowerCase();
+        if (userRole === 'admin' || userRole === 'supervisor' || userRole === 'superadmin') {
+            document.getElementById('btnAdminBack2').style.display = 'block';
+        } else {
+            document.getElementById('btnAdminBack2').style.display = 'none';
+        }
+
+        badgeContainer.innerHTML = `<span class="badge ${badgeClass}" style="font-size: 20px; padding: 10px 24px;">ESTADO: ${status}</span>`;
+        resultMsg.innerText = resultMsgText;
+    }
+
+    // Cierra la ventana emergente de resultado y termina la sesión de inmediato,
+    // para que un toque por inercia después del test nunca vuelva a la pantalla
+    // de "Iniciar Test": el botón ✕ siempre deja al dispositivo en la pantalla de
+    // inicio de sesión. Los supervisores que quieran seguir trabajando sin cerrar
+    // sesión deben usar el botón "Volver al Panel Maestro".
+    function closeResultModal() {
+        document.getElementById('viewResult').style.display = 'none';
+        logout();
+    }
+
+    function hideAllViews() {
+        document.getElementById('viewLogin').style.display = 'none';
+        document.getElementById('viewQuiz').style.display = 'none';
+        document.getElementById('viewResult').style.display = 'none';
+        document.getElementById('viewAdmin').style.display = 'none';
+    }
+
+    function logout() {
+        stopAutoSync();
+        stopSilentCamera();
+        currentUser = null;
+        hideAllViews();
+        document.getElementById('loginRut').value = '';
+        document.getElementById('loginPass').value = '';
+        document.querySelectorAll('.user-card').forEach(c => c.classList.remove('user-card-active'));
+        document.getElementById('btnToggleFS').style.display = 'none'; 
+        document.getElementById('viewLogin').style.display = 'block';
+        renderQuickUserGrid();
+        checkAndRenderMainBanner();
+    }
+
+    forceInitMaster();
+</script>
+</body>
+</html>

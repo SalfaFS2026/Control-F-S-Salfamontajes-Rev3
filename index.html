@@ -158,6 +158,16 @@
         .tag-of { background: rgba(71, 85, 105, 0.4); color: #cbd5e1; border: 1px dashed #64748b; }
         .tag-turno { background: rgba(22, 163, 74, 0.2); color: #4ade80; border: 1px solid #16a34a; }
         .tag-desc { background: rgba(100, 116, 139, 0.25); color: #94a3b8; border: 1px solid #475569; }
+        .ficha { background:#ffffff; color:#1f2937; border-radius: 12px; padding: 28px 32px; font-size: 14px; line-height: 1.55; }
+        .ficha h1 { color:#111827; text-shadow:none; font-size: 22px; margin: 6px 0 12px; text-align:left; }
+        .ficha h2 { color:#b8141b; text-shadow:none; font-size: 16px; margin: 22px 0 8px; text-align:left; border-bottom: 2px solid #E31B23; padding-bottom: 4px; }
+        .ficha p, .ficha li { color:#1f2937; font-size: 14px; line-height: 1.55; }
+        .ficha-logo { font-family: "Arial Black", Arial, sans-serif; font-weight: 900; font-size: 22px; }
+        .ficha table { width:100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 13px; }
+        .ficha th { background:#E31B23 !important; color:#ffffff !important; text-align:left; padding: 7px 9px; }
+        .ficha td { color:#1f2937 !important; border-bottom: 1px solid #e5e7eb; padding: 7px 9px; vertical-align: top; }
+        .ficha-meta td:first-child { font-weight:700; width: 130px; }
+        .ficha-small, .ficha-refs li { font-size: 12px !important; color:#4b5563 !important; }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -483,6 +493,10 @@
             </div>
         </div>
 
+        <div id="quizCalibNotice" style="display:none; font-size:13px; color:#facc15; background: rgba(250,204,21,0.1); border:1px solid #ca8a04; border-radius:10px; padding:10px 12px; margin-bottom:10px;">
+            Este celular aún no está calibrado. Puedes rendir el test igual; pídele a tu supervisor que lo calibre (toma 45 segundos).
+        </div>
+
         <label id="declaracionBox" style="display:flex; gap:12px; align-items:flex-start; background: var(--input-dark); border: 1px solid var(--border-color); padding: 14px; border-radius: 10px; margin: 6px 0 4px; cursor:pointer; font-size: 14px; line-height: 1.4;">
             <input type="checkbox" id="chkDeclaracion" style="width:24px; height:24px; flex-shrink:0; accent-color: var(--salfa-red); margin-top:2px;">
             <span>Declaro que respondí con la verdad y que, si me siento con sueño o cansado durante la jornada, avisaré a mi supervisor.</span>
@@ -538,10 +552,18 @@
             <button class="tab-btn" data-tab="historial" onclick="showAdminTab('historial')">Historial e Informes</button>
             <button class="tab-btn" data-tab="alertas" onclick="showAdminTab('alertas')">Correos de Alerta</button>
             <button class="tab-btn" data-tab="cuenta" onclick="showAdminTab('cuenta')">Mi Cuenta</button>
+            <button class="tab-btn" data-tab="ficha" id="tabBtnFicha" onclick="showAdminTab('ficha')" style="display:none;">Ficha Técnica</button>
         </div>
 
         <!-- ===== PESTAÑA HOY ===== -->
         <div class="tab-panel" id="tab-hoy">
+            <div id="calibBox" class="panel-box" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div>
+                    <div style="font-weight:700; color:#ffffff;">📱 Este equipo</div>
+                    <div id="calibStatusText" class="muted-sm" style="margin-top:3px;"></div>
+                </div>
+                <button class="btn btn-sm btn-info" onclick="startCalibration()">Calibrar este equipo</button>
+            </div>
             <div id="adminAlertNotice" class="panel-box panel-alert" style="display:none;">
                 <div class="panel-box-head">
                     <h4 style="margin:0; color:#f87171;">⚠️ Alertas pendientes de revisar</h4>
@@ -718,6 +740,113 @@
                     </div>
                     <button class="btn btn-success" style="margin-top:14px; width:100%; padding:14px;" onclick="saveAlertEmails()">Guardar correos</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- ===== PESTAÑA FICHA TÉCNICA (solo superadmin) ===== -->
+        <div class="tab-panel" id="tab-ficha" style="display:none;">
+            <div class="panel-box toolbar">
+                <div class="muted-sm">Solo tú ves esta pestaña. Puedes descargarla en PDF para la postulación o para prevención.</div>
+                <button class="btn btn-pdf" onclick="printFicha()">Descargar PDF / Imprimir</button>
+            </div>
+            <div id="fichaContent" class="ficha">
+                <div class="ficha-head">
+                    <div class="ficha-logo"><span style="color:#E31B23;">SALFA</span><span style="color:#8A8F93;">MONTAJES</span></div>
+                    <h1>Ficha Técnica<br>Control de Fatiga y Somnolencia (F&amp;S)</h1>
+                    <table class="ficha-meta">
+                        <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
+                        <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
+                        <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
+                        <tr><td>Versión</td><td>4 – noviembre 2026</td></tr>
+                    </table>
+                </div>
+
+                <h2>1. Objetivo</h2>
+                <p>Detectar antes de iniciar la jornada a los conductores y operadores que no están en condiciones de manejar u operar equipos por fatiga o somnolencia, con un dato medible y no solo con lo que la persona declara. Es el control a la persona que complementa los dispositivos instalados en los equipos (EST N°6 Codelco).</p>
+
+                <h2>2. Cómo funciona</h2>
+                <ol>
+                    <li>El trabajador entra con su RUT y clave desde su celular o desde un equipo de la obra.</li>
+                    <li>Responde 5 preguntas: horas de sueño, somnolencia (escala KSS), malestar físico, medicamentos y estrés, y firma una declaración de que respondió con la verdad.</li>
+                    <li>Rinde el test de reacción PVT-B de 3 minutos. Durante el test la app toma 2 fotos para confirmar que es la persona correcta.</li>
+                    <li>La app entrega el resultado al instante: Normal, Leve, Moderado o Severo.</li>
+                    <li>Si sale Moderado o Severo, se avisa por correo (y WhatsApp si está activo) a los supervisores y la app aplica el protocolo de pausa o bloqueo.</li>
+                </ol>
+
+                <h2>3. Fundamento del test</h2>
+                <p><b>PVT (Psychomotor Vigilance Task).</b> Test de reacción simple creado por David Dinges (Universidad de Pennsylvania) y publicado en 1985. Mide qué tan rápido responde una persona a un estímulo que aparece en momentos al azar. Con falta de sueño aumentan los "lapsus" (respuestas muy lentas o microsueños), y eso es lo que el test detecta. NASA financió su versión breve para los astronautas de la Estación Espacial, y también lo usan organismos de transporte y aerolíneas.</p>
+                <p><b>PVT-B (versión de 3 minutos).</b> Basner, Mollicone y Dinges (2011) validaron una versión de 3 minutos con estímulos cada 2 a 5 segundos y lapsus desde 355 ms. Versiones más cortas (90 segundos o 2 minutos) se consideraron poco sensibles, por eso la app usa 3 minutos.</p>
+                <p><b>Escala de Somnolencia de Karolinska (KSS).</b> Escala de 1 a 9 que mide cuánto sueño siente la persona en ese momento (Åkerstedt y Gillberg, 1990).</p>
+                <p><b>Referencia internacional.</b> El manual de gestión del riesgo de fatiga de la OACI (Doc 9966) nombra al PVT como prueba de rendimiento que cumple los criterios para medir fatiga, y a la escala KSS como medida subjetiva de somnolencia.</p>
+                <p><b>Uso en pantalla táctil.</b> NASA validó una versión táctil del PVT contra el equipo estándar y encontró resultados similares, siempre que se descuente el retraso propio de la pantalla. Por eso la app calibra cada equipo (punto 7).</p>
+
+                <h2>4. Parámetros de medición</h2>
+                <table class="ficha-table">
+                    <tr><th>Parámetro</th><th>Valor en la app</th><th>Origen</th></tr>
+                    <tr><td>Duración del test</td><td>3 minutos</td><td>PVT-B</td></tr>
+                    <tr><td>Tiempo entre estímulos</td><td>Al azar, 2 a 5 segundos</td><td>PVT-B</td></tr>
+                    <tr><td>Lapsus</td><td>Respuesta de 355 ms o más</td><td>PVT-B</td></tr>
+                    <tr><td>Falsa partida</td><td>Tocar antes del verde o en menos de 100 ms</td><td>PVT / PVT-B</td></tr>
+                    <tr><td>Somnolencia percibida</td><td>Escala KSS 1 a 9</td><td>Karolinska</td></tr>
+                    <tr><td>Retraso de pantalla</td><td>Se descuenta según calibración del equipo (máx. 120 ms)</td><td>Validación NASA táctil</td></tr>
+                </table>
+
+                <h2>5. Clasificación del resultado</h2>
+                <p>Cada factor da un nivel y el resultado final es el <b>peor</b> de ellos, para que un factor grave nunca quede escondido. Estos cortes son un <b>criterio interno inicial</b>, basado en los estudios anteriores, que se ajusta con los datos de la obra y la revisión de prevención y la mutualidad.</p>
+                <table class="ficha-table">
+                    <tr><th>Factor</th><th>Normal</th><th>Leve</th><th>Moderado</th><th>Severo</th></tr>
+                    <tr><td>Errores PVT-B (lapsus + falsas partidas)</td><td>0 – 2</td><td>3 – 4</td><td>5 – 7</td><td>8 o más / sin respuestas</td></tr>
+                    <tr><td>Escala KSS</td><td>1 – 5</td><td>6</td><td>7</td><td>8 – 9</td></tr>
+                    <tr><td>Horas de sueño</td><td>7 o más</td><td>5 – 6</td><td>Menos de 5</td><td>Menos de 5 + PVT moderado</td></tr>
+                    <tr><td>Dolor intenso, medicamentos, estrés alto</td><td>Ninguno</td><td>Uno</td><td>Dos o más</td><td>—</td></tr>
+                </table>
+                <p class="ficha-small">Además, un promedio de reacción de 400 ms o más, o salir 25% más lento que el propio promedio habitual del trabajador, sube el resultado como mínimo a Leve.</p>
+
+                <h2>6. Protocolo de acción</h2>
+                <table class="ficha-table">
+                    <tr><th>Resultado</th><th>Qué pasa</th></tr>
+                    <tr><td><b>Normal</b></td><td>Apto para trabajar.</td></tr>
+                    <tr><td><b>Leve</b></td><td>Apto para trabajar. Si siente sueño durante la jornada, avisa a su supervisor.</td></tr>
+                    <tr><td><b>Moderado</b></td><td><b>Por ningún motivo puede conducir ni operar equipos.</b> Pausa de 20 minutos, hidratación y nuevo test. Si vuelve a salir Moderado o Severo, queda bloqueado. Se avisa a los supervisores.</td></tr>
+                    <tr><td><b>Severo</b></td><td><b>Por ningún motivo puede conducir ni operar equipos.</b> Queda bloqueado hasta que un supervisor converse con él y lo libere en la app, dejando registrado quién, cuándo y por qué. Se avisa a los supervisores.</td></tr>
+                </table>
+
+                <h2>7. Calibración de equipos</h2>
+                <p>Cada celular o tablet tiene un pequeño retraso propio de pantalla. Un supervisor descansado calibra cada equipo una vez (45 segundos); la app compara su resultado con la referencia de una persona descansada (250 ms) y descuenta la diferencia en todos los tests de ese equipo. La corrección tiene un tope de 120 ms para que nunca pueda esconder fatiga real, y se repite cada 60 días o si se borran los datos del navegador. Si un equipo no está calibrado, la app no descuenta nada (es decir, queda del lado más exigente).</p>
+
+                <h2>8. Registro y control</h2>
+                <ul>
+                    <li>Cada test queda guardado con fecha, hora, fotos, resultado y causas, y se puede descargar en Excel o PDF.</li>
+                    <li>Panel de control del día: % de evaluados (solo personal en turno, según calendario 4x3, 8x6 A/B y 14x14 A/B), pendientes, bloqueados y casos del mes.</li>
+                    <li>Correo diario a los supervisores con quienes están en turno y no han rendido el test.</li>
+                </ul>
+
+                <h2>9. Limitaciones</h2>
+                <ul>
+                    <li>Es una herramienta de <b>apoyo</b> para tomar decisiones; no es un diagnóstico médico ni reemplaza el criterio del supervisor.</li>
+                    <li>La medición sigue un test validado, pero la clasificación final es un criterio interno que debe calibrarse con datos reales.</li>
+                    <li>Los celulares no son equipos de laboratorio; por eso se calibra cada equipo y se compara a cada trabajador con su propio promedio.</li>
+                </ul>
+
+                <h2>10. Validación propuesta</h2>
+                <ol>
+                    <li><b>Marcha blanca de 3 a 4 semanas</b>, usando la app junto a la encuesta en papel, para comparar resultados y ajustar los cortes.</li>
+                    <li><b>Revisión por prevención de riesgos y la mutualidad</b> (médico o especialista en salud ocupacional) de los criterios de clasificación y del protocolo.</li>
+                    <li>Si alguna faena cuenta con un equipo comercial (por ejemplo Access Point), comparar ambos resultados en un grupo de trabajadores el mismo día.</li>
+                    <li><b>Procedimiento escrito</b> con el protocolo de acción y responsables.</li>
+                    <li><b>Consentimiento de los trabajadores</b> para el uso de fotos y datos, y resguardo de la información en una cuenta de la empresa (Ley 21.719 de protección de datos personales, vigente desde diciembre de 2026).</li>
+                </ol>
+
+                <h2>11. Referencias</h2>
+                <ul class="ficha-refs">
+                    <li>Dinges DF, Powell JW. Microcomputer analyses of performance on a portable, simple visual RT task during sustained operations. Behavior Research Methods, Instruments &amp; Computers, 1985.</li>
+                    <li>Basner M, Mollicone D, Dinges DF. Validity and sensitivity of a brief psychomotor vigilance test (PVT-B) to total and partial sleep deprivation. Acta Astronautica, 2011.</li>
+                    <li>Basner M, Dinges DF. Maximizing sensitivity of the Psychomotor Vigilance Test (PVT) to sleep loss. Sleep, 2011.</li>
+                    <li>Åkerstedt T, Gillberg M. Subjective and objective sleepiness in the active individual. International Journal of Neuroscience, 1990.</li>
+                    <li>OACI. Manual for the Oversight of Fatigue Management Approaches (Doc 9966), Apéndice A.</li>
+                    <li>Arsintescu L. y colaboradores. Validación de un PVT en pantalla táctil frente al PVT-192. NASA Ames Research Center.</li>
+                    <li>NASA Spinoff 2013: versión breve del PVT para astronautas (Reaction Self-Test).</li>
+                </ul>
             </div>
         </div>
 
@@ -1606,13 +1735,105 @@
         }
     }
 
+
+    // ===== Calibración del equipo (solo supervisores) =====
+    function renderCalibBox() {
+        const st = calibStatus();
+        const t = document.getElementById('calibStatusText');
+        t.innerText = st.text;
+        t.style.color = st.ok ? '#4ade80' : '#facc15';
+        document.getElementById('calibBox').style.borderColor = st.ok ? 'var(--border-color)' : '#ca8a04';
+    }
+
+    function startCalibration() {
+        if (!currentUser || !isAdminLevel(currentUser)) return;
+        const ok = confirm('CALIBRAR ESTE EQUIPO\n\nDebe hacerlo una persona DESCANSADA (idealmente el supervisor), sin apuro y concentrada.\n\nSon 45 segundos: toca la pantalla apenas se ponga verde.\n\nLa calibración mide el retraso propio de la pantalla de este celular para descontarlo en los tests.\n\n¿Comenzar?');
+        if (!ok) return;
+        testMode = 'calib';
+        requestFullScreen();
+        hideAllViews();
+        const ts = document.getElementById('testScreen');
+        ts.style.display = 'flex';
+        ts.className = 'bg-prep';
+        document.getElementById('timerBadge').style.display = 'block';
+        document.getElementById('targetBtn').style.display = 'flex';
+        startReactionTest();
+    }
+
+    function finishCalibration() {
+        clearInterval(mainTimer);
+        clearTimeout(roundTimer);
+        testState = 'ENDED';
+        testMode = 'test';
+        document.getElementById('testScreen').style.display = 'none';
+
+        const valid = reactionTimesRaw.filter(t => t >= PVT_FALSE_START_MS && t <= 800).sort((a, b) => a - b);
+        const back = () => { hideAllViews(); showAdminDashboard(); };
+
+        if (valid.length < CALIB_MIN_VALID) {
+            alert(`No se pudo calibrar: hubo solo ${valid.length} respuestas válidas (se necesitan ${CALIB_MIN_VALID}). Repite la calibración tocando apenas aparezca el verde.`);
+            return back();
+        }
+        if (falseStarts >= 3) {
+            alert(`No se pudo calibrar: hubo ${falseStarts} toques antes del verde. Repite la calibración sin adelantarte.`);
+            return back();
+        }
+        const mid = Math.floor(valid.length / 2);
+        const median = valid.length % 2 ? valid[mid] : Math.round((valid[mid - 1] + valid[mid]) / 2);
+        const offset = median - CALIB_REFERENCE_MS;
+
+        if (offset > CALIB_MAX_OFFSET_MS) {
+            alert(`No se pudo calibrar: las respuestas fueron muy lentas (mediana ${median} ms). Debe calibrar una persona descansada y concentrada. Si el problema sigue, este celular puede ser demasiado lento para el test.`);
+            return back();
+        }
+
+        const calib = {
+            offsetMs: Math.max(0, offset),
+            medianMs: median,
+            samples: valid.length,
+            timestamp: new Date().toISOString(),
+            date: formatChileDateTime(new Date()),
+            by: currentUser.name,
+            byRut: currentUser.rut,
+            deviceId: getDeviceId()
+        };
+        localStorage.setItem('fsDeviceCalib', JSON.stringify(calib));
+        alert(`Equipo calibrado.\n\nMediana: ${median} ms (${valid.length} respuestas).\nCorrección que se descontará: ${calib.offsetMs} ms.`);
+        back();
+    }
+
+
+    // Abre la ficha técnica en una ventana limpia para imprimir o guardar en PDF
+    function printFicha() {
+        const content = document.getElementById('fichaContent').outerHTML;
+        const css = `body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:18px;background:#fff;}
+            .ficha{color:#1f2937;font-size:12.5px;line-height:1.5;max-width:780px;margin:0 auto;}
+            .ficha h1{font-size:20px;margin:6px 0 10px;color:#111827;}
+            .ficha h2{color:#b8141b;font-size:14.5px;margin:16px 0 6px;border-bottom:2px solid #E31B23;padding-bottom:3px;page-break-after:avoid;}
+            .ficha p,.ficha li{font-size:12.5px;}
+            .ficha-logo{font-family:"Arial Black",Arial,sans-serif;font-weight:900;font-size:20px;}
+            table{width:100%;border-collapse:collapse;margin:5px 0 8px;font-size:11.5px;page-break-inside:avoid;}
+            th{background:#E31B23;color:#fff;text-align:left;padding:6px 8px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+            td{border-bottom:1px solid #e5e7eb;padding:6px 8px;vertical-align:top;}
+            .ficha-meta td:first-child{font-weight:700;width:120px;}
+            .ficha-small,.ficha-refs li{font-size:11px;color:#4b5563;}
+            @page{margin:14mm;}`;
+        const w = window.open('', '_blank');
+        if (!w) { alert('Permite las ventanas emergentes para descargar la ficha.'); return; }
+        w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Ficha Técnica F&S Salfamontajes</title><style>${css}</style></head><body>${content}</body></html>`);
+        w.document.close();
+        w.focus();
+        setTimeout(() => w.print(), 400);
+    }
+
     // ===== Pestañas del panel =====
     let currentAdminTab = 'hoy';
     function showAdminTab(tab) {
+        if (tab === 'ficha' && !isSuperAdmin(currentUser)) tab = 'hoy';
         currentAdminTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
         if (tab === 'alertas') prepareAlertsTab();
-        ['hoy', 'personal', 'historial', 'alertas', 'cuenta'].forEach(t => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        ['hoy', 'personal', 'historial', 'alertas', 'cuenta', 'ficha'].forEach(t => {
             document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
         });
     }
@@ -1735,6 +1956,46 @@
 
     let testState = 'PREP', startTime, mainTimer, roundTimer, secondsLeft = PVT_DURATION_S;
     let reactionTimes = [], totalStimuli = 0, falseStarts = 0;
+
+    // ===== Calibración por equipo =====
+    // Las pantallas táctiles agregan un retraso propio (NASA midió ~77 ms en
+    // promedio en su validación del PVT táctil). Cada equipo se calibra una
+    // vez con una persona DESCANSADA (supervisor): se compara su mediana con
+    // la referencia de una persona descansada y la diferencia se descuenta en
+    // todos los tests de ese equipo. Tope de 120 ms para que nunca pueda
+    // esconder fatiga real.
+    const CALIB_DURATION_S = 45;
+    const CALIB_REFERENCE_MS = 250;
+    const CALIB_MAX_OFFSET_MS = 120;
+    const CALIB_MIN_VALID = 8;
+    const CALIB_VIGENCIA_DIAS = 60;
+    let testMode = 'test'; // 'test' o 'calib'
+    let reactionTimesRaw = [];
+
+    function getDeviceCalib() {
+        try { return JSON.parse(localStorage.getItem('fsDeviceCalib')) || null; } catch (e) { return null; }
+    }
+    function getDeviceId() {
+        let id = localStorage.getItem('fsDeviceId');
+        if (!id) {
+            id = 'eq_' + Math.random().toString(36).substr(2, 8);
+            localStorage.setItem('fsDeviceId', id);
+        }
+        return id;
+    }
+    // Retraso a descontar en este equipo (0 si no está calibrado o venció)
+    function getDeviceOffset() {
+        const c = getDeviceCalib();
+        if (!c || !c.offsetMs) return 0;
+        return Math.max(0, Math.min(CALIB_MAX_OFFSET_MS, Number(c.offsetMs) || 0));
+    }
+    function calibStatus() {
+        const c = getDeviceCalib();
+        if (!c) return { ok: false, text: 'Este equipo no está calibrado.' };
+        const dias = Math.floor((Date.now() - new Date(c.timestamp).getTime()) / 86400000);
+        if (dias > CALIB_VIGENCIA_DIAS) return { ok: false, text: `La calibración venció (hace ${dias} días). Calibra de nuevo.`, calib: c };
+        return { ok: true, text: `Calibrado el ${c.date} por ${c.by}. Corrección: ${c.offsetMs} ms.`, calib: c };
+    }
 
     function formatTimerBadge(s) {
         const m = Math.floor(s / 60);
@@ -2280,6 +2541,7 @@
         syncChileTimeFromNetwork(); // refresca la hora real de Chile antes de iniciar el test
 
         document.getElementById('chkDeclaracion').checked = false;
+        document.getElementById('quizCalibNotice').style.display = calibStatus().ok ? 'none' : 'block';
         updateKssLabel(document.getElementById('qAlert').value);
 
         // Antes de habilitar el test, se revisa si el trabajador está
@@ -2309,6 +2571,8 @@
         renderDashboard();
         startAutoSync();
         document.getElementById('adminWho').innerText = `${currentUser.name} · ${roleLabel(currentUser.role)}`;
+        document.getElementById('tabBtnFicha').style.display = isSuperAdmin(currentUser) ? '' : 'none';
+        if (currentAdminTab === 'ficha' && !isSuperAdmin(currentUser)) currentAdminTab = 'hoy';
         showAdminTab(currentAdminTab || 'hoy');
         Promise.all([refreshReleasesFromServer(), refreshPersonalFromServer(), refreshCalendarioFromServer()])
             .then(() => { if (currentUser && isAdminLevel(currentUser)) renderDashboard(); });
@@ -2320,6 +2584,7 @@
         renderQuickUserGrid();
         try { renderDayControl(); } catch (e) { console.error('[Control del día]', e); }
         try { renderCalendarioForm(); } catch (e) { console.error('[Calendario]', e); }
+        try { renderCalibBox(); } catch (e) { console.error('[Calibración]', e); }
         syncWorkersToAlerts();
 
         const unreadAlerts = getUnreadAlerts();
@@ -3198,6 +3463,7 @@
             checkCanTakeTest();
             return;
         }
+        testMode = 'test';
         requestFullScreen();
         hideAllViews();
         const testScreen = document.getElementById('testScreen');
@@ -3228,31 +3494,37 @@
 
     function startReactionTest() {
         reactionTimes = [];
+        reactionTimesRaw = [];
         totalStimuli = 0;
         falseStarts = 0;
-        // 5 s de preparación + 3 min de test PVT-B
-        secondsLeft = PVT_DURATION_S + PVT_PREP_S;
+        const dur = testMode === 'calib' ? CALIB_DURATION_S : PVT_DURATION_S;
+        // 5 s de preparación + duración del test
+        secondsLeft = dur + PVT_PREP_S;
 
-        document.getElementById('timerBadge').innerText = formatTimerBadge(PVT_DURATION_S);
-        document.getElementById('testInstruction').innerText = 'PREPÁRATE PARA EL TEST PVT (3 MINUTOS)...\nPresiona SOLO cuando la pantalla se ponga verde';
+        document.getElementById('timerBadge').innerText = formatTimerBadge(dur);
+        document.getElementById('testInstruction').innerText = testMode === 'calib'
+            ? 'CALIBRACIÓN DEL EQUIPO (45 SEGUNDOS)\nPresiona apenas la pantalla se ponga verde'
+            : 'PREPÁRATE PARA EL TEST PVT (3 MINUTOS)...\nPresiona SOLO cuando la pantalla se ponga verde';
         document.getElementById('targetBtn').innerText = 'PREPARADO';
 
         testState = 'PREP';
 
         mainTimer = setInterval(() => {
             secondsLeft--;
-            document.getElementById('timerBadge').innerText = formatTimerBadge(Math.min(secondsLeft, PVT_DURATION_S));
+            document.getElementById('timerBadge').innerText = formatTimerBadge(Math.min(secondsLeft, dur));
 
             // Segunda foto a mitad del test (1:30)
-            if (secondsLeft === Math.floor(PVT_DURATION_S / 2)) {
+            if (testMode !== 'calib' && secondsLeft === Math.floor(PVT_DURATION_S / 2)) {
                 photo2Data = captureSilentFrame();
             }
 
-            if (secondsLeft === PVT_DURATION_S && testState === 'PREP') {
+            if (secondsLeft === dur && testState === 'PREP') {
                 nextRound();
             }
 
-            if (secondsLeft <= 0) endTest();
+            if (secondsLeft <= 0) {
+                if (testMode === 'calib') finishCalibration(); else endTest();
+            }
         }, 1000);
     }
 
@@ -3273,23 +3545,30 @@
             document.getElementById('testInstruction').innerText = '¡TOCA AHORA!';
             document.getElementById('targetBtn').innerText = '¡PRESIONA!';
             startTime = performance.now();
+            // Momento más cercano a cuando el verde aparece en pantalla
+            requestAnimationFrame(ts => { if (testState === 'GREEN') startTime = ts; });
         }, delay);
     }
 
-    function handleTestTap() {
-        if (testState === 'PREP') return;
+    function handleTestTap(ev) {
+        if (testState === 'PREP' || testState === 'ENDED') return;
+        const tapTime = (ev && typeof ev.timeStamp === 'number' && ev.timeStamp > 0) ? ev.timeStamp : performance.now();
         if (testState === 'RED') {
             // Toque antes del estímulo = falsa partida
             falseStarts++;
             clearTimeout(roundTimer);
             nextRound();
         } else if (testState === 'GREEN') {
-            const elapsed = Math.round(performance.now() - startTime);
-            if (elapsed < PVT_FALSE_START_MS) {
+            const raw = Math.round(tapTime - startTime);
+            if (raw < PVT_FALSE_START_MS) {
                 // Respuesta imposiblemente rápida = anticipación (falsa partida)
                 falseStarts++;
             } else {
-                reactionTimes.push(elapsed);
+                reactionTimesRaw.push(raw);
+                // En calibración se guarda el tiempo tal cual; en el test se
+                // descuenta el retraso del equipo.
+                const corr = testMode === 'calib' ? raw : Math.max(PVT_FALSE_START_MS, raw - getDeviceOffset());
+                reactionTimes.push(corr);
             }
             nextRound();
         }
@@ -3370,7 +3649,7 @@
         // Si el test terminó con la pantalla en verde y ya pasaron 355 ms o más
         // sin respuesta, ese estímulo cuenta como lapsus (posible microsueño).
         // Si recién se había encendido, no se cuenta (no fue culpa del trabajador).
-        const pendingLapse = (endedOnGreen && pendingMs >= PVT_LAPSE_MS) ? 1 : 0;
+        const pendingLapse = (endedOnGreen && (pendingMs - getDeviceOffset()) >= PVT_LAPSE_MS) ? 1 : 0;
 
         const responsesCount = reactionTimes.length;
         let avg = 0;
@@ -3460,6 +3739,9 @@
 
         if (causes.length === 0) causes.push('Sin factores de riesgo relevantes detectados.');
         causes.push(`Detalle PVT-B: ${responsesCount} respuestas, promedio ${avg} ms, ${lapses} lapsus, ${falseStarts} falsas partidas.`);
+        causes.push(getDeviceOffset() > 0
+            ? `Equipo calibrado: se descontaron ${getDeviceOffset()} ms de retraso de pantalla.`
+            : 'Equipo sin calibrar: no se descontó retraso de pantalla.');
 
         const status = LEVELS[finalLevel];
         const badgeClass = getBadgeClass(status);
@@ -3497,6 +3779,9 @@
             falseStarts: falseStarts,
             kss: kss,
             testVersion: 'PVT-B 3min',
+            deviceId: getDeviceId(),
+            deviceOffset: getDeviceOffset(),
+            rawAvg: reactionTimesRaw.length ? Math.round(reactionTimesRaw.reduce((a, b) => a + b, 0) / reactionTimesRaw.length) : 0,
             declaracion: true,
             photo1: photo1Data,
             photo2: photo2Data

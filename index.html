@@ -122,6 +122,53 @@
         .day-kpi-val { font-size: 24px; font-weight: bold; color: #ffffff; }
         .day-kpi-lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .blocked-row { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; background: rgba(15,23,42,0.6); border-radius: 8px; padding: 10px 12px; margin-top: 6px; font-size: 14px; }
+        /* ===== Panel con pestañas ===== */
+        .admin-card { padding: 20px; }
+        .admin-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom: 14px; }
+        .admin-who { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .admin-header-actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .btn-sm { width:auto; margin:0; padding: 10px 16px; font-size: 14px; }
+        .btn-xs { width:auto; margin:0; padding: 6px 12px; font-size: 12px; }
+        .tab-bar { display:flex; gap:4px; border-bottom: 2px solid var(--border-color); margin-bottom: 18px; overflow-x:auto; position: sticky; top: 0; background: var(--card-dark); z-index: 5; }
+        .tab-btn { background:none; border:none; color: var(--text-muted); font-size: 15px; font-weight: 700; padding: 12px 16px; cursor:pointer; border-bottom: 3px solid transparent; margin-bottom:-2px; white-space: nowrap; }
+        .tab-btn.active { color:#ffffff; border-bottom-color: var(--salfa-red); }
+        .tab-btn:hover { color:#ffffff; }
+        .panel-box { background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 18px; border: 1px solid var(--border-color); }
+        .panel-alert { background: rgba(227, 27, 35, 0.18); border-color: var(--salfa-red); }
+        .panel-box-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom: 12px; }
+        .panel-title { text-align:left; margin: 0 0 12px; font-size: 16px; }
+        .panel-box-head .panel-title { margin: 0; }
+        .panel-grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .kpi-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-bottom: 12px; }
+        .day-kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .muted-sm { font-size: 13px; color: var(--text-muted); }
+        .day-details { margin-top: 8px; }
+        .day-details summary { cursor:pointer; color: var(--text-muted); font-size: 14px; padding: 4px 0; }
+        .day-details > div { margin-top: 6px; font-size: 13px; }
+        .toolbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+        .form-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items:end; }
+        .form-grid-btn { align-self: end; }
+        .lbl-sm { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+        .inp-left { text-align:left !important; font-size: 16px !important; padding: 12px !important; letter-spacing: 0 !important; }
+        .form-grid select, #editPersonModal select { font-size: 16px; padding: 12px; text-align:left; letter-spacing: 0; }
+        .inp-search { max-width: 260px; }
+        .tag { display:inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        .tag-sup { background: rgba(250, 204, 21, 0.18); color: #facc15; border: 1px solid #ca8a04; }
+        .tag-trab { background: rgba(148, 163, 184, 0.18); color: #e2e8f0; border: 1px solid #64748b; }
+        .tag-of { background: rgba(71, 85, 105, 0.4); color: #cbd5e1; border: 1px dashed #64748b; }
+        .tag-turno { background: rgba(22, 163, 74, 0.2); color: #4ade80; border: 1px solid #16a34a; }
+        .tag-desc { background: rgba(100, 116, 139, 0.25); color: #94a3b8; border: 1px solid #475569; }
+        .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
+        .container { justify-content: flex-start; }
+        .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
+        @media (max-width: 640px) {
+            .logo-container { font-size: 30px; }
+            .brand-header { margin-top: 44px; }
+            .fullscreen-btn { top: 8px; right: 8px; padding: 6px 10px; font-size: 12px; }
+            .panel-grid-2 { grid-template-columns: 1fr; }
+            .admin-card { padding: 14px; }
+            .inp-search { max-width: none; }
+        }
         .btn-pdf { background: var(--salfa-red); margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
         .btn-secondary { background: #475569; color: #ffffff; }
         .btn-purple { background: #8b5cf6; margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
@@ -402,10 +449,11 @@
             <label>2. Nivel de somnolencia en este momento – Escala KSS (1 = Muy despierto / 9 = Muy somnoliento, luchando contra el sueño):</label>
             <div class="slider-touch-container">
                 <button type="button" class="btn-step" onclick="adjustAlert(-1)">-</button>
-                <input type="range" id="qAlert" min="1" max="9" value="3" oninput="document.getElementById('alertVal').innerText = this.value" style="accent-color: var(--salfa-red); flex-grow: 1;">
+                <input type="range" id="qAlert" min="1" max="9" value="3" oninput="updateKssLabel(this.value)" style="accent-color: var(--salfa-red); flex-grow: 1;">
                 <button type="button" class="btn-step" onclick="adjustAlert(1)">+</button>
             </div>
             <div style="text-align: center; font-size: 28px; font-weight: bold; color: var(--salfa-red); margin-top: 5px;" id="alertVal">3</div>
+            <div id="kssText" style="text-align:center; font-size: 15px; color: var(--text-muted); margin-top: 2px;">Despierto</div>
         </div>
 
         <div class="form-group">
@@ -470,129 +518,208 @@
     </div>
 
     <!-- 4. DASHBOARD MAESTRO -->
-    <div id="viewAdmin" class="card" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin:0; text-align: left;">Panel Maestro F&S</h2>
+    <div id="viewAdmin" class="card admin-card" style="display: none;">
+        <div class="admin-header">
             <div>
-                <button class="btn" onclick="showQuiz()" style="width: auto; margin: 0; padding: 10px 16px; font-size: 14px;">Rendir Test</button>
-                <button class="btn btn-secondary" onclick="logout()" style="width: auto; margin: 0; padding: 10px 16px; font-size: 14px;">Salir</button>
+                <h2 style="margin:0; text-align: left;">Panel Maestro F&S</h2>
+                <div id="adminWho" class="admin-who"></div>
+            </div>
+            <div class="admin-header-actions">
+                <button class="btn btn-sm" onclick="showQuiz()">Rendir Test</button>
+                <button class="btn btn-sm btn-secondary" onclick="forceManualSync(event)">🔄 Sincronizar</button>
+                <button class="btn btn-sm btn-secondary" onclick="logout()">Salir</button>
             </div>
         </div>
 
-        <div id="adminAlertNotice" style="display:none; background: rgba(227, 27, 35, 0.25); border: 1px solid var(--salfa-red); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h4 style="margin:0; color:#f87171;">⚠️ Alertas de Seguridad Pendientes de Confirmación</h4>
-                <button class="btn btn-success" onclick="markAlertsAsRead()" style="padding: 6px 12px; font-size: 12px;">Marcar como Leídas</button>
-            </div>
-            <div id="adminAlertList" style="margin-top: 10px;"></div>
+        <div class="tab-bar" role="tablist">
+            <button class="tab-btn active" data-tab="hoy" onclick="showAdminTab('hoy')">Hoy</button>
+            <button class="tab-btn" data-tab="personal" onclick="showAdminTab('personal')">Personal</button>
+            <button class="tab-btn" data-tab="historial" onclick="showAdminTab('historial')">Historial e Informes</button>
+            <button class="tab-btn" data-tab="cuenta" onclick="showAdminTab('cuenta')">Mi Cuenta</button>
         </div>
 
-        <div id="dayControl" style="background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
-            <h3 style="text-align: left; margin-bottom: 12px; font-size: 15px; color: #facc15;">Control del Día</h3>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom: 12px;">
-                <div class="day-kpi"><div class="day-kpi-val" id="kpiEvaluadosHoy">0%</div><div class="day-kpi-lbl">Evaluados hoy</div></div>
-                <div class="day-kpi"><div class="day-kpi-val" id="kpiPendientesHoy">0</div><div class="day-kpi-lbl">Sin test hoy</div></div>
-                <div class="day-kpi"><div class="day-kpi-val" id="kpiBloqueados" style="color:#f87171;">0</div><div class="day-kpi-lbl">Bloqueados / en pausa</div></div>
-                <div class="day-kpi"><div class="day-kpi-val" id="kpiCasosMes" style="color:#facc15;">0</div><div class="day-kpi-lbl">Moderado/Severo este mes</div></div>
-            </div>
-            <div id="blockedListContainer"></div>
-            <details style="margin-top:8px;">
-                <summary style="cursor:pointer; color: var(--text-muted); font-size: 14px;">Ver trabajadores sin test hoy</summary>
-                <div id="pendingListContainer" style="margin-top:8px; font-size:13px;"></div>
-            </details>
-            <div id="marchaBlancaNotice" style="display:none; margin-top:10px; font-size:13px; color:#38bdf8;">Modo marcha blanca activo: los resultados se registran, pero no se bloquea a nadie.</div>
-        </div>
-
-        <div style="background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
-            <h3 style="text-align: left; margin-bottom: 10px; font-size: 15px; color: #38bdf8;">Mi Cuenta - Cambiar Contraseña</h3>
-            <form onsubmit="handleChangePassword(event)" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px;">
-                <input type="password" id="currentPass" pattern="[0-9]*" inputmode="numeric" placeholder="Contraseña Actual (Números)" style="text-align:left;" required>
-                <input type="password" id="newPass" pattern="[0-9]*" inputmode="numeric" placeholder="Nueva Contraseña (Números)" style="text-align:left;" required>
-                <button type="submit" class="btn btn-info" style="margin: 0; width: auto; height: 100%;">Actualizar Clave</button>
-            </form>
-        </div>
-
-        <div style="background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
-            <h3 style="text-align: left; margin-bottom: 10px; font-size: 15px; color: #f87171;">+ Crear Nuevo Perfil de Usuario</h3>
-            <form onsubmit="handleAddUser(event)" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;">
-                <input type="text" id="newRut" placeholder="RUT (ej: 12345678-9)" style="text-align:left;" required>
-                <input type="text" id="newName" placeholder="Nombre Completo" style="text-align:left;" required>
-                <select id="newRole">
-                    <option value="worker">Trabajador</option>
-                    <option value="admin">Supervisor / Admin</option>
-                </select>
-                <button type="submit" class="btn" style="margin: 0; width: auto;">Crear</button>
-            </form>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-dark); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; border: 1px solid var(--border-color);">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <label style="margin: 0; font-weight: bold; color: #ffffff;">Filtrar:</label>
-                <select id="dateFilter" onchange="renderDashboard()" style="width: auto; padding: 8px 14px;">
-                    <option value="all">Todo el Historial</option>
-                    <option value="today">Solo Hoy</option>
-                    <option value="week">Esta Semana</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-purple" onclick="openWeeklyDashboardModal()">📊 Reporte Semanal</button>
-                <button class="btn btn-info" onclick="forceManualSync(event)" style="width: auto; margin: 0; padding: 10px 16px; font-size: 14px;">🔄 Sincronizar</button>
-                <button class="btn btn-success" onclick="exportToExcel()">Descargar Excel</button>
-                <button class="btn btn-pdf" onclick="exportToPDF()">Descargar PDF</button>
-            </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-            <div>
-                <div style="background: var(--input-dark); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; border: 1px solid var(--border-color);">
-                    <div style="font-size: 26px; font-weight: bold; color: #f87171;" id="cntCritical">0</div>
-                    <div style="font-size: 13px; color: var(--text-muted);">Alertas Moderado / Severo</div>
+        <!-- ===== PESTAÑA HOY ===== -->
+        <div class="tab-panel" id="tab-hoy">
+            <div id="adminAlertNotice" class="panel-box panel-alert" style="display:none;">
+                <div class="panel-box-head">
+                    <h4 style="margin:0; color:#f87171;">⚠️ Alertas pendientes de revisar</h4>
+                    <button class="btn btn-success btn-xs" onclick="markAlertsAsRead()">Marcar como leídas</button>
                 </div>
-                <div style="background: var(--input-dark); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border-color);">
-                    <div style="font-size: 26px; font-weight: bold; color: #ffffff;" id="cntUsers">0</div>
-                    <div style="font-size: 13px; color: var(--text-muted);">Usuarios Registrados</div>
+                <div id="adminAlertList" style="margin-top: 10px;"></div>
+            </div>
+
+            <div id="dayControl" class="panel-box">
+                <div class="panel-box-head">
+                    <h3 class="panel-title" style="color:#facc15;">Control del Día</h3>
+                    <span id="dayDateLabel" class="muted-sm"></span>
+                </div>
+                <div class="kpi-row">
+                    <div class="day-kpi"><div class="day-kpi-val" id="kpiEvaluadosHoy">0%</div><div class="day-kpi-lbl">Evaluados hoy</div><div class="day-kpi-sub" id="kpiEvaluadosDetalle"></div></div>
+                    <div class="day-kpi"><div class="day-kpi-val" id="kpiPendientesHoy">0</div><div class="day-kpi-lbl">En turno sin test</div></div>
+                    <div class="day-kpi"><div class="day-kpi-val" id="kpiDescanso" style="color:#94a3b8;">0</div><div class="day-kpi-lbl">De descanso hoy</div></div>
+                    <div class="day-kpi"><div class="day-kpi-val" id="kpiBloqueados" style="color:#f87171;">0</div><div class="day-kpi-lbl">Bloqueados / en pausa</div></div>
+                    <div class="day-kpi"><div class="day-kpi-val" id="kpiCasosMes" style="color:#facc15;">0</div><div class="day-kpi-lbl">Moderado/Severo este mes</div></div>
+                </div>
+                <div id="blockedListContainer"></div>
+                <details class="day-details">
+                    <summary>Ver quiénes están en turno y no han rendido el test</summary>
+                    <div id="pendingListContainer"></div>
+                </details>
+                <details class="day-details">
+                    <summary>Ver quiénes están de descanso hoy</summary>
+                    <div id="restListContainer"></div>
+                </details>
+                <div id="marchaBlancaNotice" style="display:none; margin-top:10px; font-size:13px; color:#38bdf8;">Modo marcha blanca activo: los resultados se registran, pero no se bloquea a nadie.</div>
+            </div>
+
+            <div class="panel-grid-2">
+                <div class="panel-box" style="margin-bottom:0;">
+                    <div class="day-kpi" style="margin-bottom:10px;">
+                        <div class="day-kpi-val" style="color:#f87171;" id="cntCritical">0</div>
+                        <div class="day-kpi-lbl">Alertas Moderado / Severo (filtro del historial)</div>
+                    </div>
+                    <div class="day-kpi">
+                        <div class="day-kpi-val" id="cntUsers">0</div>
+                        <div class="day-kpi-lbl">Usuarios registrados</div>
+                    </div>
+                </div>
+                <div class="panel-box" style="margin-bottom:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <canvas id="fatigueChart" style="max-height: 150px;"></canvas>
+                    <button class="btn btn-info btn-xs" onclick="downloadChart()" style="margin-top: 8px;">Descargar gráfico PNG</button>
                 </div>
             </div>
-            <div style="background: var(--input-dark); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
-                <canvas id="fatigueChart" style="max-height: 130px;"></canvas>
-                <button class="btn btn-info" onclick="downloadChart()" style="margin-top: 8px; padding: 4px 8px; font-size: 12px;">Descargar Gráfico PNG</button>
+        </div>
+
+        <!-- ===== PESTAÑA PERSONAL ===== -->
+        <div class="tab-panel" id="tab-personal" style="display:none;">
+            <div class="panel-box">
+                <h3 class="panel-title" style="color:#f87171;">+ Agregar persona</h3>
+                <form onsubmit="handleAddUser(event)" class="form-grid">
+                    <div><label class="lbl-sm">RUT</label><input type="text" id="newRut" placeholder="12345678-9" class="inp-left" required></div>
+                    <div><label class="lbl-sm">Nombre completo</label><input type="text" id="newName" placeholder="Nombre y apellido" class="inp-left" required></div>
+                    <div><label class="lbl-sm">Acceso a la app</label>
+                        <select id="newRole">
+                            <option value="worker">Solo rinde test</option>
+                            <option value="admin">Panel Maestro (supervisor/admin)</option>
+                        </select></div>
+                    <div><label class="lbl-sm">Cargo</label>
+                        <select id="newTipo">
+                            <option value="trabajador">Trabajador</option>
+                            <option value="supervisor">Supervisor de personal</option>
+                            <option value="no_rinde">No rinde test (oficina)</option>
+                        </select></div>
+                    <div><label class="lbl-sm">Jornada</label>
+                        <select id="newTurno" onchange="toggleInicioField('new')">
+                            <option value="todos">Todos los días (sin turno)</option>
+                            <option value="4x3">4x3</option>
+                            <option value="8x6">8x6</option>
+                            <option value="14x14">14x14</option>
+                        </select></div>
+                    <div id="newInicioWrap" style="display:none;"><label class="lbl-sm">Primer día de su subida actual</label><input type="date" id="newInicio" class="inp-left"></div>
+                    <div class="form-grid-btn"><button type="submit" class="btn" style="margin:0;">Agregar</button></div>
+                </form>
+                <p class="muted-sm" style="margin:8px 0 0;">La clave inicial son los 5 primeros números del RUT. Con la jornada y su primer día de subida, la app calcula sola qué días está de descanso.</p>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-box-head">
+                    <h3 class="panel-title">Personal registrado</h3>
+                    <input type="text" id="userSearch" placeholder="Buscar por nombre o RUT" class="inp-left inp-search" oninput="renderUsersTable()">
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>RUT</th>
+                                <th>Nombre</th>
+                                <th>Cargo</th>
+                                <th>Jornada</th>
+                                <th>Hoy</th>
+                                <th id="thClave">Clave</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <h3>Perfiles Registrados</h3>
-        <div class="table-responsive" style="margin-bottom: 20px;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>RUT</th>
-                        <th>Nombre</th>
-                        <th>Tipo</th>
-                        <th>Clave</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody"></tbody>
-            </table>
+        <!-- ===== PESTAÑA HISTORIAL ===== -->
+        <div class="tab-panel" id="tab-historial" style="display:none;">
+            <div class="panel-box toolbar">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label style="margin: 0; font-weight: bold; color: #ffffff;">Mostrar:</label>
+                    <select id="dateFilter" onchange="renderDashboard()" style="width: auto; padding: 8px 14px; font-size:15px;">
+                        <option value="all">Todo el historial</option>
+                        <option value="today">Solo hoy</option>
+                        <option value="week">Esta semana</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-purple" onclick="openWeeklyDashboardModal()">📊 Reporte Semanal</button>
+                    <button class="btn btn-success" onclick="exportToExcel()">Descargar Excel</button>
+                    <button class="btn btn-pdf" onclick="exportToPDF()">Descargar PDF</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Trabajador</th>
+                            <th>RUT</th>
+                            <th>Reacción</th>
+                            <th>Estado F&S</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
         </div>
 
-        <h3>Historial General de Evaluaciones</h3>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha y Hora</th>
-                        <th>Trabajador</th>
-                        <th>RUT</th>
-                        <th>Reacción</th>
-                        <th>Estado F&S</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="adminTableBody"></tbody>
-            </table>
+        <!-- ===== PESTAÑA MI CUENTA ===== -->
+        <div class="tab-panel" id="tab-cuenta" style="display:none;">
+            <div class="panel-box">
+                <h3 class="panel-title" style="color:#38bdf8;">Cambiar mi contraseña</h3>
+                <form onsubmit="handleChangePassword(event)" class="form-grid">
+                    <div><label class="lbl-sm">Contraseña actual</label><input type="password" id="currentPass" pattern="[0-9]*" inputmode="numeric" class="inp-left" required></div>
+                    <div><label class="lbl-sm">Nueva contraseña (solo números)</label><input type="password" id="newPass" pattern="[0-9]*" inputmode="numeric" class="inp-left" required></div>
+                    <div class="form-grid-btn"><button type="submit" class="btn btn-info" style="margin:0; width:100%; padding:14px;">Actualizar clave</button></div>
+                </form>
+            </div>
         </div>
     </div>
 
+</div>
+
+<!-- MODAL EDITAR PERSONA -->
+<div id="editPersonModal" class="modal">
+    <div class="modal-content" style="max-width: 480px;">
+        <h3 style="margin-bottom:4px;">Editar persona</h3>
+        <p id="editPersonName" style="margin-top:0;"></p>
+        <input type="hidden" id="editRut">
+        <div class="form-group"><label class="lbl-sm">Cargo</label>
+            <select id="editTipo">
+                <option value="trabajador">Trabajador</option>
+                <option value="supervisor">Supervisor de personal</option>
+                <option value="no_rinde">No rinde test (oficina)</option>
+            </select></div>
+        <div class="form-group"><label class="lbl-sm">Jornada</label>
+            <select id="editTurno" onchange="toggleInicioField('edit')">
+                <option value="todos">Todos los días (sin turno)</option>
+                <option value="4x3">4x3</option>
+                <option value="8x6">8x6</option>
+                <option value="14x14">14x14</option>
+            </select></div>
+        <div class="form-group" id="editInicioWrap"><label class="lbl-sm">Primer día de su subida actual (o de cualquier subida)</label><input type="date" id="editInicio" class="inp-left" onchange="updateEditPreview()"></div>
+        <p id="editPreview" class="muted-sm" style="margin-top:0;"></p>
+        <div style="display:flex; gap:10px;">
+            <button class="btn" onclick="savePersonEdit()" style="margin:0;">Guardar</button>
+            <button class="btn btn-secondary" onclick="closeEditPerson()" style="margin:0;">Cancelar</button>
+        </div>
+    </div>
 </div>
 
 <!-- MODAL REPORTES INDIVIDUALES -->
@@ -1109,15 +1236,19 @@
     function renderDayControl() {
         const users = JSON.parse(localStorage.getItem('users')) || [];
         const logs = JSON.parse(localStorage.getItem('logs')) || [];
-        const workers = users.filter(u => !isAdminLevel(u));
+
+        // Quiénes rinden test (cargo) y, de ellos, quiénes están en turno hoy
+        const rinden = users.filter(u => getPersonInfo(u).tipo !== 'no_rinde');
+        const enTurno = rinden.filter(u => isOnShift(u));
+        const descanso = rinden.filter(u => !isOnShift(u));
 
         const testedToday = new Set(
             logs.filter(l => isSameChileDay(parseLogTimestamp(l)))
                 .map(l => formatRut(l.rut))
         );
-        const pending = workers.filter(w => !testedToday.has(formatRut(w.rut)));
-        const evaluated = workers.length - pending.length;
-        const pct = workers.length ? Math.round(evaluated * 100 / workers.length) : 0;
+        const pending = enTurno.filter(w => !testedToday.has(formatRut(w.rut)));
+        const evaluated = enTurno.length - pending.length;
+        const pct = enTurno.length ? Math.round(evaluated * 100 / enTurno.length) : 0;
 
         const parts = getChileParts();
         const casosMes = logs.filter(l => {
@@ -1128,16 +1259,20 @@
             return p.year === parts.year && p.month === parts.month;
         }).length;
 
-        // Todos los usuarios (incluye supervisores que rinden test)
         const blocked = users
             .map(u => ({ u, st: getBlockState(u.rut) }))
             .filter(x => x.st.state !== 'LIBRE');
 
+        document.getElementById('dayDateLabel').innerText = `${parts.day}/${parts.month}/${parts.year}`;
         document.getElementById('kpiEvaluadosHoy').innerText = `${pct}%`;
+        document.getElementById('kpiEvaluadosDetalle').innerText = `${evaluated} de ${enTurno.length} en turno`;
         document.getElementById('kpiPendientesHoy').innerText = pending.length;
+        document.getElementById('kpiDescanso').innerText = descanso.length;
         document.getElementById('kpiBloqueados').innerText = MODO_MARCHA_BLANCA ? '—' : blocked.length;
         document.getElementById('kpiCasosMes').innerText = casosMes;
         document.getElementById('marchaBlancaNotice').style.display = MODO_MARCHA_BLANCA ? 'block' : 'none';
+
+        const supTag = u => getPersonInfo(u).tipo === 'supervisor' ? ' <span class="tag tag-sup">SUP</span>' : '';
 
         const bc = document.getElementById('blockedListContainer');
         bc.innerHTML = '';
@@ -1148,7 +1283,7 @@
                 const etiqueta = st.state === 'PAUSA'
                     ? `<span class="badge badge-moderado">EN PAUSA</span>`
                     : `<span class="badge badge-severo">BLOQUEADO</span>`;
-                row.innerHTML = `<div>${etiqueta} <b>${u.name}</b> (${u.rut})<br><span style="color:var(--text-muted); font-size:12px;">${st.reason}</span></div>`;
+                row.innerHTML = `<div>${etiqueta} <b>${u.name}</b> (${u.rut})${supTag(u)}<br><span style="color:var(--text-muted); font-size:12px;">${st.reason}</span></div>`;
                 const btn = document.createElement('button');
                 btn.className = 'btn btn-success';
                 btn.innerText = 'Liberar';
@@ -1160,8 +1295,173 @@
 
         const pc = document.getElementById('pendingListContainer');
         pc.innerHTML = pending.length
-            ? pending.map(w => `<div style="padding:3px 0;">• ${w.name} (${w.rut})</div>`).join('')
-            : '<div style="color:#4ade80;">Todos los trabajadores rindieron su test hoy.</div>';
+            ? pending.map(w => `<div style="padding:3px 0;">• ${w.name} (${w.rut})${supTag(w)}</div>`).join('')
+            : '<div style="color:#4ade80;">Todos los que están en turno rindieron su test hoy.</div>';
+
+        const rc = document.getElementById('restListContainer');
+        rc.innerHTML = descanso.length
+            ? descanso.map(w => `<div style="padding:3px 0;">• ${w.name}${supTag(w)} <span class="muted-sm">(${computeShift(getPersonInfo(w)).text})</span></div>`).join('')
+            : '<div class="muted-sm">Nadie está de descanso hoy (o falta configurar las jornadas en la pestaña Personal).</div>';
+    }
+
+    // =====================================================================
+    // ===== PERSONAL: CARGO Y JORNADA (TURNOS) ============================
+    // =====================================================================
+    // Se guarda por RUT: cargo (trabajador / supervisor / no_rinde), jornada
+    // (todos, 4x3, 8x6, 14x14) y el primer día de una subida (para calcular
+    // los días de descanso). Queda en este equipo y en el script de alertas,
+    // para que valga en todos los equipos.
+    const JORNADAS = {
+        'todos': { label: 'Todos los días', trabajo: 1, descanso: 0 },
+        '4x3':   { label: '4x3',   trabajo: 4,  descanso: 3 },
+        '8x6':   { label: '8x6',   trabajo: 8,  descanso: 6 },
+        '14x14': { label: '14x14', trabajo: 14, descanso: 14 }
+    };
+    const CARGOS = {
+        'trabajador': { label: 'Trabajador', tag: 'tag-trab' },
+        'supervisor': { label: 'Supervisor de personal', tag: 'tag-sup' },
+        'no_rinde':   { label: 'No rinde test', tag: 'tag-of' }
+    };
+
+    function getPersonalMap() {
+        try { return JSON.parse(localStorage.getItem('fsPersonal')) || {}; } catch (e) { return {}; }
+    }
+    function setPersonalMap(m) { localStorage.setItem('fsPersonal', JSON.stringify(m)); }
+
+    // Datos de una persona, con valores por defecto si aún no se configuró
+    function getPersonInfo(user) {
+        const m = getPersonalMap();
+        const info = m[formatRut(user.rut)] || {};
+        return {
+            tipo: info.tipo || (isAdminLevel(user) ? 'no_rinde' : 'trabajador'),
+            turno: JORNADAS[info.turno] ? info.turno : 'todos',
+            inicio: info.inicio || '',
+            updatedAt: info.updatedAt || ''
+        };
+    }
+
+    function savePersonInfo(rut, datos) {
+        const m = getPersonalMap();
+        const entry = { ...datos, updatedAt: new Date().toISOString() };
+        m[formatRut(rut)] = entry;
+        setPersonalMap(m);
+        postToAlerts({ action: 'personal', rut: formatRut(rut), datos: entry });
+    }
+
+    function mergePersonalFromServer(serverMap) {
+        if (!serverMap || typeof serverMap !== 'object') return;
+        const m = getPersonalMap();
+        Object.keys(serverMap).forEach(k => {
+            const srv = serverMap[k];
+            const loc = m[k];
+            if (!loc || String(srv.updatedAt || '') > String(loc.updatedAt || '')) m[k] = srv;
+        });
+        setPersonalMap(m);
+    }
+
+    async function refreshPersonalFromServer() {
+        if (!ALERTS_URL) return;
+        try {
+            const res = await fetchWithTimeout(ALERTS_URL + '?action=personal', 6000);
+            const data = await res.json();
+            if (data && data.ok) mergePersonalFromServer(data.personal);
+        } catch (e) {
+            console.warn('[Personal] No se pudo traer cargo/jornada desde el servidor:', e);
+        }
+    }
+
+    // Fecha de hoy en Chile como 'YYYY-MM-DD'
+    function chileTodayISO() {
+        const p = getChileParts();
+        return `${p.year}-${p.month}-${p.day}`;
+    }
+    function isoToDayNumber(iso) {
+        const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return null;
+        return Math.floor(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000);
+    }
+
+    // Cálculo de la jornada a partir de { turno, inicio }. Devuelve si está
+    // en turno ese día y un texto corto ("En turno · día 3 de 8").
+    function computeShift(info, isoDate) {
+        const j = JORNADAS[info && info.turno];
+        if (!j || j.descanso === 0) return { onShift: true, text: 'Todos los días' };
+        const start = isoToDayNumber(info.inicio);
+        if (start === null) return { onShift: true, text: 'Falta fecha de subida' };
+        const day = isoToDayNumber(isoDate || chileTodayISO());
+        const ciclo = j.trabajo + j.descanso;
+        const pos = (((day - start) % ciclo) + ciclo) % ciclo;
+        if (pos < j.trabajo) return { onShift: true, text: `En turno · día ${pos + 1} de ${j.trabajo}` };
+        const sube = new Date((day + (ciclo - pos)) * 86400000);
+        const dd = String(sube.getUTCDate()).padStart(2, '0');
+        const mm = String(sube.getUTCMonth() + 1).padStart(2, '0');
+        return { onShift: false, text: `Descanso · sube el ${dd}/${mm}` };
+    }
+    function isOnShift(user, isoDate) { return computeShift(getPersonInfo(user), isoDate).onShift; }
+    function shiftStatusText(user) { return computeShift(getPersonInfo(user)); }
+
+    // ¿Debe rendir el test hoy? (cargo que rinde test y en turno)
+    function mustTestToday(user) {
+        return getPersonInfo(user).tipo !== 'no_rinde' && isOnShift(user);
+    }
+
+    function toggleInicioField(prefix) {
+        const turno = document.getElementById(prefix + 'Turno').value;
+        const wrap = document.getElementById(prefix + 'InicioWrap');
+        wrap.style.display = (turno === 'todos') ? 'none' : 'block';
+        if (prefix === 'edit') updateEditPreview();
+    }
+
+    // ===== Editar persona =====
+    function openEditPerson(rut) {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const u = users.find(x => formatRut(x.rut) === formatRut(rut));
+        if (!u) return;
+        const info = getPersonInfo(u);
+        document.getElementById('editRut').value = u.rut;
+        document.getElementById('editPersonName').innerText = `${u.name} · ${u.rut}`;
+        document.getElementById('editTipo').value = info.tipo;
+        document.getElementById('editTurno').value = info.turno;
+        document.getElementById('editInicio').value = info.inicio || '';
+        toggleInicioField('edit');
+        document.getElementById('editPersonModal').style.display = 'flex';
+    }
+    function closeEditPerson() {
+        document.getElementById('editPersonModal').style.display = 'none';
+    }
+    function updateEditPreview() {
+        const turno = document.getElementById('editTurno').value;
+        const inicio = document.getElementById('editInicio').value;
+        const prev = document.getElementById('editPreview');
+        if (turno === 'todos') { prev.innerText = 'Debe rendir el test todos los días.'; return; }
+        if (!inicio) { prev.innerText = 'Indica el primer día de una subida para calcular sus descansos.'; return; }
+        prev.innerText = 'Hoy: ' + computeShift({ turno, inicio }).text;
+    }
+    function savePersonEdit() {
+        const rut = document.getElementById('editRut').value;
+        const turno = document.getElementById('editTurno').value;
+        const inicio = document.getElementById('editInicio').value;
+        if (turno !== 'todos' && !inicio) {
+            alert('Indica el primer día de una subida para esta jornada.');
+            return;
+        }
+        savePersonInfo(rut, {
+            tipo: document.getElementById('editTipo').value,
+            turno: turno,
+            inicio: turno === 'todos' ? '' : inicio
+        });
+        closeEditPerson();
+        renderDashboard();
+    }
+
+    // ===== Pestañas del panel =====
+    let currentAdminTab = 'hoy';
+    function showAdminTab(tab) {
+        currentAdminTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        ['hoy', 'personal', 'historial', 'cuenta'].forEach(t => {
+            document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
+        });
     }
 
     // Envía la lista de trabajadores (sin claves) al script de alertas, para
@@ -1172,7 +1472,10 @@
         if (Date.now() - lastWorkersSync < 10 * 60000) return;
         lastWorkersSync = Date.now();
         const users = JSON.parse(localStorage.getItem('users')) || [];
-        const lista = users.map(u => ({ rut: u.rut, name: u.name, role: isAdminLevel(u) ? 'supervisor' : 'trabajador' }));
+        const lista = users.map(u => {
+            const info = getPersonInfo(u);
+            return { rut: u.rut, name: u.name, tipo: info.tipo, turno: info.turno, inicio: info.inicio };
+        });
         postToAlerts({ action: 'trabajadores', lista: lista });
     }
 
@@ -1703,12 +2006,26 @@
         }
     }
 
+    // Descripciones de la Escala de Somnolencia de Karolinska (KSS)
+    const KSS_TEXT = {
+        1: 'Muy despierto', 2: 'Bien despierto', 3: 'Despierto', 4: 'Algo despierto',
+        5: 'Ni despierto ni con sueño', 6: 'Algunas señales de sueño',
+        7: 'Con sueño, pero sin esfuerzo para mantenerme despierto',
+        8: 'Con sueño, me cuesta mantenerme despierto',
+        9: 'Muy somnoliento, luchando contra el sueño'
+    };
+    function updateKssLabel(v) {
+        v = parseInt(v);
+        document.getElementById('alertVal').innerText = v;
+        document.getElementById('kssText').innerText = KSS_TEXT[v] || '';
+    }
+
     function adjustAlert(delta) {
         const slider = document.getElementById('qAlert');
         let newVal = parseInt(slider.value) + delta;
         if (newVal >= 1 && newVal <= 9) {
             slider.value = newVal;
-            document.getElementById('alertVal').innerText = newVal;
+            updateKssLabel(newVal);
         }
     }
 
@@ -1751,9 +2068,11 @@
             const card = document.createElement('div');
             card.className = 'user-card';
             card.onclick = () => selectQuickUser(u.rut, card);
+            const esSup = getPersonInfo(u).tipo === 'supervisor';
             card.innerHTML = `
                 <div class="user-card-name">${u.name}</div>
                 <div class="user-card-rut">${u.rut}</div>
+                ${esSup ? '<div class="user-card-tag">SUPERVISOR</div>' : ''}
             `;
             container.appendChild(card);
         });
@@ -1808,6 +2127,7 @@
         syncChileTimeFromNetwork(); // refresca la hora real de Chile antes de iniciar el test
 
         document.getElementById('chkDeclaracion').checked = false;
+        updateKssLabel(document.getElementById('qAlert').value);
 
         // Antes de habilitar el test, se revisa si el trabajador está
         // bloqueado o en pausa (con los datos más recientes de la nube).
@@ -1835,7 +2155,10 @@
         document.getElementById('viewAdmin').style.display = 'block';
         renderDashboard();
         startAutoSync();
-        refreshReleasesFromServer().then(() => { if (currentUser && isAdminLevel(currentUser)) renderDashboard(); });
+        document.getElementById('adminWho').innerText = `${currentUser.name} · ${roleLabel(currentUser.role)}`;
+        showAdminTab(currentAdminTab || 'hoy');
+        Promise.all([refreshReleasesFromServer(), refreshPersonalFromServer()])
+            .then(() => { if (currentUser && isAdminLevel(currentUser)) renderDashboard(); });
     }
 
     function renderDashboard() {
@@ -1868,23 +2191,41 @@
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
 
-        // Solo Diego Moreno (superadmin) puede ver las claves de otros usuarios.
-        // Los demás perfiles admin/supervisor ven la clave oculta, pero conservan
-        // todas sus demás funciones (crear/ver usuarios, eliminar test, informes).
+        // Solo el superadmin ve las claves de otros usuarios.
         const canSeePasswords = isSuperAdmin(currentUser);
+        document.getElementById('thClave').style.display = canSeePasswords ? '' : 'none';
 
-        users.forEach(u => {
+        const q = (document.getElementById('userSearch').value || '').trim().toLowerCase();
+        const qRut = formatRut(q);
+        const list = users
+            .filter(u => !q || String(u.name).toLowerCase().includes(q) || (qRut && formatRut(u.rut).includes(qRut)))
+            .sort((a, b) => {
+                const order = { supervisor: 0, trabajador: 1, no_rinde: 2 };
+                const ta = order[getPersonInfo(a).tipo], tb = order[getPersonInfo(b).tipo];
+                return ta - tb || String(a.name).localeCompare(String(b.name));
+            });
+
+        list.forEach(u => {
             const isMaster = formatRut(u.rut) === MASTER_RUT;
-            const userRole = String(u.role).trim().toLowerCase();
+            const info = getPersonInfo(u);
+            const cargo = CARGOS[info.tipo];
+            const sh = computeShift(info);
+            const hoy = info.tipo === 'no_rinde'
+                ? '<span class="muted-sm">—</span>'
+                : `<span class="tag ${sh.onShift ? 'tag-turno' : 'tag-desc'}">${info.turno === 'todos' ? 'Rinde hoy' : sh.text}</span>`;
+            const acceso = isAdminLevel(u) ? '<div class="muted-sm" style="font-size:11px; margin-top:3px;">Acceso al panel</div>' : '';
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><b>${u.rut}</b></td>
                 <td>${u.name}</td>
-                <td><span class="badge badge-role">${roleLabel(userRole)}</span></td>
-                <td><code style="color:#f87171;">${canSeePasswords ? u.pass : '••••••'}</code></td>
+                <td><span class="tag ${cargo.tag}">${cargo.label}</span>${acceso}</td>
+                <td>${JORNADAS[info.turno].label}</td>
+                <td>${hoy}</td>
+                ${canSeePasswords ? `<td><code style="color:#f87171;">${u.pass}</code></td>` : ''}
                 <td>
-                    <div style="display:flex; gap:6px;">
-                        <button class="btn btn-info" onclick="openUserReport('${u.rut}')">Ver Reporte</button>
+                    <div style="display:flex; gap:6px; flex-wrap:nowrap;">
+                        <button class="btn btn-info" onclick="openEditPerson('${u.rut}')">Editar</button>
+                        <button class="btn btn-info btn-ghost" onclick="openUserReport('${u.rut}')">Reporte</button>
                         ${!isMaster ? `<button class="btn btn-danger" onclick="deleteUser('${u.rut}')">Eliminar</button>` : ''}
                     </div>
                 </td>
@@ -1892,6 +2233,9 @@
             tbody.appendChild(tr);
         });
 
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="muted-sm">Sin resultados.</td></tr>';
+        }
         document.getElementById('cntUsers').innerText = users.length;
     }
 
@@ -2363,6 +2707,22 @@
         localStorage.setItem('users', JSON.stringify(users));
 
         postToSheets("addUser", { user: newUser });
+
+        // Cargo y jornada
+        const turno = document.getElementById('newTurno').value;
+        const inicio = document.getElementById('newInicio').value;
+        savePersonInfo(newUser.rut, {
+            tipo: document.getElementById('newTipo').value,
+            turno: turno,
+            inicio: turno === 'todos' ? '' : inicio
+        });
+        if (turno !== 'todos' && !inicio) {
+            alert('Persona creada. Falta indicar el primer día de su subida: edítala en la lista para que la app calcule sus descansos.');
+        }
+        document.getElementById('newTipo').value = 'trabajador';
+        document.getElementById('newTurno').value = 'todos';
+        document.getElementById('newInicio').value = '';
+        toggleInicioField('new');
 
         document.getElementById('newRut').value = '';
         document.getElementById('newName').value = '';

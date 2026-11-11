@@ -168,6 +168,10 @@
         .ficha td { color:#1f2937 !important; border-bottom: 1px solid #e5e7eb; padding: 7px 9px; vertical-align: top; }
         .ficha-meta td:first-child { font-weight:700; width: 130px; }
         .ficha-small, .ficha-refs li { font-size: 12px !important; color:#4b5563 !important; }
+        .consent-text { background: var(--input-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 6px 18px; max-height: 52vh; overflow-y: auto; }
+        .consent-text p { color: #e2e8f0; font-size: 15px; line-height: 1.55; }
+        .btn-success-lg { background: #16a34a; }
+        .btn-success-lg:active { background: #15803d; }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -508,6 +512,22 @@
     </div>
 
     <!-- 3. RESULTADO INDIVIDUAL (VENTANA EMERGENTE) -->
+    <!-- 2a. CONSENTIMIENTO DE CÁMARA Y FOTOS -->
+    <div id="viewConsent" class="card" style="display: none;">
+        <h2 style="margin-bottom:6px;">📷 Uso de cámara y fotografías</h2>
+        <p id="consentWho" style="text-align:center; color:#f87171; font-weight:bold; margin-top:0;"></p>
+        <div class="consent-text">
+            <p>Para rendir el test de fatiga y somnolencia, la app usa la <b>cámara frontal</b> de este equipo para tomar <b>2 fotografías</b>: una al inicio del test y otra a la mitad.</p>
+            <p><b>Para qué:</b> solo para confirmar que quien rinde el test eres tú. La revisión de que aparezca un rostro se hace en el mismo equipo. No se graba video ni audio, y la cámara se apaga al terminar el test.</p>
+            <p><b>Quién las ve:</b> solo los supervisores y administradores de la app.</p>
+            <p><b>Cuánto tiempo se guardan:</b> las fotos <b>se eliminan automáticamente al terminar el turno</b>, como máximo 14 horas después del test, tanto del equipo como de la nube.</p>
+            <p><b>Qué sí queda guardado:</b> el resultado del test (fecha, hora, tiempos de reacción, respuestas y estado F&amp;S), como registro del control de fatiga de la obra.</p>
+            <p><b>Si no aceptas</b> o quieres retirar tu consentimiento más adelante, avisa a tu supervisor: el control de fatiga se hará por otro medio que defina la empresa.</p>
+        </div>
+        <button class="btn btn-success-lg" onclick="answerConsent(true)">✅ Acepto</button>
+        <button class="btn btn-secondary" onclick="answerConsent(false)">No acepto</button>
+    </div>
+
     <!-- 2b. TRABAJADOR BLOQUEADO / EN PAUSA -->
     <div id="viewBlocked" class="card" style="display: none; text-align: center;">
         <div id="blockedIcon" style="font-size: 54px; margin-bottom: 6px;">⛔</div>
@@ -758,7 +778,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td>4 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td>5 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -822,23 +842,31 @@
                     <li>Correo diario a los supervisores con quienes están en turno y no han rendido el test.</li>
                 </ul>
 
-                <h2>9. Limitaciones</h2>
+                <h2>9. Privacidad y consentimiento</h2>
+                <ul>
+                    <li>Antes de su primer test, cada trabajador acepta o rechaza el uso de la cámara y las fotos. La respuesta queda registrada con fecha y equipo.</li>
+                    <li>Las 2 fotos del test se usan solo para confirmar la identidad y <b>se eliminan automáticamente al terminar el turno</b> (máximo 14 horas), del equipo y de la nube. Queda guardado solo el resultado del test.</li>
+                    <li>Las claves no se guardan ni se descargan en los equipos: la app usa solo una huella cifrada. Los datos solo se entregan a usuarios con sesión válida; un trabajador ve solo sus propios tests.</li>
+                    <li>Quien no acepte el uso de la cámara hace el control de fatiga por otro medio que defina la empresa.</li>
+                </ul>
+
+                <h2>10. Limitaciones</h2>
                 <ul>
                     <li>Es una herramienta de <b>apoyo</b> para tomar decisiones; no es un diagnóstico médico ni reemplaza el criterio del supervisor.</li>
                     <li>La medición sigue un test validado, pero la clasificación final es un criterio interno que debe calibrarse con datos reales.</li>
                     <li>Los celulares no son equipos de laboratorio; por eso se calibra cada equipo y se compara a cada trabajador con su propio promedio.</li>
                 </ul>
 
-                <h2>10. Validación propuesta</h2>
+                <h2>11. Validación propuesta</h2>
                 <ol>
                     <li><b>Marcha blanca de 3 a 4 semanas</b>, usando la app junto a la encuesta en papel, para comparar resultados y ajustar los cortes.</li>
                     <li><b>Revisión por prevención de riesgos y la mutualidad</b> (médico o especialista en salud ocupacional) de los criterios de clasificación y del protocolo.</li>
                     <li>Si alguna faena cuenta con un equipo comercial (por ejemplo Access Point), comparar ambos resultados en un grupo de trabajadores el mismo día.</li>
                     <li><b>Procedimiento escrito</b> con el protocolo de acción y responsables.</li>
-                    <li><b>Consentimiento de los trabajadores</b> para el uso de fotos y datos, y resguardo de la información en una cuenta de la empresa (Ley 21.719 de protección de datos personales, vigente desde diciembre de 2026).</li>
+                    <li><b>Resguardo de los datos en una cuenta de la empresa</b> y revisión del texto de consentimiento por el área legal o de personas (Ley 21.719 de protección de datos personales, vigente desde diciembre de 2026).</li>
                 </ol>
 
-                <h2>11. Referencias</h2>
+                <h2>12. Referencias</h2>
                 <ul class="ficha-refs">
                     <li>Dinges DF, Powell JW. Microcomputer analyses of performance on a portable, simple visual RT task during sustained operations. Behavior Research Methods, Instruments &amp; Computers, 1985.</li>
                     <li>Basner M, Mollicone D, Dinges DF. Validity and sensitivity of a brief psychomotor vigilance test (PVT-B) to total and partial sleep deprivation. Acta Astronautica, 2011.</li>
@@ -1050,7 +1078,34 @@
     // sacar informes) pero NO ven las claves de otros usuarios.
     const MASTER_RUT = '16582525K';
     const MASTER_NAME = 'Diego Moreno';
-    const MASTER_DEFAULT_PASS = '200687';
+
+    // ===== Claves: la app nunca guarda ni recibe la clave, solo su huella =====
+    // Huella = SHA-256 de "fs-salfa:RUT:CLAVE" (igual que en el programa de la planilla)
+    async function passHash(rut, pass) {
+        const txt = 'fs-salfa:' + formatRut(rut) + ':' + String(pass).trim();
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    // Sesión guardada en este equipo para sincronizar con la planilla
+    function getSession() {
+        try { return JSON.parse(localStorage.getItem('fsSession')) || null; } catch (e) { return null; }
+    }
+    function setSession(rut, h) { localStorage.setItem('fsSession', JSON.stringify({ rut, h })); }
+
+    // Convierte usuarios antiguos (con clave a la vista) al formato con huella
+    async function migrateLocalUsers() {
+        let users = [];
+        try { users = JSON.parse(localStorage.getItem('users')) || []; } catch (e) { users = []; }
+        let changed = false;
+        for (const u of users) {
+            if (u.pass !== undefined && u.pass !== null && u.pass !== '') {
+                if (!u.h) u.h = await passHash(u.rut, String(u.pass).replace(/\D/g, ''));
+                delete u.pass;
+                changed = true;
+            }
+        }
+        if (changed) localStorage.setItem('users', JSON.stringify(users));
+    }
 
     function normRole(role) {
         return String(role || '').trim().toLowerCase();
@@ -1083,9 +1138,6 @@
             }
             return u;
         });
-        if (!found) {
-            result.unshift({ rut: MASTER_RUT, pass: MASTER_DEFAULT_PASS, name: MASTER_NAME, role: 'superadmin' });
-        }
         return result;
     }
 
@@ -1113,15 +1165,17 @@
     // caído, etc.) la deja encolada para reintentarla más adelante, en vez de
     // perderla en silencio.
     function postToSheets(action, payload) {
+        const auth = getSession();
         return fetch(SCRIPT_URL, {
             method: "POST",
-            body: JSON.stringify({ action, ...payload })
+            body: JSON.stringify({ action, auth, ...payload })
         }).catch(err => {
             console.warn(`[Sync] Sin conexión al enviar "${action}". Se reintentará automáticamente cuando vuelva la señal.`, err);
             const queue = getPendingQueue();
             queue.push({
                 qid: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
                 action,
+                auth,
                 payload
             });
             setPendingQueue(queue);
@@ -1145,7 +1199,7 @@
             try {
                 await fetch(SCRIPT_URL, {
                     method: "POST",
-                    body: JSON.stringify({ action: item.action, ...item.payload })
+                    body: JSON.stringify({ action: item.action, auth: item.auth || getSession(), ...item.payload })
                 });
                 console.log(`[Sync] Reenviado correctamente tras recuperar señal: ${item.action}`);
             } catch (err) {
@@ -1844,6 +1898,79 @@
         setTimeout(() => w.print(), 400);
     }
 
+
+    // ===== Consentimiento de cámara y fotos =====
+    const CONSENT_VERSION = 'v1';
+    const RETENCION_FOTOS_HORAS = 14;
+
+    function getConsents() {
+        try { return JSON.parse(localStorage.getItem('fsConsents')) || []; } catch (e) { return []; }
+    }
+    function mergeConsents(list) {
+        const local = getConsents();
+        list.forEach(c => {
+            if (!local.some(l => formatRut(l.rut) === formatRut(c.rut) && l.timestamp === c.timestamp)) local.push(c);
+        });
+        localStorage.setItem('fsConsents', JSON.stringify(local));
+    }
+    // Última respuesta de la persona para la versión vigente del texto
+    function consentStatus(rut) {
+        const r = formatRut(rut);
+        const mine = getConsents()
+            .filter(c => formatRut(c.rut) === r && c.version === CONSENT_VERSION)
+            .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+        return mine.length ? mine[0].respuesta : null;
+    }
+    function showConsent() {
+        hideAllViews();
+        document.getElementById('consentWho').innerText = `${currentUser.name} (RUT: ${currentUser.rut})`;
+        document.getElementById('viewConsent').style.display = 'block';
+    }
+    async function answerConsent(acepta) {
+        const c = {
+            rut: currentUser.rut, name: currentUser.name, version: CONSENT_VERSION,
+            respuesta: acepta ? 'ACEPTA' : 'NO ACEPTA',
+            date: formatChileDateTime(new Date()), timestamp: new Date().toISOString(), deviceId: getDeviceId()
+        };
+        mergeConsents([c]);
+        postToSheets('addConsent', { consent: c });
+        if (acepta) {
+            showQuiz();
+        } else {
+            alert('Quedó registrado que no aceptas el uso de la cámara.\n\nNo puedes rendir el test con la app. Avisa a tu supervisor para hacer el control de fatiga por otro medio.');
+            if (isAdminLevel(currentUser)) showAdminDashboard(); else logout();
+        }
+    }
+
+    // ===== Borrado de fotos en este equipo al terminar el turno =====
+    function purgeOldLocalPhotos() {
+        const limite = Date.now() - RETENCION_FOTOS_HORAS * 3600 * 1000;
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('img_base64_')) keys.push(k);
+        }
+        keys.forEach(k => {
+            const m = k.match(/^img_base64_log_(\d+)_/);
+            const t = m ? Number(m[1]) : 0;
+            if (!t || t < limite) localStorage.removeItem(k);
+        });
+        // También se quitan las fotos que hayan quedado dentro de los registros
+        try {
+            const logs = JSON.parse(localStorage.getItem('logs')) || [];
+            let changed = false;
+            logs.forEach(l => {
+                const t = parseLogTimestamp(l).getTime();
+                if ((l.photo1 || l.photo2) && (!t || t < limite)) {
+                    if (String(l.photo1 || '').startsWith('data:') || String(l.photo1 || '').includes('drive.google.com')) { l.photo1 = 'Eliminada (fin de turno)'; changed = true; }
+                    if (String(l.photo2 || '').startsWith('data:') || String(l.photo2 || '').includes('drive.google.com')) { l.photo2 = 'Eliminada (fin de turno)'; changed = true; }
+                }
+            });
+            if (changed) localStorage.setItem('logs', JSON.stringify(logs));
+        } catch (e) { /* sin registros */ }
+    }
+    setInterval(purgeOldLocalPhotos, 15 * 60000);
+
     // ===== Pestañas del panel =====
     let currentAdminTab = 'hoy';
     function showAdminTab(tab) {
@@ -2044,6 +2171,7 @@
 
     function getFormattedImageUrl(url) {
         if (!url || url === "Sin foto" || url.startsWith("Error")) return null;
+        if (!url.startsWith('data:image') && !url.startsWith('http')) return null;
         if (url.startsWith('data:image')) return url;
 
         const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
@@ -2243,10 +2371,34 @@
         }
     }
 
+    // Pide los datos a la planilla con la sesión del equipo. Si la planilla
+    // todavía tiene el programa antiguo, usa el método anterior.
+    async function fetchInitialData(auth) {
+        if (auth) {
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getInitialData', auth }) });
+                const d = await res.json();
+                if (d && d.status) return d;
+            } catch (e) { /* programa antiguo o sin señal */ }
+        }
+        // Programa antiguo: GET con claves a la vista -> se convierten a huella
+        const res = await fetch(SCRIPT_URL + "?action=getInitialData");
+        const d = await res.json();
+        if (d && Array.isArray(d.users)) {
+            for (const u of d.users) {
+                if (u.pass !== undefined && !u.h) u.h = await passHash(u.rut, String(u.pass).trim().replace(/\D/g, ''));
+                delete u.pass;
+            }
+            d.status = d.status || 'legacy';
+        }
+        return d;
+    }
+
     async function syncDataFromCloud() {
         try {
-            const res = await fetch(SCRIPT_URL + "?action=getInitialData");
-            const data = await res.json();
+            const data = await fetchInitialData(getSession());
+            if (!data || data.status === 'denied' || data.status === 'error') return;
+            if (Array.isArray(data.consents)) mergeConsents(data.consents);
 
             // La cola pendiente es la que nos dice qué cambios locales todavía
             // NO han llegado al servidor (por falta de señal). Se usa para no
@@ -2277,7 +2429,7 @@
                     rut: String(u.rut).trim().toUpperCase(),
                     name: String(u.name).trim(),
                     role: String(u.role).trim().toLowerCase(),
-                    pass: String(u.pass).trim().replace(/\D/g, '')
+                    h: String(u.h || '')
                 }));
 
                 const localUsersNow = JSON.parse(localStorage.getItem('users')) || [];
@@ -2411,7 +2563,7 @@
             return;
         }
 
-        if (currentUser.pass !== currentPass) {
+        if (currentUser.h !== await passHash(currentUser.rut, currentPass)) {
             alert('La contraseña actual es incorrecta.');
             return;
         }
@@ -2425,11 +2577,14 @@
         const index = users.findIndex(u => formatRut(u.rut) === formatRut(currentUser.rut));
 
         if (index !== -1) {
-            users[index].pass = newPass;
-            currentUser.pass = newPass;
+            const newH = await passHash(currentUser.rut, newPass);
+            // Se envía con la sesión actual (clave antigua) y luego se actualiza
+            await postToSheets("updatePass", { rut: currentUser.rut, newPass: newPass });
+            users[index].h = newH;
+            delete users[index].pass;
+            currentUser.h = newH;
             localStorage.setItem('users', JSON.stringify(users));
-
-            postToSheets("updatePass", { rut: currentUser.rut, newPass: newPass });
+            setSession(currentUser.rut, newH);
 
             alert('Contraseña actualizada correctamente.');
             document.getElementById('currentPass').value = '';
@@ -2477,7 +2632,9 @@
         return rutStr.toString().replace(/[^0-9kK]/g, '').toUpperCase();
     }
 
-    function forceInitMaster() {
+    async function forceInitMaster() {
+        try { await migrateLocalUsers(); } catch (e) { console.error('[Migración claves]', e); }
+        try { purgeOldLocalPhotos(); } catch (e) { console.error('[Fotos]', e); }
         let users = JSON.parse(localStorage.getItem('users')) || [];
         users = enforceMasterSuperAdmin(users);
         localStorage.setItem('users', JSON.stringify(users));
@@ -2517,19 +2674,47 @@
         setActiveInput('loginPass');
     }
 
-    function handleLogin(e) {
+    async function handleLogin(e) {
         e.preventDefault();
         const inputRut = formatRut(document.getElementById('loginRut').value);
         const inputPass = document.getElementById('loginPass').value.trim();
+        if (!inputRut || !inputPass) { alert('Ingresa tu RUT y tu clave.'); return; }
 
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const user = users.find(u => formatRut(u.rut) === inputRut && String(u.pass).trim() === inputPass);
+        await migrateLocalUsers();
+        const h = await passHash(inputRut, inputPass);
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let user = users.find(u => formatRut(u.rut) === inputRut && u.h === h);
+
+        // Si no está en este equipo (equipo nuevo o clave cambiada en otro
+        // equipo), se intenta ingresar en línea con la planilla.
+        if (!user) {
+            try {
+                const data = await fetchInitialData({ rut: inputRut, h });
+                if (data && data.status === 'success') {
+                    setSession(inputRut, h);
+                    await syncDataFromCloud();
+                    users = JSON.parse(localStorage.getItem('users')) || [];
+                    user = users.find(u => formatRut(u.rut) === inputRut && u.h === h);
+                } else if (data && data.status === 'legacy') {
+                    const lu = (data.users || []).find(u => formatRut(u.rut) === inputRut && u.h === h);
+                    if (lu) {
+                        setSession(inputRut, h);
+                        await syncDataFromCloud();
+                        users = JSON.parse(localStorage.getItem('users')) || [];
+                        user = users.find(u => formatRut(u.rut) === inputRut && u.h === h);
+                    }
+                }
+            } catch (err) {
+                console.warn('[Login] Sin conexión para validar en línea:', err);
+            }
+        }
 
         if (!user) {
             alert('RUT o contraseña incorrectos.');
             return;
         }
 
+        setSession(user.rut, h);
         currentUser = user;
         document.getElementById('viewLogin').style.display = 'none';
 
@@ -2549,6 +2734,7 @@
 
     function showQuiz() {
         stopAutoSync();
+        if (consentStatus(currentUser.rut) !== 'ACEPTA') { showConsent(); return; }
         hideAllViews();
         document.getElementById('viewQuiz').style.display = 'block';
         document.getElementById('welcomeUser').innerText = `Hola, ${currentUser.name} (RUT: ${currentUser.rut})`;
@@ -2628,9 +2814,9 @@
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = '';
 
-        // Solo el superadmin ve las claves de otros usuarios.
-        const canSeePasswords = isSuperAdmin(currentUser);
-        document.getElementById('thClave').style.display = canSeePasswords ? '' : 'none';
+        // Las claves ya no se ven: solo se pueden restablecer.
+        const canReset = isAdminLevel(currentUser);
+        document.getElementById('thClave').style.display = 'none';
 
         const q = (document.getElementById('userSearch').value || '').trim().toLowerCase();
         const qRut = formatRut(q);
@@ -2658,11 +2844,11 @@
                 <td>${info.puesto ? `<div style="font-weight:600; margin-bottom:4px;">${info.puesto}</div>` : '<div class="muted-sm" style="font-size:12px; margin-bottom:4px;">Sin cargo</div>'}<span class="tag ${cargo.tag}">${cargo.label}</span>${acceso}</td>
                 <td>${JORNADAS[info.turno].label}</td>
                 <td>${hoy}</td>
-                ${canSeePasswords ? `<td><code style="color:#f87171;">${u.pass}</code></td>` : ''}
                 <td>
                     <div style="display:flex; gap:6px; flex-wrap:nowrap;">
                         <button class="btn btn-info" onclick="openEditPerson('${u.rut}')">Editar</button>
                         <button class="btn btn-info btn-ghost" onclick="openUserReport('${u.rut}')">Reporte</button>
+                        ${canReset && !isMaster ? `<button class="btn btn-info btn-ghost" onclick="resetUserPass('${u.rut}')">Restablecer clave</button>` : ''}
                         ${!isMaster ? `<button class="btn btn-danger" onclick="deleteUser('${u.rut}')">Eliminar</button>` : ''}
                     </div>
                 </td>
@@ -2772,8 +2958,9 @@
         detailBox.style.display = 'block';
         detailBox.innerHTML = `
             <div style="display:flex; justify-content:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                ${(!p1Local && !p2Local) ? `<div class="muted-sm" style="padding:10px 14px; border:1px dashed var(--border-color); border-radius:8px;">📷 Fotos eliminadas al terminar el turno (política de privacidad F&amp;S).</div>` : ''}
                 ${p1Local ? `<div style="text-align:center;"><span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Inicio del Test</span><img src="${p1Local}" style="width:140px; height:105px; object-fit:cover; border-radius:8px; border:2px solid var(--salfa-red);" /></div>` : ''}
-                ${p2Local ? `<div style="text-align:center;"><span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Mitad del Test (30s)</span><img src="${p2Local}" style="width:140px; height:105px; object-fit:cover; border-radius:8px; border:2px solid #0284c7;" /></div>` : ''}
+                ${p2Local ? `<div style="text-align:center;"><span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Mitad del Test</span><img src="${p2Local}" style="width:140px; height:105px; object-fit:cover; border-radius:8px; border:2px solid #0284c7;" /></div>` : ''}
             </div>
             <div style="text-align:center; margin-bottom:15px;">
                 <span class="badge ${badgeClass}" style="font-size:18px; padding:8px 20px;">ESTADO: ${log.status}</span>
@@ -3119,6 +3306,19 @@
         }
     }
 
+
+    // Restablece la clave de un usuario a la inicial (5 primeros números del RUT)
+    async function resetUserPass(rut) {
+        if (!currentUser || !isAdminLevel(currentUser)) return;
+        const def = formatRut(rut).replace(/\D/g, '').substring(0, 5) || '12345';
+        if (!confirm(`¿Restablecer la clave de ${rut}?\n\nQuedará como la clave inicial: ${def} (5 primeros números del RUT). Avísale para que la cambie.`)) return;
+        await postToSheets('updatePass', { rut, newPass: def });
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const u = users.find(x => formatRut(x.rut) === formatRut(rut));
+        if (u) { u.h = await passHash(rut, def); delete u.pass; localStorage.setItem('users', JSON.stringify(users)); }
+        alert(`Clave restablecida. La nueva clave de ${rut} es ${def}.`);
+    }
+
     async function handleAddUser(e) {
         e.preventDefault();
         const rawRut = document.getElementById('newRut').value;
@@ -3139,11 +3339,11 @@
             return;
         }
 
-        const newUser = { rut: rawRut.trim().toUpperCase(), pass: defaultPass, name: name, role: role };
+        const newUser = { rut: rawRut.trim().toUpperCase(), name: name, role: role, h: await passHash(rawRut, defaultPass) };
         users.push(newUser);
         localStorage.setItem('users', JSON.stringify(users));
 
-        postToSheets("addUser", { user: newUser });
+        postToSheets("addUser", { user: { rut: newUser.rut, name, role, pass: defaultPass } });
 
         // Cargo y turno
         savePersonInfo(newUser.rut, {
@@ -3475,6 +3675,7 @@
 
     async function startPhotoCountdownSequence() {
         if (!currentUser) return;
+        if (consentStatus(currentUser.rut) !== 'ACEPTA') { showConsent(); return; }
         if (!document.getElementById('chkDeclaracion').checked) {
             alert('Antes de iniciar, marca la declaración: confirma que respondiste con la verdad.');
             return;
@@ -3900,6 +4101,7 @@
     function hideAllViews() {
         document.getElementById('viewLogin').style.display = 'none';
         document.getElementById('viewQuiz').style.display = 'none';
+        document.getElementById('viewConsent').style.display = 'none';
         document.getElementById('viewBlocked').style.display = 'none';
         document.getElementById('viewResult').style.display = 'none';
         document.getElementById('viewAdmin').style.display = 'none';

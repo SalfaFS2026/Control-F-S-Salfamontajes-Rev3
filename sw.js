@@ -10,7 +10,7 @@
 // que los dispositivos descarguen la versión nueva la próxima vez que
 // tengan señal, en vez de quedarse con la copia vieja guardada.
 
-const CACHE_NAME = 'fs-salfamontajes-v5';
+const CACHE_NAME = 'fs-salfamontajes-v6';
 
 // Recursos que se guardan de entrada para que el login, el cuestionario y
 // el test funcionen offline desde el primer momento.
@@ -62,6 +62,25 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (event.request.method !== 'GET') return;
+
+    // La página principal (index.html) va primero a la red, para que los
+    // cambios publicados se vean de inmediato. Solo si no hay señal se usa
+    // la copia guardada.
+    const isPage = event.request.mode === 'navigate' || url.endsWith('/index.html') || url.endsWith('/');
+    if (isPage) {
+        event.respondWith(
+            fetch(event.request, { cache: 'no-cache' })
+                .then((response) => {
+                    if (response && response.ok) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(event.request).then((c) => c || caches.match('./index.html')))
+        );
+        return;
+    }
 
     event.respondWith(
         caches.match(event.request).then((cached) => {

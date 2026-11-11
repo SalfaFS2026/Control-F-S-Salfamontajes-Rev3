@@ -172,6 +172,41 @@
         .consent-text p { color: #e2e8f0; font-size: 15px; line-height: 1.55; }
         .btn-success-lg { background: #16a34a; }
         .btn-success-lg:active { background: #15803d; }
+
+        /* ===== Apariencia ===== */
+        body { background:
+            radial-gradient(900px 500px at 50% -120px, rgba(227, 27, 35, 0.22), transparent 70%),
+            radial-gradient(700px 400px at 100% 100%, rgba(2, 132, 199, 0.10), transparent 70%),
+            var(--bg-dark); background-attachment: fixed; }
+        .card { border-top: 3px solid var(--salfa-red); background: linear-gradient(180deg, #22304a 0%, var(--card-dark) 140px); }
+        .btn { box-shadow: 0 6px 16px -6px rgba(227, 27, 35, 0.55); }
+        .btn-secondary, .btn-ghost { box-shadow: none; }
+        .opt-btn { transition: transform .08s, background .15s; }
+        .opt-btn.selected { background: linear-gradient(180deg, rgba(227,27,35,0.45), rgba(227,27,35,0.25)); border-color: #ff4d55; }
+        .q-ico { display:inline-block; width: 30px; height: 30px; line-height: 30px; text-align:center; background: rgba(255,255,255,0.08); border-radius: 8px; margin-right: 6px; }
+        .q-sub { display:block; font-size: 13px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+        .steps { display:flex; align-items:center; justify-content:center; gap: 6px; margin-bottom: 16px; }
+        .step { display:flex; align-items:center; gap:6px; font-size: 13px; color: var(--text-muted); font-weight: 700; white-space: nowrap; }
+        .step span { width: 24px; height: 24px; border-radius: 50%; background: var(--input-dark); display:flex; align-items:center; justify-content:center; color:#fff; font-size: 12px; }
+        .step.active { color: #fff; }
+        .step.active span { background: var(--salfa-red); box-shadow: 0 0 0 4px rgba(227,27,35,0.25); }
+        .step-line { flex: 0 1 36px; height: 2px; background: var(--border-color); }
+        .result-card { transition: background .3s; }
+        .result-icon { text-align:center; font-size: 64px; line-height: 1; margin: 14px 0 4px; }
+        .rs-normal { background: linear-gradient(180deg, #14532d 0%, var(--card-dark) 55%); border-color: #16a34a; }
+        .rs-leve { background: linear-gradient(180deg, #0c4a6e 0%, var(--card-dark) 55%); border-color: #0284c7; }
+        .rs-moderado { background: linear-gradient(180deg, #713f12 0%, var(--card-dark) 55%); border-color: #ca8a04; }
+        .rs-severo { background: linear-gradient(180deg, #7f1d1d 0%, var(--card-dark) 55%); border-color: #E31B23; }
+        .kpi-row .day-kpi { position: relative; overflow: hidden; border-top: 3px solid #64748b; }
+        .kpi-row .day-kpi:nth-child(1) { border-top-color: #22c55e; background: linear-gradient(180deg, rgba(34,197,94,0.12), var(--card-dark) 70%); }
+        .kpi-row .day-kpi:nth-child(2) { border-top-color: #38bdf8; background: linear-gradient(180deg, rgba(56,189,248,0.12), var(--card-dark) 70%); }
+        .kpi-row .day-kpi:nth-child(3) { border-top-color: #94a3b8; }
+        .kpi-row .day-kpi:nth-child(4) { border-top-color: #ef4444; background: linear-gradient(180deg, rgba(239,68,68,0.14), var(--card-dark) 70%); }
+        .kpi-row .day-kpi:nth-child(5) { border-top-color: #facc15; background: linear-gradient(180deg, rgba(250,204,21,0.12), var(--card-dark) 70%); }
+        .day-kpi-val { font-size: 28px; }
+        .tab-btn.active { color:#fff; border-bottom-color: var(--salfa-red); background: linear-gradient(180deg, transparent, rgba(227,27,35,0.12)); border-radius: 8px 8px 0 0; }
+        .user-card { transition: transform .08s; }
+        .user-card:active { transform: scale(0.97); }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -447,11 +482,18 @@
 
     <!-- 2. CUESTIONARIO -->
     <div id="viewQuiz" class="card" style="display: none;">
+        <div class="steps">
+            <div class="step active"><span>1</span>Preguntas</div>
+            <div class="step-line"></div>
+            <div class="step"><span>2</span>Test 3 min</div>
+            <div class="step-line"></div>
+            <div class="step"><span>3</span>Resultado</div>
+        </div>
         <h2>Evaluación de Estado Personal (F&S)</h2>
         <p id="welcomeUser" style="text-align: center; color: #f87171; font-weight: bold; font-size: 16px; margin-bottom: 20px;"></p>
         
         <div class="form-group">
-            <label>1. ¿Cuántas horas dormiste anoche?</label>
+            <label><span class="q-ico">🛏️</span> 1. ¿Cuántas horas dormiste anoche?</label>
             <div class="option-group" id="grpSleep">
                 <div class="opt-btn selected" onclick="selectOpt('grpSleep', this, 'good')">7 hrs o más</div>
                 <div class="opt-btn" onclick="selectOpt('grpSleep', this, 'medium')">5 a 6 hrs</div>
@@ -460,7 +502,7 @@
         </div>
         
         <div class="form-group">
-            <label>2. Nivel de somnolencia en este momento – Escala KSS (1 = Muy despierto / 9 = Muy somnoliento, luchando contra el sueño):</label>
+            <label><span class="q-ico">😴</span> 2. ¿Cuánto sueño sientes ahora? <span class="q-sub">Escala KSS: 1 = muy despierto · 9 = luchando contra el sueño</span></label>
             <div class="slider-touch-container">
                 <button type="button" class="btn-step" onclick="adjustAlert(-1)">-</button>
                 <input type="range" id="qAlert" min="1" max="9" value="3" oninput="updateKssLabel(this.value)" style="accent-color: var(--salfa-red); flex-grow: 1;">
@@ -471,7 +513,7 @@
         </div>
 
         <div class="form-group">
-            <label>3. ¿Sientes algún malestar físico o dolor en este momento?</label>
+            <label><span class="q-ico">🤕</span> 3. ¿Sientes algún malestar físico o dolor en este momento?</label>
             <div class="option-group" id="grpPain">
                 <div class="opt-btn selected" onclick="selectOpt('grpPain', this, 'none')">Sin dolor / Bien</div>
                 <div class="opt-btn" onclick="selectOpt('grpPain', this, 'mild')">Malestar leve</div>
@@ -480,7 +522,7 @@
         </div>
 
         <div class="form-group">
-            <label>4. ¿Has consumido medicamentos que causen somnolencia o energizantes?</label>
+            <label><span class="q-ico">💊</span> 4. ¿Has consumido medicamentos que causen somnolencia o energizantes?</label>
             <div class="option-group" id="grpMeds">
                 <div class="opt-btn selected" onclick="selectOpt('grpMeds', this, 'none')">Ninguno</div>
                 <div class="opt-btn" onclick="selectOpt('grpMeds', this, 'caffeine')">Café / Energéticas</div>
@@ -489,7 +531,7 @@
         </div>
 
         <div class="form-group">
-            <label>5. Estado de estrés o carga mental actual:</label>
+            <label><span class="q-ico">🧠</span> 5. Estado de estrés o carga mental actual:</label>
             <div class="option-group" id="grpStress">
                 <div class="opt-btn selected" onclick="selectOpt('grpStress', this, 'low')">Bajo / Normal</div>
                 <div class="opt-btn" onclick="selectOpt('grpStress', this, 'medium')">Moderado</div>
@@ -512,6 +554,17 @@
     </div>
 
     <!-- 3. RESULTADO INDIVIDUAL (VENTANA EMERGENTE) -->
+    <!-- 1b. CAMBIO DE CLAVE OBLIGATORIO -->
+    <div id="viewForcePass" class="card" style="display: none; max-width: 520px; margin-left:auto; margin-right:auto;">
+        <h2 style="margin-bottom:6px;">🔐 Crea tu clave personal</h2>
+        <p id="forcePassWho" style="text-align:center; color:#f87171; font-weight:bold; margin-top:0;"></p>
+        <p style="text-align:center;">Estás usando la clave inicial, que es fácil de adivinar. Crea una clave nueva de <b>al menos 6 números</b> y no se la compartas a nadie.</p>
+        <div class="form-group"><label class="lbl-sm">Nueva clave</label><input type="password" id="fpNew" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"></div>
+        <div class="form-group"><label class="lbl-sm">Repite la nueva clave</label><input type="password" id="fpNew2" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"></div>
+        <button class="btn" onclick="submitForcedPass()">Guardar mi clave</button>
+        <button class="btn btn-secondary" id="btnForceLater" style="display:none;" onclick="continueAfterLogin()">Continuar por ahora</button>
+    </div>
+
     <!-- 2a. CONSENTIMIENTO DE CÁMARA Y FOTOS -->
     <div id="viewConsent" class="card" style="display: none;">
         <h2 style="margin-bottom:6px;">📷 Uso de cámara y fotografías</h2>
@@ -538,12 +591,13 @@
     </div>
 
     <div id="viewResult" class="modal">
-        <div class="modal-content" style="max-width: 420px;">
+        <div class="modal-content result-card" id="resultCard" style="max-width: 440px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                <h2 style="margin: 0; text-align: left;">Resultado de Evaluación F&S (PVT)</h2>
+                <h2 style="margin: 0; text-align: left;">Resultado de tu evaluación F&S</h2>
                 <button type="button" class="btn-danger" onclick="closeResultModal()" aria-label="Cerrar" style="width: 36px; height: 36px; min-width: 36px; padding: 0; font-size: 18px; border-radius: 8px; flex-shrink: 0;">✕</button>
             </div>
-            <div id="statusBadgeContainer" style="text-align: center; margin: 15px 0;"></div>
+            <div id="resultIcon" class="result-icon">✅</div>
+            <div id="statusBadgeContainer" style="text-align: center; margin: 6px 0 12px;"></div>
             <div id="noDriveBanner" style="display:none; background:#E31B23; color:#fff; font-weight:900; font-size:19px; line-height:1.35; text-align:center; padding:14px 16px; border-radius:12px; margin: 10px 0 4px; letter-spacing:0.3px;">⛔ POR NINGÚN MOTIVO PUEDES CONDUCIR NI OPERAR EQUIPOS</div>
             <p id="resultMsg" style="text-align: center; font-size: 16px; line-height: 1.6; color: #ffffff;"></p>
             <button class="btn" onclick="showQuiz()">Volver a Evaluar</button>
@@ -885,7 +939,7 @@
                 <h3 class="panel-title" style="color:#38bdf8;">Cambiar mi contraseña</h3>
                 <form onsubmit="handleChangePassword(event)" class="form-grid">
                     <div><label class="lbl-sm">Contraseña actual</label><input type="password" id="currentPass" pattern="[0-9]*" inputmode="numeric" class="inp-left" required></div>
-                    <div><label class="lbl-sm">Nueva contraseña (solo números)</label><input type="password" id="newPass" pattern="[0-9]*" inputmode="numeric" class="inp-left" required></div>
+                    <div><label class="lbl-sm">Nueva contraseña (mínimo 6 números)</label><input type="password" id="newPass" pattern="[0-9]*" inputmode="numeric" class="inp-left" required></div>
                     <div class="form-grid-btn"><button type="submit" class="btn btn-info" style="margin:0; width:100%; padding:14px;">Actualizar clave</button></div>
                 </form>
             </div>
@@ -1259,8 +1313,25 @@
     }
     function setAlertsQueue(q) { localStorage.setItem(ALERTS_QUEUE_KEY, JSON.stringify(q)); }
 
+    // Lee datos del programa de alertas con la sesión del equipo. Si el
+    // programa todavía es la versión anterior, usa el método antiguo.
+    async function alertsRead(newAction, oldAction) {
+        try {
+            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ action: newAction, auth: getSession() }) });
+            const d = await res.json();
+            if (d && d.ok) return d;
+            if (d && d.error && !/desconocida/i.test(d.error)) return null;
+        } catch (e) { /* sin señal */ }
+        try {
+            const res = await fetchWithTimeout(ALERTS_URL + '?action=' + oldAction, 6000);
+            const d = await res.json();
+            return (d && d.ok) ? d : null;
+        } catch (e) { return null; }
+    }
+
     async function postToAlerts(payload) {
         if (!ALERTS_URL) return null;
+        payload = { auth: getSession(), ...payload };
         try {
             const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify(payload) });
             return await res.json();
@@ -1282,7 +1353,7 @@
         const remaining = [];
         for (const item of q) {
             try {
-                await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify(item) });
+                await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ auth: getSession(), ...item }) });
             } catch (e) {
                 remaining.push(item);
             }
@@ -1363,8 +1434,7 @@
     async function refreshReleasesFromServer() {
         if (!ALERTS_URL) return;
         try {
-            const res = await fetchWithTimeout(ALERTS_URL + '?action=liberaciones', 6000);
-            const data = await res.json();
+            const data = await alertsRead('leerLiberaciones', 'liberaciones');
             if (data && data.ok) mergeReleases(data.liberaciones);
         } catch (e) {
             console.warn('[Alertas] No se pudieron traer las liberaciones:', e);
@@ -1603,8 +1673,7 @@
     async function refreshCalendarioFromServer() {
         if (!ALERTS_URL) return;
         try {
-            const res = await fetchWithTimeout(ALERTS_URL + '?action=calendario', 6000);
-            const data = await res.json();
+            const data = await alertsRead('leerCalendario', 'calendario');
             if (data && data.ok && data.calendario) {
                 const loc = getCalendario();
                 if (String(data.calendario.updatedAt || '') > String(loc.updatedAt || '')) setCalendario(data.calendario);
@@ -1658,8 +1727,7 @@
     async function refreshPersonalFromServer() {
         if (!ALERTS_URL) return;
         try {
-            const res = await fetchWithTimeout(ALERTS_URL + '?action=personal', 6000);
-            const data = await res.json();
+            const data = await alertsRead('leerPersonal', 'personal');
             if (data && data.ok) mergePersonalFromServer(data.personal);
         } catch (e) {
             console.warn('[Personal] No se pudo traer cargo/jornada desde el servidor:', e);
@@ -1772,7 +1840,7 @@
         const pin = document.getElementById('cfgPin').value.trim();
         if (!pin) { alert('Ingresa la clave de supervisores.'); return; }
         try {
-            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ action: 'leerCorreos', pin }) });
+            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ action: 'leerCorreos', pin, auth: getSession() }) });
             const data = await res.json();
             if (!data.ok) { sessionStorage.removeItem('fsReleasePin'); alert(data.error || 'No se pudo leer la configuración.'); return; }
             sessionStorage.setItem('fsReleasePin', pin);
@@ -1798,7 +1866,7 @@
         const pending = document.getElementById('newAlertEmail').value.trim();
         if (pending) { alert('Tienes un correo escrito sin agregar. Presiona "+ Agregar" o bórralo.'); return; }
         try {
-            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ action: 'guardarCorreos', pin, correos: alertEmails }) });
+            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ action: 'guardarCorreos', pin, correos: alertEmails, auth: getSession() }) });
             const data = await res.json();
             if (!data.ok) { alert(data.error || 'No se pudo guardar.'); return; }
             alert('Correos guardados. Desde ahora las alertas llegan a esta lista.');
@@ -1970,6 +2038,62 @@
         } catch (e) { /* sin registros */ }
     }
     setInterval(purgeOldLocalPhotos, 15 * 60000);
+
+
+    // ===== Claves =====
+    const MIN_PASS_LEN = 6;
+    function defaultPassFor(rut) { return formatRut(rut).replace(/\D/g, '').substring(0, 5) || '12345'; }
+
+    // Cambia la clave en la planilla (requiere señal). Devuelve true si quedó guardada.
+    async function changePasswordOnline(newPass) {
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'updatePass', auth: getSession(), rut: currentUser.rut, newPass })
+        });
+        const d = await res.json();
+        if (!d || d.status !== 'success') throw new Error((d && d.message) || 'No se pudo guardar la clave.');
+        const newH = await passHash(currentUser.rut, newPass);
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const u = users.find(x => formatRut(x.rut) === formatRut(currentUser.rut));
+        if (u) { u.h = newH; delete u.pass; }
+        localStorage.setItem('users', JSON.stringify(users));
+        currentUser.h = newH;
+        setSession(currentUser.rut, newH);
+        return true;
+    }
+
+    function validateNewPass(p1, p2) {
+        if (!/^\d+$/.test(p1)) return 'La clave debe tener solo números.';
+        if (p1.length < MIN_PASS_LEN) return `La clave debe tener al menos ${MIN_PASS_LEN} números.`;
+        if (p1 !== p2) return 'Las dos claves no coinciden.';
+        if (p1 === defaultPassFor(currentUser.rut) || formatRut(currentUser.rut).startsWith(p1)) return 'No uses números de tu RUT como clave.';
+        if (/^(\d)\1+$/.test(p1) || '0123456789012345'.includes(p1) || '9876543210987654'.includes(p1)) return 'Esa clave es muy fácil de adivinar (números repetidos o seguidos).';
+        return '';
+    }
+
+    function showForcePass() {
+        hideAllViews();
+        document.getElementById('forcePassWho').innerText = `${currentUser.name} (RUT: ${currentUser.rut})`;
+        document.getElementById('fpNew').value = '';
+        document.getElementById('fpNew2').value = '';
+        document.getElementById('btnForceLater').style.display = 'none';
+        document.getElementById('viewForcePass').style.display = 'block';
+    }
+
+    async function submitForcedPass() {
+        const p1 = document.getElementById('fpNew').value.trim();
+        const p2 = document.getElementById('fpNew2').value.trim();
+        const err = validateNewPass(p1, p2);
+        if (err) { alert(err); return; }
+        try {
+            await changePasswordOnline(p1);
+            alert('Listo, tu clave quedó guardada. Úsala desde ahora para entrar.');
+            continueAfterLogin();
+        } catch (e) {
+            alert('No se pudo guardar la clave (necesitas señal). Puedes seguir por ahora; te lo pediremos de nuevo la próxima vez que entres.');
+            document.getElementById('btnForceLater').style.display = 'block';
+        }
+    }
 
     // ===== Pestañas del panel =====
     let currentAdminTab = 'hoy';
@@ -2554,42 +2678,22 @@
     async function handleChangePassword(e) {
         e.preventDefault();
         if (!currentUser) return;
-
         const currentPass = document.getElementById('currentPass').value.trim();
         const newPass = document.getElementById('newPass').value.trim();
-
-        if (!/^\d+$/.test(newPass)) {
-            alert('La nueva contraseña debe contener únicamente números.');
-            return;
-        }
-
         if (currentUser.h !== await passHash(currentUser.rut, currentPass)) {
             alert('La contraseña actual es incorrecta.');
             return;
         }
-
-        if (newPass.length < 4) {
-            alert('La nueva contraseña debe tener al menos 4 dígitos.');
-            return;
-        }
-
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        const index = users.findIndex(u => formatRut(u.rut) === formatRut(currentUser.rut));
-
-        if (index !== -1) {
-            const newH = await passHash(currentUser.rut, newPass);
-            // Se envía con la sesión actual (clave antigua) y luego se actualiza
-            await postToSheets("updatePass", { rut: currentUser.rut, newPass: newPass });
-            users[index].h = newH;
-            delete users[index].pass;
-            currentUser.h = newH;
-            localStorage.setItem('users', JSON.stringify(users));
-            setSession(currentUser.rut, newH);
-
+        const err = validateNewPass(newPass, newPass);
+        if (err) { alert(err); return; }
+        try {
+            await changePasswordOnline(newPass);
             alert('Contraseña actualizada correctamente.');
             document.getElementById('currentPass').value = '';
             document.getElementById('newPass').value = '';
             renderDashboard();
+        } catch (e2) {
+            alert('No se pudo cambiar la clave. Revisa que tengas señal e intenta de nuevo.');
         }
     }
 
@@ -2719,6 +2823,19 @@
         document.getElementById('viewLogin').style.display = 'none';
 
         requestFullScreen();
+
+        // Si usa la clave inicial (5 primeros números del RUT), debe cambiarla
+        if (h === await passHash(user.rut, defaultPassFor(user.rut))) {
+            showForcePass();
+            return;
+        }
+        continueAfterLogin();
+    }
+
+    function continueAfterLogin() {
+        const user = currentUser;
+        if (!user) return;
+        hideAllViews();
 
         const fsBtn = document.getElementById('btnToggleFS');
         const userRole = String(user.role).trim().toLowerCase();
@@ -3310,8 +3427,8 @@
     // Restablece la clave de un usuario a la inicial (5 primeros números del RUT)
     async function resetUserPass(rut) {
         if (!currentUser || !isAdminLevel(currentUser)) return;
-        const def = formatRut(rut).replace(/\D/g, '').substring(0, 5) || '12345';
-        if (!confirm(`¿Restablecer la clave de ${rut}?\n\nQuedará como la clave inicial: ${def} (5 primeros números del RUT). Avísale para que la cambie.`)) return;
+        const def = defaultPassFor(rut);
+        if (!confirm(`¿Restablecer la clave de ${rut}?\n\nQuedará como la clave inicial: ${def} (5 primeros números del RUT). La app le pedirá crear una clave nueva al entrar.`)) return;
         await postToSheets('updatePass', { rut, newPass: def });
         const users = JSON.parse(localStorage.getItem('users')) || [];
         const u = users.find(x => formatRut(x.rut) === formatRut(rut));
@@ -4084,6 +4201,10 @@
         }
 
         badgeContainer.innerHTML = `<span class="badge ${badgeClass}" style="font-size: 20px; padding: 10px 24px;">ESTADO: ${status}</span>`;
+        const rc = document.getElementById('resultCard');
+        rc.classList.remove('rs-normal', 'rs-leve', 'rs-moderado', 'rs-severo');
+        rc.classList.add('rs-' + status.toLowerCase());
+        document.getElementById('resultIcon').innerText = { NORMAL: '✅', LEVE: '🔵', MODERADO: '⚠️', SEVERO: '⛔' }[status] || '✅';
         resultMsg.innerText = resultMsgText;
         document.getElementById('noDriveBanner').style.display = (status === 'MODERADO' || status === 'SEVERO') ? 'block' : 'none';
     }
@@ -4102,6 +4223,7 @@
         document.getElementById('viewLogin').style.display = 'none';
         document.getElementById('viewQuiz').style.display = 'none';
         document.getElementById('viewConsent').style.display = 'none';
+        document.getElementById('viewForcePass').style.display = 'none';
         document.getElementById('viewBlocked').style.display = 'none';
         document.getElementById('viewResult').style.display = 'none';
         document.getElementById('viewAdmin').style.display = 'none';

@@ -389,7 +389,7 @@
                 ⚠️ ALERTA OPERACIONAL DE SEGURIDAD (EVALUACIONES CRÍTICAS HOY)
             </div>
             <p style="margin: 0 0 10px 0; font-size: 13px; color: #cbd5e1;">
-                Se han detectado evaluaciones con estado MODERADO o SEVERO durante la jornada. Los supervisores deben revisar el panel maestro.
+                Se han detectado evaluaciones con estado MODERADO o SEVERO durante la jornada. Estas personas <b>por ningún motivo pueden conducir ni operar equipos</b>. Los supervisores deben revisar el panel maestro.
             </p>
             <div id="alertListContainer"></div>
         </div>
@@ -510,6 +510,7 @@
                 <button type="button" class="btn-danger" onclick="closeResultModal()" aria-label="Cerrar" style="width: 36px; height: 36px; min-width: 36px; padding: 0; font-size: 18px; border-radius: 8px; flex-shrink: 0;">✕</button>
             </div>
             <div id="statusBadgeContainer" style="text-align: center; margin: 15px 0;"></div>
+            <div id="noDriveBanner" style="display:none; background:#E31B23; color:#fff; font-weight:900; font-size:19px; line-height:1.35; text-align:center; padding:14px 16px; border-radius:12px; margin: 10px 0 4px; letter-spacing:0.3px;">⛔ POR NINGÚN MOTIVO PUEDES CONDUCIR NI OPERAR EQUIPOS</div>
             <p id="resultMsg" style="text-align: center; font-size: 16px; line-height: 1.6; color: #ffffff;"></p>
             <button class="btn" onclick="showQuiz()">Volver a Evaluar</button>
             <button class="btn btn-secondary" id="btnAdminBack2" onclick="showAdminDashboard()" style="display:none;">Volver al Panel Maestro</button>
@@ -535,6 +536,7 @@
             <button class="tab-btn active" data-tab="hoy" onclick="showAdminTab('hoy')">Hoy</button>
             <button class="tab-btn" data-tab="personal" onclick="showAdminTab('personal')">Personal</button>
             <button class="tab-btn" data-tab="historial" onclick="showAdminTab('historial')">Historial e Informes</button>
+            <button class="tab-btn" data-tab="alertas" onclick="showAdminTab('alertas')">Correos de Alerta</button>
             <button class="tab-btn" data-tab="cuenta" onclick="showAdminTab('cuenta')">Mi Cuenta</button>
         </div>
 
@@ -608,17 +610,31 @@
                             <option value="supervisor">Supervisor de personal</option>
                             <option value="no_rinde">No rinde test (oficina)</option>
                         </select></div>
-                    <div><label class="lbl-sm">Jornada</label>
-                        <select id="newTurno" onchange="toggleInicioField('new')">
+                    <div><label class="lbl-sm">Turno</label>
+                        <select id="newTurno">
                             <option value="todos">Todos los días (sin turno)</option>
                             <option value="4x3">4x3</option>
-                            <option value="8x6">8x6</option>
-                            <option value="14x14">14x14</option>
+                            <option value="8x6A">8x6 · Turno A</option>
+                            <option value="8x6B">8x6 · Turno B</option>
+                            <option value="14x14A">14x14 · Turno A</option>
+                            <option value="14x14B">14x14 · Turno B</option>
                         </select></div>
-                    <div id="newInicioWrap" style="display:none;"><label class="lbl-sm">Primer día de su subida actual</label><input type="date" id="newInicio" class="inp-left"></div>
                     <div class="form-grid-btn"><button type="submit" class="btn" style="margin:0;">Agregar</button></div>
                 </form>
-                <p class="muted-sm" style="margin:8px 0 0;">La clave inicial son los 5 primeros números del RUT. Con la jornada y su primer día de subida, la app calcula sola qué días está de descanso.</p>
+                <p class="muted-sm" style="margin:8px 0 0;">La clave inicial son los 5 primeros números del RUT. Según el turno, la app calcula sola qué días está de descanso (ver "Calendario de turnos" más abajo).</p>
+            </div>
+
+            <div class="panel-box">
+                <h3 class="panel-title" style="color:#4ade80;">Calendario de turnos</h3>
+                <p class="muted-sm" style="margin-top:0;">Para cada turno, indica el primer día de una subida (la actual o cualquier otra). Con eso la app sabe qué días trabaja y qué días descansa todo el personal de ese turno.</p>
+                <div class="form-grid" id="calendarGrid">
+                    <div><label class="lbl-sm">4x3 · primer día de subida</label><input type="date" id="cal_4x3" class="inp-left"><div class="muted-sm cal-hint" id="calHint_4x3"></div></div>
+                    <div><label class="lbl-sm">8x6 Turno A · primer día de subida</label><input type="date" id="cal_8x6A" class="inp-left"><div class="muted-sm cal-hint" id="calHint_8x6A"></div></div>
+                    <div><label class="lbl-sm">8x6 Turno B · primer día de subida</label><input type="date" id="cal_8x6B" class="inp-left"><div class="muted-sm cal-hint" id="calHint_8x6B"></div></div>
+                    <div><label class="lbl-sm">14x14 Turno A · primer día de subida</label><input type="date" id="cal_14x14A" class="inp-left"><div class="muted-sm cal-hint" id="calHint_14x14A"></div></div>
+                    <div><label class="lbl-sm">14x14 Turno B · primer día de subida</label><input type="date" id="cal_14x14B" class="inp-left"><div class="muted-sm cal-hint" id="calHint_14x14B"></div></div>
+                    <div class="form-grid-btn"><button class="btn btn-success" style="margin:0; width:100%; padding:14px;" onclick="saveCalendario()">Guardar calendario</button></div>
+                </div>
             </div>
 
             <div class="panel-box">
@@ -633,7 +649,7 @@
                                 <th>RUT</th>
                                 <th>Nombre</th>
                                 <th>Cargo</th>
-                                <th>Jornada</th>
+                                <th>Turno</th>
                                 <th>Hoy</th>
                                 <th id="thClave">Clave</th>
                                 <th>Acciones</th>
@@ -679,6 +695,32 @@
             </div>
         </div>
 
+        <!-- ===== PESTAÑA CORREOS DE ALERTA ===== -->
+        <div class="tab-panel" id="tab-alertas" style="display:none;">
+            <div class="panel-box">
+                <h3 class="panel-title" style="color:#f87171;">Correos que reciben las alertas</h3>
+                <p class="muted-sm" style="margin-top:0;">Cuando alguien sale <b>MODERADO</b> o <b>SEVERO</b>, se envía un correo a todas estas direcciones indicando que <b>por ningún motivo puede conducir ni operar</b>. También reciben el resumen diario de quiénes no han rendido el test.</p>
+                <div id="alertsNotConfigured" class="panel-alert" style="display:none; padding:12px; border-radius:10px; margin-bottom:12px; font-size:14px;">
+                    Falta activar el programa de alertas (cuenta F&S). Mientras tanto no se pueden guardar ni enviar correos.
+                </div>
+                <div id="emailsLocked">
+                    <p class="muted-sm">Para ver o cambiar los correos, ingresa la clave de supervisores.</p>
+                    <div class="form-grid">
+                        <div><label class="lbl-sm">Clave de supervisores</label><input type="password" id="cfgPin" inputmode="numeric" class="inp-left"></div>
+                        <div class="form-grid-btn"><button class="btn btn-info" style="margin:0; width:100%; padding:14px;" onclick="loadAlertEmails()">Ver correos</button></div>
+                    </div>
+                </div>
+                <div id="emailsEditor" style="display:none;">
+                    <div id="emailList"></div>
+                    <div class="form-grid" style="margin-top:12px;">
+                        <div><label class="lbl-sm">Agregar correo</label><input type="email" id="newAlertEmail" placeholder="nombre@empresa.cl" class="inp-left" style="width:100%; padding:12px; background:var(--input-dark); border:2px solid var(--border-color); color:#fff; border-radius:10px;"></div>
+                        <div class="form-grid-btn"><button class="btn btn-secondary" style="margin:0; width:100%; padding:14px;" onclick="addAlertEmail()">+ Agregar</button></div>
+                    </div>
+                    <button class="btn btn-success" style="margin-top:14px; width:100%; padding:14px;" onclick="saveAlertEmails()">Guardar correos</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== PESTAÑA MI CUENTA ===== -->
         <div class="tab-panel" id="tab-cuenta" style="display:none;">
             <div class="panel-box">
@@ -706,14 +748,15 @@
                 <option value="supervisor">Supervisor de personal</option>
                 <option value="no_rinde">No rinde test (oficina)</option>
             </select></div>
-        <div class="form-group"><label class="lbl-sm">Jornada</label>
-            <select id="editTurno" onchange="toggleInicioField('edit')">
+        <div class="form-group"><label class="lbl-sm">Turno</label>
+            <select id="editTurno" onchange="updateEditPreview()">
                 <option value="todos">Todos los días (sin turno)</option>
                 <option value="4x3">4x3</option>
-                <option value="8x6">8x6</option>
-                <option value="14x14">14x14</option>
+                <option value="8x6A">8x6 · Turno A</option>
+                <option value="8x6B">8x6 · Turno B</option>
+                <option value="14x14A">14x14 · Turno A</option>
+                <option value="14x14B">14x14 · Turno B</option>
             </select></div>
-        <div class="form-group" id="editInicioWrap"><label class="lbl-sm">Primer día de su subida actual (o de cualquier subida)</label><input type="date" id="editInicio" class="inp-left" onchange="updateEditPreview()"></div>
         <p id="editPreview" class="muted-sm" style="margin-top:0;"></p>
         <div style="display:flex; gap:10px;">
             <button class="btn" onclick="savePersonEdit()" style="margin:0;">Guardar</button>
@@ -1153,12 +1196,12 @@
             document.getElementById('blockedIcon').innerText = '⏸️';
             document.getElementById('blockedTitle').innerText = 'Pausa obligatoria';
             document.getElementById('blockedMsg').innerText =
-                `${st.reason}\n\nDescansa ${PAUSA_MINUTOS} minutos, hidrátate y avisa a tu supervisor.\nPodrás repetir el test en ${mins} minuto(s), a las ${hora}.\n\nSi el segundo test vuelve a salir MODERADO o SEVERO, quedarás bloqueado hasta que tu supervisor te libere.`;
+                `${st.reason}\n\n⛔ POR NINGÚN MOTIVO PUEDES CONDUCIR NI OPERAR EQUIPOS.\n\nDescansa ${PAUSA_MINUTOS} minutos, hidrátate y avisa a tu supervisor.\nPodrás repetir el test en ${mins} minuto(s), a las ${hora}.\n\nSi el segundo test vuelve a salir MODERADO o SEVERO, quedarás bloqueado hasta que tu supervisor te libere.`;
         } else {
             document.getElementById('blockedIcon').innerText = '⛔';
             document.getElementById('blockedTitle').innerText = 'No puedes rendir el test';
             document.getElementById('blockedMsg').innerText =
-                `${st.reason}\n\nNo debes operar equipos ni conducir.\nTu supervisor ya fue avisado y debe conversar contigo y liberarte desde el Panel Maestro.`;
+                `${st.reason}\n\n⛔ POR NINGÚN MOTIVO PUEDES CONDUCIR NI OPERAR EQUIPOS.\nTu supervisor ya fue avisado y debe conversar contigo y liberarte desde el Panel Maestro.`;
         }
         return false;
     }
@@ -1301,7 +1344,7 @@
         const rc = document.getElementById('restListContainer');
         rc.innerHTML = descanso.length
             ? descanso.map(w => `<div style="padding:3px 0;">• ${w.name}${supTag(w)} <span class="muted-sm">(${computeShift(getPersonInfo(w)).text})</span></div>`).join('')
-            : '<div class="muted-sm">Nadie está de descanso hoy (o falta configurar las jornadas en la pestaña Personal).</div>';
+            : '<div class="muted-sm">Nadie está de descanso hoy (o falta configurar turnos y calendario en la pestaña Personal).</div>';
     }
 
     // =====================================================================
@@ -1312,11 +1355,66 @@
     // los días de descanso). Queda en este equipo y en el script de alertas,
     // para que valga en todos los equipos.
     const JORNADAS = {
-        'todos': { label: 'Todos los días', trabajo: 1, descanso: 0 },
-        '4x3':   { label: '4x3',   trabajo: 4,  descanso: 3 },
-        '8x6':   { label: '8x6',   trabajo: 8,  descanso: 6 },
-        '14x14': { label: '14x14', trabajo: 14, descanso: 14 }
+        'todos':  { label: 'Todos los días', trabajo: 1, descanso: 0 },
+        '4x3':    { label: '4x3',              trabajo: 4,  descanso: 3 },
+        '8x6A':   { label: '8x6 · Turno A',    trabajo: 8,  descanso: 6 },
+        '8x6B':   { label: '8x6 · Turno B',    trabajo: 8,  descanso: 6 },
+        '14x14A': { label: '14x14 · Turno A',  trabajo: 14, descanso: 14 },
+        '14x14B': { label: '14x14 · Turno B',  trabajo: 14, descanso: 14 }
     };
+    // Compatibilidad con jornadas guardadas antes de separar A y B
+    const JORNADA_ANTIGUA = { '8x6': '8x6A', '14x14': '14x14A' };
+    const TURNOS_CALENDARIO = ['4x3', '8x6A', '8x6B', '14x14A', '14x14B'];
+
+    // Calendario: primer día de una subida para cada turno ('YYYY-MM-DD')
+    function getCalendario() {
+        try { return JSON.parse(localStorage.getItem('fsCalendario')) || {}; } catch (e) { return {}; }
+    }
+    function setCalendario(c) { localStorage.setItem('fsCalendario', JSON.stringify(c)); }
+
+    function renderCalendarioForm() {
+        const cal = getCalendario();
+        TURNOS_CALENDARIO.forEach(t => {
+            const inp = document.getElementById('cal_' + t);
+            if (inp && document.activeElement !== inp) inp.value = cal[t] || '';
+            const hint = document.getElementById('calHint_' + t);
+            if (hint) {
+                if (!cal[t]) { hint.innerText = 'Sin fecha: este turno se cuenta todos los días.'; hint.style.color = '#facc15'; }
+                else {
+                    const sh = computeShift({ turno: t });
+                    hint.innerText = 'Hoy: ' + sh.text;
+                    hint.style.color = sh.onShift ? '#4ade80' : '#94a3b8';
+                }
+            }
+        });
+    }
+
+    function saveCalendario() {
+        const cal = getCalendario();
+        TURNOS_CALENDARIO.forEach(t => {
+            const v = document.getElementById('cal_' + t).value;
+            cal[t] = v || '';
+        });
+        cal.updatedAt = new Date().toISOString();
+        setCalendario(cal);
+        postToAlerts({ action: 'calendario', calendario: cal });
+        alert('Calendario de turnos guardado.');
+        renderDashboard();
+    }
+
+    async function refreshCalendarioFromServer() {
+        if (!ALERTS_URL) return;
+        try {
+            const res = await fetchWithTimeout(ALERTS_URL + '?action=calendario', 6000);
+            const data = await res.json();
+            if (data && data.ok && data.calendario) {
+                const loc = getCalendario();
+                if (String(data.calendario.updatedAt || '') > String(loc.updatedAt || '')) setCalendario(data.calendario);
+            }
+        } catch (e) {
+            console.warn('[Calendario] No se pudo traer desde el servidor:', e);
+        }
+    }
     const CARGOS = {
         'trabajador': { label: 'Trabajador', tag: 'tag-trab' },
         'supervisor': { label: 'Supervisor de personal', tag: 'tag-sup' },
@@ -1334,8 +1432,7 @@
         const info = m[formatRut(user.rut)] || {};
         return {
             tipo: info.tipo || (isAdminLevel(user) ? 'no_rinde' : 'trabajador'),
-            turno: JORNADAS[info.turno] ? info.turno : 'todos',
-            inicio: info.inicio || '',
+            turno: JORNADAS[info.turno] ? info.turno : (JORNADA_ANTIGUA[info.turno] || 'todos'),
             updatedAt: info.updatedAt || ''
         };
     }
@@ -1381,13 +1478,13 @@
         return Math.floor(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000);
     }
 
-    // Cálculo de la jornada a partir de { turno, inicio }. Devuelve si está
+    // Cálculo de la jornada según el calendario del turno. Devuelve si está
     // en turno ese día y un texto corto ("En turno · día 3 de 8").
     function computeShift(info, isoDate) {
         const j = JORNADAS[info && info.turno];
         if (!j || j.descanso === 0) return { onShift: true, text: 'Todos los días' };
-        const start = isoToDayNumber(info.inicio);
-        if (start === null) return { onShift: true, text: 'Falta fecha de subida' };
+        const start = isoToDayNumber(getCalendario()[info.turno]);
+        if (start === null) return { onShift: true, text: 'Falta fecha en el calendario' };
         const day = isoToDayNumber(isoDate || chileTodayISO());
         const ciclo = j.trabajo + j.descanso;
         const pos = (((day - start) % ciclo) + ciclo) % ciclo;
@@ -1405,13 +1502,6 @@
         return getPersonInfo(user).tipo !== 'no_rinde' && isOnShift(user);
     }
 
-    function toggleInicioField(prefix) {
-        const turno = document.getElementById(prefix + 'Turno').value;
-        const wrap = document.getElementById(prefix + 'InicioWrap');
-        wrap.style.display = (turno === 'todos') ? 'none' : 'block';
-        if (prefix === 'edit') updateEditPreview();
-    }
-
     // ===== Editar persona =====
     function openEditPerson(rut) {
         const users = JSON.parse(localStorage.getItem('users')) || [];
@@ -1422,8 +1512,7 @@
         document.getElementById('editPersonName').innerText = `${u.name} · ${u.rut}`;
         document.getElementById('editTipo').value = info.tipo;
         document.getElementById('editTurno').value = info.turno;
-        document.getElementById('editInicio').value = info.inicio || '';
-        toggleInicioField('edit');
+        updateEditPreview();
         document.getElementById('editPersonModal').style.display = 'flex';
     }
     function closeEditPerson() {
@@ -1431,27 +1520,90 @@
     }
     function updateEditPreview() {
         const turno = document.getElementById('editTurno').value;
-        const inicio = document.getElementById('editInicio').value;
         const prev = document.getElementById('editPreview');
         if (turno === 'todos') { prev.innerText = 'Debe rendir el test todos los días.'; return; }
-        if (!inicio) { prev.innerText = 'Indica el primer día de una subida para calcular sus descansos.'; return; }
-        prev.innerText = 'Hoy: ' + computeShift({ turno, inicio }).text;
+        if (!getCalendario()[turno]) { prev.innerText = 'Falta la fecha de este turno en el "Calendario de turnos".'; return; }
+        prev.innerText = 'Hoy: ' + computeShift({ turno }).text;
     }
     function savePersonEdit() {
         const rut = document.getElementById('editRut').value;
-        const turno = document.getElementById('editTurno').value;
-        const inicio = document.getElementById('editInicio').value;
-        if (turno !== 'todos' && !inicio) {
-            alert('Indica el primer día de una subida para esta jornada.');
-            return;
-        }
         savePersonInfo(rut, {
             tipo: document.getElementById('editTipo').value,
-            turno: turno,
-            inicio: turno === 'todos' ? '' : inicio
+            turno: document.getElementById('editTurno').value
         });
         closeEditPerson();
         renderDashboard();
+    }
+
+
+    // ===== Correos de alerta (se guardan en el programa de alertas) =====
+    let alertEmails = [];
+    function prepareAlertsTab() {
+        document.getElementById('alertsNotConfigured').style.display = ALERTS_URL ? 'none' : 'block';
+        const pin = sessionStorage.getItem('fsReleasePin');
+        if (pin && ALERTS_URL && document.getElementById('emailsEditor').style.display === 'none') {
+            document.getElementById('cfgPin').value = pin;
+            loadAlertEmails();
+        }
+    }
+    function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+    function renderEmailList() {
+        const c = document.getElementById('emailList');
+        if (!alertEmails.length) {
+            c.innerHTML = '<div class="muted-sm" style="color:#facc15;">No hay correos. Agrega al menos uno.</div>';
+            return;
+        }
+        c.innerHTML = '';
+        alertEmails.forEach((e, i) => {
+            const row = document.createElement('div');
+            row.className = 'blocked-row';
+            row.innerHTML = `<div>✉️ ${e}</div>`;
+            const b = document.createElement('button');
+            b.className = 'btn btn-danger';
+            b.innerText = 'Quitar';
+            b.onclick = () => { alertEmails.splice(i, 1); renderEmailList(); };
+            row.appendChild(b);
+            c.appendChild(row);
+        });
+    }
+    async function loadAlertEmails() {
+        if (!ALERTS_URL) { alert('Falta activar el programa de alertas (cuenta F&S).'); return; }
+        const pin = document.getElementById('cfgPin').value.trim();
+        if (!pin) { alert('Ingresa la clave de supervisores.'); return; }
+        try {
+            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ action: 'leerCorreos', pin }) });
+            const data = await res.json();
+            if (!data.ok) { sessionStorage.removeItem('fsReleasePin'); alert(data.error || 'No se pudo leer la configuración.'); return; }
+            sessionStorage.setItem('fsReleasePin', pin);
+            alertEmails = data.correos || [];
+            document.getElementById('emailsLocked').style.display = 'none';
+            document.getElementById('emailsEditor').style.display = 'block';
+            renderEmailList();
+        } catch (e) {
+            alert('Sin conexión. Intenta de nuevo con señal.');
+        }
+    }
+    function addAlertEmail() {
+        const inp = document.getElementById('newAlertEmail');
+        const e = inp.value.trim().toLowerCase();
+        if (!isValidEmail(e)) { alert('Ese correo no es válido.'); return; }
+        if (alertEmails.includes(e)) { alert('Ese correo ya está en la lista.'); return; }
+        alertEmails.push(e);
+        inp.value = '';
+        renderEmailList();
+    }
+    async function saveAlertEmails() {
+        const pin = sessionStorage.getItem('fsReleasePin') || document.getElementById('cfgPin').value.trim();
+        const pending = document.getElementById('newAlertEmail').value.trim();
+        if (pending) { alert('Tienes un correo escrito sin agregar. Presiona "+ Agregar" o bórralo.'); return; }
+        try {
+            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify({ action: 'guardarCorreos', pin, correos: alertEmails }) });
+            const data = await res.json();
+            if (!data.ok) { alert(data.error || 'No se pudo guardar.'); return; }
+            alert('Correos guardados. Desde ahora las alertas llegan a esta lista.');
+        } catch (e) {
+            alert('Sin conexión. Intenta de nuevo con señal.');
+        }
     }
 
     // ===== Pestañas del panel =====
@@ -1459,7 +1611,8 @@
     function showAdminTab(tab) {
         currentAdminTab = tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-        ['hoy', 'personal', 'historial', 'cuenta'].forEach(t => {
+        if (tab === 'alertas') prepareAlertsTab();
+        ['hoy', 'personal', 'historial', 'alertas', 'cuenta'].forEach(t => {
             document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
         });
     }
@@ -1474,7 +1627,7 @@
         const users = JSON.parse(localStorage.getItem('users')) || [];
         const lista = users.map(u => {
             const info = getPersonInfo(u);
-            return { rut: u.rut, name: u.name, tipo: info.tipo, turno: info.turno, inicio: info.inicio };
+            return { rut: u.rut, name: u.name, tipo: info.tipo, turno: info.turno };
         });
         postToAlerts({ action: 'trabajadores', lista: lista });
     }
@@ -1604,8 +1757,8 @@
         ['Estado', 'Significado Operacional F&S'],
         ['NORMAL', 'Sin signos de fatiga; apto para laborar.'],
         ['LEVE', 'Cansancio menor; requiere atención o monitoreo, apto para laborar.'],
-        ['MODERADO', 'Alerta disminuida; requiere pausa o supervisión antes de laborar.'],
-        ['SEVERO', 'Alto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.']
+        ['MODERADO', 'Alerta disminuida. Por ningún motivo puede conducir ni operar equipos: pausa obligatoria y nuevo test.'],
+        ['SEVERO', 'Alto riesgo de microsueños o fatiga crítica. Por ningún motivo puede conducir ni operar equipos: descanso inmediato y liberación por supervisor.']
     ];
 
     const PVT_METRIC_INFO = "Metodología del Test: Test de Vigilancia Psicomotora breve (PVT-B, Basner y Dinges 2011): 3 minutos con estímulos visuales cada 2 a 5 segundos. Se registran lapsus (respuestas de 355 ms o más), falsas partidas (toques antes del estímulo o en menos de 100 ms) y tiempo de reacción promedio. La clasificación combina el PVT-B con la Escala de Somnolencia de Karolinska (KSS) y las horas de sueño. Es una herramienta de apoyo: no reemplaza el criterio del supervisor.";
@@ -1762,7 +1915,7 @@
             unreadAlerts.forEach(log => {
                 const item = document.createElement('div');
                 item.className = 'critical-alert-item';
-                item.innerHTML = `<b>${log.name}</b> (${log.rut}) - Estado: <span style="color:#f87171; font-weight:bold;">${log.status}</span> [${log.date.split(' ')[1] || log.date}]`;
+                item.innerHTML = `<b>${log.name}</b> (${log.rut}) - Estado: <span style="color:#f87171; font-weight:bold;">${log.status}</span> [${log.date.split(' ')[1] || log.date}] · <b style="color:#fca5a5;">NO PUEDE CONDUCIR NI OPERAR</b>`;
                 listContainer.appendChild(item);
             });
         } else {
@@ -2157,7 +2310,7 @@
         startAutoSync();
         document.getElementById('adminWho').innerText = `${currentUser.name} · ${roleLabel(currentUser.role)}`;
         showAdminTab(currentAdminTab || 'hoy');
-        Promise.all([refreshReleasesFromServer(), refreshPersonalFromServer()])
+        Promise.all([refreshReleasesFromServer(), refreshPersonalFromServer(), refreshCalendarioFromServer()])
             .then(() => { if (currentUser && isAdminLevel(currentUser)) renderDashboard(); });
     }
 
@@ -2166,6 +2319,7 @@
         renderLogsTable();
         renderQuickUserGrid();
         try { renderDayControl(); } catch (e) { console.error('[Control del día]', e); }
+        try { renderCalendarioForm(); } catch (e) { console.error('[Calendario]', e); }
         syncWorkersToAlerts();
 
         const unreadAlerts = getUnreadAlerts();
@@ -2178,7 +2332,7 @@
             unreadAlerts.forEach(log => {
                 const item = document.createElement('div');
                 item.style.cssText = "font-size:13px; color:#ffffff; margin-top:4px; padding:4px 8px; background:rgba(15, 23, 42, 0.6); border-radius:6px;";
-                item.innerHTML = `<b>${log.name}</b> (${log.rut}) - Estado: <b style="color:#f87171">${log.status}</b> [${log.date}] - Reacción: ${log.avg} ms`;
+                item.innerHTML = `<b>${log.name}</b> (${log.rut}) - Estado: <b style="color:#f87171">${log.status}</b> [${log.date}] - Reacción: ${log.avg} ms<br><span style="color:#fca5a5; font-weight:700;">⛔ Por ningún motivo puede conducir ni operar equipos.</span>`;
                 adminList.appendChild(item);
             });
         } else {
@@ -2708,21 +2862,13 @@
 
         postToSheets("addUser", { user: newUser });
 
-        // Cargo y jornada
-        const turno = document.getElementById('newTurno').value;
-        const inicio = document.getElementById('newInicio').value;
+        // Cargo y turno
         savePersonInfo(newUser.rut, {
             tipo: document.getElementById('newTipo').value,
-            turno: turno,
-            inicio: turno === 'todos' ? '' : inicio
+            turno: document.getElementById('newTurno').value
         });
-        if (turno !== 'todos' && !inicio) {
-            alert('Persona creada. Falta indicar el primer día de su subida: edítala en la lista para que la app calcule sus descansos.');
-        }
         document.getElementById('newTipo').value = 'trabajador';
         document.getElementById('newTurno').value = 'todos';
-        document.getElementById('newInicio').value = '';
-        toggleInicioField('new');
 
         document.getElementById('newRut').value = '';
         document.getElementById('newName').value = '';
@@ -3324,11 +3470,11 @@
         } else if (status === 'LEVE') {
             resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nCansancio menor; requiere atención o monitoreo, apto para laborar.`;
         } else if (status === 'MODERADO') {
-            resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nAlerta disminuida; requiere pausa o supervisión antes de laborar.`;
+            resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nAlerta disminuida.`;
         } else {
             resultMsgText = responsesCount === 0 
-                ? `Test Sin Respuesta (Omisión Total).\n\nAlto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.`
-                : `Tiempo Promedio (PVT): ${avg} ms.\n\nAlto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.`;
+                ? `Test Sin Respuesta (Omisión Total).\n\nAlto riesgo de microsueños o fatiga crítica.`
+                : `Tiempo Promedio (PVT): ${avg} ms.\n\nAlto riesgo de microsueños o fatiga crítica.`;
         }
         const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         const logs = JSON.parse(localStorage.getItem('logs')) || [];
@@ -3410,9 +3556,9 @@
         if (!MODO_MARCHA_BLANCA) {
             const st = getBlockState(currentUser.rut);
             if (st.state === 'BLOQUEADO') {
-                protocolo = '\n\n⛔ NO OPERES NI CONDUZCAS. Quedaste bloqueado hasta que tu supervisor converse contigo y te libere. Tu supervisor ya fue avisado.';
+                protocolo = '\n\nQuedaste bloqueado hasta que tu supervisor converse contigo y te libere. Tu supervisor ya fue avisado.';
             } else if (st.state === 'PAUSA') {
-                protocolo = `\n\n⏸️ Pausa obligatoria de ${PAUSA_MINUTOS} minutos: descansa, hidrátate y avisa a tu supervisor. Luego repite el test.`;
+                protocolo = `\n\n⏸️ Pausa obligatoria de ${PAUSA_MINUTOS} minutos: descansa, hidrátate y avisa a tu supervisor. Luego repite el test. Si vuelve a salir MODERADO o SEVERO, quedarás bloqueado.`;
             } else if (status === 'LEVE') {
                 protocolo = '\n\nPuedes trabajar. Si sientes sueño durante la jornada, avisa a tu supervisor.';
             }
@@ -3432,6 +3578,7 @@
 
         badgeContainer.innerHTML = `<span class="badge ${badgeClass}" style="font-size: 20px; padding: 10px 24px;">ESTADO: ${status}</span>`;
         resultMsg.innerText = resultMsgText;
+        document.getElementById('noDriveBanner').style.display = (status === 'MODERADO' || status === 'SEVERO') ? 'block' : 'none';
     }
 
     // Cierra la ventana emergente de resultado y termina la sesión de inmediato,
@@ -3453,6 +3600,11 @@
     }
 
     function logout() {
+        try { sessionStorage.removeItem('fsReleasePin'); } catch (e) {}
+        alertEmails = [];
+        document.getElementById('emailsLocked').style.display = 'block';
+        document.getElementById('emailsEditor').style.display = 'none';
+        document.getElementById('cfgPin').value = '';
         stopAutoSync();
         stopSilentCamera();
         currentUser = null;

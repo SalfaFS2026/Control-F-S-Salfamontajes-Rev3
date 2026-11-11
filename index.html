@@ -626,7 +626,8 @@
                             <option value="worker">Solo rinde test</option>
                             <option value="admin">Panel Maestro (supervisor/admin)</option>
                         </select></div>
-                    <div><label class="lbl-sm">Cargo</label>
+                    <div><label class="lbl-sm">Cargo</label><input type="text" id="newPuesto" placeholder="Ej: Operador excavadora" class="inp-left" list="puestosList"></div>
+                    <div><label class="lbl-sm">Tipo en F&amp;S</label>
                         <select id="newTipo">
                             <option value="trabajador">Trabajador</option>
                             <option value="supervisor">Supervisor de personal</option>
@@ -670,7 +671,7 @@
                             <tr>
                                 <th>RUT</th>
                                 <th>Nombre</th>
-                                <th>Cargo</th>
+                                <th>Cargo / Tipo</th>
                                 <th>Turno</th>
                                 <th>Hoy</th>
                                 <th id="thClave">Clave</th>
@@ -865,13 +866,27 @@
 
 </div>
 
+<datalist id="puestosList">
+    <option value="Conductor">
+    <option value="Operador excavadora">
+    <option value="Operador retroexcavadora">
+    <option value="Operador camión pluma">
+    <option value="Operador grúa">
+    <option value="Operador manlift">
+    <option value="Rigger">
+    <option value="Mecánico">
+    <option value="Supervisor">
+    <option value="Prevencionista">
+</datalist>
+
 <!-- MODAL EDITAR PERSONA -->
 <div id="editPersonModal" class="modal">
     <div class="modal-content" style="max-width: 480px;">
         <h3 style="margin-bottom:4px;">Editar persona</h3>
         <p id="editPersonName" style="margin-top:0;"></p>
         <input type="hidden" id="editRut">
-        <div class="form-group"><label class="lbl-sm">Cargo</label>
+        <div class="form-group"><label class="lbl-sm">Cargo</label><input type="text" id="editPuesto" placeholder="Ej: Operador excavadora" class="inp-left" list="puestosList" style="width:100%; padding:12px; background:var(--input-dark); border:2px solid var(--border-color); color:#fff; border-radius:10px;"></div>
+        <div class="form-group"><label class="lbl-sm">Tipo en F&amp;S</label>
             <select id="editTipo">
                 <option value="trabajador">Trabajador</option>
                 <option value="supervisor">Supervisor de personal</option>
@@ -1561,6 +1576,7 @@
         const info = m[formatRut(user.rut)] || {};
         return {
             tipo: info.tipo || (isAdminLevel(user) ? 'no_rinde' : 'trabajador'),
+            puesto: info.puesto || '',
             turno: JORNADAS[info.turno] ? info.turno : (JORNADA_ANTIGUA[info.turno] || 'todos'),
             updatedAt: info.updatedAt || ''
         };
@@ -1640,6 +1656,7 @@
         document.getElementById('editRut').value = u.rut;
         document.getElementById('editPersonName').innerText = `${u.name} · ${u.rut}`;
         document.getElementById('editTipo').value = info.tipo;
+        document.getElementById('editPuesto').value = info.puesto || '';
         document.getElementById('editTurno').value = info.turno;
         updateEditPreview();
         document.getElementById('editPersonModal').style.display = 'flex';
@@ -1658,6 +1675,7 @@
         const rut = document.getElementById('editRut').value;
         savePersonInfo(rut, {
             tipo: document.getElementById('editTipo').value,
+            puesto: document.getElementById('editPuesto').value.trim(),
             turno: document.getElementById('editTurno').value
         });
         closeEditPerson();
@@ -1848,7 +1866,7 @@
         const users = JSON.parse(localStorage.getItem('users')) || [];
         const lista = users.map(u => {
             const info = getPersonInfo(u);
-            return { rut: u.rut, name: u.name, tipo: info.tipo, turno: info.turno };
+            return { rut: u.rut, name: u.name, tipo: info.tipo, turno: info.turno, puesto: info.puesto };
         });
         postToAlerts({ action: 'trabajadores', lista: lista });
     }
@@ -2637,7 +2655,7 @@
             tr.innerHTML = `
                 <td><b>${u.rut}</b></td>
                 <td>${u.name}</td>
-                <td><span class="tag ${cargo.tag}">${cargo.label}</span>${acceso}</td>
+                <td>${info.puesto ? `<div style="font-weight:600; margin-bottom:4px;">${info.puesto}</div>` : '<div class="muted-sm" style="font-size:12px; margin-bottom:4px;">Sin cargo</div>'}<span class="tag ${cargo.tag}">${cargo.label}</span>${acceso}</td>
                 <td>${JORNADAS[info.turno].label}</td>
                 <td>${hoy}</td>
                 ${canSeePasswords ? `<td><code style="color:#f87171;">${u.pass}</code></td>` : ''}
@@ -3130,9 +3148,11 @@
         // Cargo y turno
         savePersonInfo(newUser.rut, {
             tipo: document.getElementById('newTipo').value,
+            puesto: document.getElementById('newPuesto').value.trim(),
             turno: document.getElementById('newTurno').value
         });
         document.getElementById('newTipo').value = 'trabajador';
+        document.getElementById('newPuesto').value = '';
         document.getElementById('newTurno').value = 'todos';
 
         document.getElementById('newRut').value = '';
@@ -3771,6 +3791,7 @@
             timestamp: now.toISOString(),
             date: dateFormatted,
             name: currentUser.name,
+            puesto: getPersonInfo(currentUser).puesto || '',
             rut: currentUser.rut,
             avg: avg,
             status: status,
@@ -3831,7 +3852,7 @@
             action: 'registrarTest',
             log: {
                 id: newLog.id, timestamp: newLog.timestamp, date: newLog.date,
-                name: newLog.name, rut: newLog.rut, status: newLog.status, avg: newLog.avg,
+                name: newLog.name, rut: newLog.rut, puesto: newLog.puesto, status: newLog.status, avg: newLog.avg,
                 lapses: lapses, falseStarts: falseStarts, kss: kss, causes: causes
             }
         });

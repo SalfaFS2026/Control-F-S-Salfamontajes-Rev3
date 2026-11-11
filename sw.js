@@ -10,7 +10,7 @@
 // que los dispositivos descarguen la versión nueva la próxima vez que
 // tengan señal, en vez de quedarse con la copia vieja guardada.
 
-const CACHE_NAME = 'fs-salfamontajes-v1';
+const CACHE_NAME = 'fs-salfamontajes-v2';
 
 // Recursos que se guardan de entrada para que el login, el cuestionario y
 // el test funcionen offline desde el primer momento.
@@ -18,11 +18,12 @@ const CORE_ASSETS = [
     './',
     './index.html',
     './manifest.json',
+    './icon-192.png',
+    './icon-512.png',
     'https://cdn.jsdelivr.net/npm/chart.js',
     'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js',
-    'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js'
 ];
 
 self.addEventListener('install', (event) => {

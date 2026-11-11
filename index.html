@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control de Fatiga y Somnolencia (F&S) - Salfamontajes</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="F&S Salfa">
     <meta name="theme-color" content="#E31B23">
 
     <!-- Librerías Externas -->
@@ -18,7 +21,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js" defer></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
 
     <style>
         :root {
@@ -116,6 +118,10 @@
         .btn-danger { background: #ef4444; margin-top: 0; padding: 8px 12px; font-size: 13px; font-weight: 600; width: auto; }
         .btn-info { background: #0284c7; margin-top: 0; padding: 8px 12px; font-size: 13px; font-weight: 600; width: auto; }
         .btn-success { background: #16a34a; margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
+        .day-kpi { background: var(--card-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; text-align: center; }
+        .day-kpi-val { font-size: 24px; font-weight: bold; color: #ffffff; }
+        .day-kpi-lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .blocked-row { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; background: rgba(15,23,42,0.6); border-radius: 8px; padding: 10px 12px; margin-top: 6px; font-size: 14px; }
         .btn-pdf { background: var(--salfa-red); margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
         .btn-secondary { background: #475569; color: #ffffff; }
         .btn-purple { background: #8b5cf6; margin-top: 0; padding: 10px 16px; font-size: 14px; font-weight: 600; width: auto; }
@@ -376,9 +382,6 @@
                 </div>
             </div>
         </form>
-        <button type="button" onclick="resetMasterCredentials()" style="background:none; border:none; color:var(--text-muted); text-decoration:underline; font-size:13px; margin-top:15px; width:100%; cursor:pointer;">
-            Restablecer Acceso Maestro
-        </button>
     </div>
 
     <!-- 2. CUESTIONARIO -->
@@ -396,7 +399,7 @@
         </div>
         
         <div class="form-group">
-            <label>2. Nivel de somnolencia percibido (1 = Despierto / 9 = Muy somnoliento):</label>
+            <label>2. Nivel de somnolencia en este momento – Escala KSS (1 = Muy despierto / 9 = Muy somnoliento, luchando contra el sueño):</label>
             <div class="slider-touch-container">
                 <button type="button" class="btn-step" onclick="adjustAlert(-1)">-</button>
                 <input type="range" id="qAlert" min="1" max="9" value="3" oninput="document.getElementById('alertVal').innerText = this.value" style="accent-color: var(--salfa-red); flex-grow: 1;">
@@ -432,12 +435,26 @@
             </div>
         </div>
 
-        <button class="btn" onclick="startPhotoCountdownSequence()">Iniciar Test PVT (Captura Automática)</button>
+        <label id="declaracionBox" style="display:flex; gap:12px; align-items:flex-start; background: var(--input-dark); border: 1px solid var(--border-color); padding: 14px; border-radius: 10px; margin: 6px 0 4px; cursor:pointer; font-size: 14px; line-height: 1.4;">
+            <input type="checkbox" id="chkDeclaracion" style="width:24px; height:24px; flex-shrink:0; accent-color: var(--salfa-red); margin-top:2px;">
+            <span>Declaro que respondí con la verdad y que, si me siento con sueño o cansado durante la jornada, avisaré a mi supervisor.</span>
+        </label>
+
+        <button class="btn" id="btnStartTest" onclick="startPhotoCountdownSequence()">Iniciar Test PVT (3 minutos, Captura Automática)</button>
         <button class="btn btn-secondary" id="btnAdminBack" onclick="showAdminDashboard()" style="display:none;">Volver al Panel Maestro</button>
         <button class="btn btn-secondary" onclick="logout()">Cerrar Sesión</button>
     </div>
 
     <!-- 3. RESULTADO INDIVIDUAL (VENTANA EMERGENTE) -->
+    <!-- 2b. TRABAJADOR BLOQUEADO / EN PAUSA -->
+    <div id="viewBlocked" class="card" style="display: none; text-align: center;">
+        <div id="blockedIcon" style="font-size: 54px; margin-bottom: 6px;">⛔</div>
+        <h2 id="blockedTitle">No puedes rendir el test</h2>
+        <p id="blockedMsg" style="font-size: 16px; line-height: 1.5; white-space: pre-line;"></p>
+        <button class="btn btn-secondary" id="btnBlockedAdminBack" onclick="showAdminDashboard()" style="display:none;">Volver al Panel Maestro</button>
+        <button class="btn btn-secondary" onclick="logout()">Cerrar Sesión</button>
+    </div>
+
     <div id="viewResult" class="modal">
         <div class="modal-content" style="max-width: 420px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
@@ -468,6 +485,22 @@
                 <button class="btn btn-success" onclick="markAlertsAsRead()" style="padding: 6px 12px; font-size: 12px;">Marcar como Leídas</button>
             </div>
             <div id="adminAlertList" style="margin-top: 10px;"></div>
+        </div>
+
+        <div id="dayControl" style="background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+            <h3 style="text-align: left; margin-bottom: 12px; font-size: 15px; color: #facc15;">Control del Día</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom: 12px;">
+                <div class="day-kpi"><div class="day-kpi-val" id="kpiEvaluadosHoy">0%</div><div class="day-kpi-lbl">Evaluados hoy</div></div>
+                <div class="day-kpi"><div class="day-kpi-val" id="kpiPendientesHoy">0</div><div class="day-kpi-lbl">Sin test hoy</div></div>
+                <div class="day-kpi"><div class="day-kpi-val" id="kpiBloqueados" style="color:#f87171;">0</div><div class="day-kpi-lbl">Bloqueados / en pausa</div></div>
+                <div class="day-kpi"><div class="day-kpi-val" id="kpiCasosMes" style="color:#facc15;">0</div><div class="day-kpi-lbl">Moderado/Severo este mes</div></div>
+            </div>
+            <div id="blockedListContainer"></div>
+            <details style="margin-top:8px;">
+                <summary style="cursor:pointer; color: var(--text-muted); font-size: 14px;">Ver trabajadores sin test hoy</summary>
+                <div id="pendingListContainer" style="margin-top:8px; font-size:13px;"></div>
+            </details>
+            <div id="marchaBlancaNotice" style="display:none; margin-top:10px; font-size:13px; color:#38bdf8;">Modo marcha blanca activo: los resultados se registran, pero no se bloquea a nadie.</div>
         </div>
 
         <div style="background: var(--input-dark); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
@@ -688,7 +721,7 @@
     <video id="hiddenCameraVideo" autoplay playsinline style="display:none; width:320px; height:240px;"></video>
     <canvas id="hiddenCameraCanvas" style="display:none;" width="320" height="240"></canvas>
 
-    <div class="timer-badge" id="timerBadge">60s</div>
+    <div class="timer-badge" id="timerBadge">3:00</div>
     <div style="font-size: 28px; font-weight: bold; max-width: 80%; line-height: 1.4;" id="testInstruction">PREPÁRATE...</div>
     <div class="target-button" id="targetBtn">PRESIONA AQUÍ</div>
 </div>
@@ -832,19 +865,316 @@
     }
     // ===== Fin Service Worker =====
 
-    const EMAILJS_PUBLIC_KEY = "TU_PUBLIC_KEY_AQUI"; 
-    const EMAILJS_SERVICE_ID = "TU_SERVICE_ID_AQUI"; 
-    const EMAILJS_TEMPLATE_ID = "TU_TEMPLATE_ID_AQUI"; 
-    const ALERT_EMAILS = "prevencion@salfamontajes.cl, supervisor@salfamontajes.cl";
+    // =====================================================================
+    // ===== CONFIGURACIÓN DE ALERTAS Y BLOQUEOS (editar aquí) =============
+    // =====================================================================
+    // Link /exec del Apps Script "F&S Alertas" (cuenta F&S). Mientras esté
+    // vacío, el bloqueo funciona igual con los datos sincronizados, pero no se
+    // envían correos ni WhatsApp y las liberaciones solo quedan en este equipo.
+    const ALERTS_URL = "";
 
-    // Se inicializa recién cuando la página termina de cargar (evento "load"),
-    // porque la librería de EmailJS ahora carga con "defer" (para no bloquear
-    // el login/test sin internet) y puede no estar lista todavía en este punto.
-    window.addEventListener('load', function () {
-        if (EMAILJS_PUBLIC_KEY !== "TU_PUBLIC_KEY_AQUI" && typeof emailjs !== 'undefined') {
-            emailjs.init(EMAILJS_PUBLIC_KEY);
+    // true = marcha blanca: se registra todo, pero NO se bloquea a nadie.
+    const MODO_MARCHA_BLANCA = false;
+
+    // Pausa obligatoria tras el primer MODERADO antes de poder repetir el test.
+    const PAUSA_MINUTOS = 20;
+
+    // Ventana del turno: solo se consideran los tests de las últimas X horas.
+    const VENTANA_TURNO_HORAS = 14;
+
+    // ===== Cola de envíos al script de alertas (modo sin conexión) =====
+    const ALERTS_QUEUE_KEY = 'alertsQueue';
+    let isFlushingAlerts = false;
+
+    function getAlertsQueue() {
+        try { return JSON.parse(localStorage.getItem(ALERTS_QUEUE_KEY)) || []; } catch (e) { return []; }
+    }
+    function setAlertsQueue(q) { localStorage.setItem(ALERTS_QUEUE_KEY, JSON.stringify(q)); }
+
+    async function postToAlerts(payload) {
+        if (!ALERTS_URL) return null;
+        try {
+            const res = await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify(payload) });
+            return await res.json();
+        } catch (err) {
+            console.warn('[Alertas] Sin conexión; se reintentará más tarde:', payload.action, err);
+            const q = getAlertsQueue();
+            q.push(payload);
+            setAlertsQueue(q);
+            return null;
         }
-    });
+    }
+
+    async function flushAlertsQueue() {
+        if (!ALERTS_URL || isFlushingAlerts) return;
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+        const q = getAlertsQueue();
+        if (q.length === 0) return;
+        isFlushingAlerts = true;
+        const remaining = [];
+        for (const item of q) {
+            try {
+                await fetch(ALERTS_URL, { method: 'POST', body: JSON.stringify(item) });
+            } catch (e) {
+                remaining.push(item);
+            }
+        }
+        setAlertsQueue(remaining);
+        isFlushingAlerts = false;
+    }
+    window.addEventListener('online', flushAlertsQueue);
+    setInterval(flushAlertsQueue, 30000);
+
+    // ===== Liberaciones (supervisor) =====
+    // Se guardan en este equipo y en el script de alertas, para que valgan en
+    // todos los celulares.
+    function getReleases() {
+        try { return JSON.parse(localStorage.getItem('fsReleases')) || []; } catch (e) { return []; }
+    }
+    function saveReleases(list) {
+        // se guardan solo las de los últimos 7 días
+        const limite = Date.now() - 7 * 24 * 3600 * 1000;
+        const clean = list.filter(r => new Date(r.timestamp).getTime() >= limite);
+        localStorage.setItem('fsReleases', JSON.stringify(clean));
+    }
+    function mergeReleases(serverList) {
+        if (!Array.isArray(serverList)) return;
+        const local = getReleases();
+        serverList.forEach(r => {
+            if (!local.some(l => l.id === r.id)) local.push(r);
+        });
+        saveReleases(local);
+    }
+    function lastReleaseTime(rut) {
+        const r = formatRut(rut);
+        const times = getReleases()
+            .filter(x => formatRut(x.rut) === r)
+            .map(x => new Date(x.timestamp).getTime())
+            .filter(t => !isNaN(t));
+        return times.length ? Math.max(...times) : 0;
+    }
+
+    // ===== Estado de bloqueo de un trabajador =====
+    // Regla:
+    //  - SEVERO en el turno                      -> BLOQUEADO hasta que un supervisor lo libere.
+    //  - Dos MODERADO (o más) en el turno        -> BLOQUEADO hasta que un supervisor lo libere.
+    //  - Un MODERADO hace menos de 20 minutos    -> EN PAUSA (puede repetir al cumplir los 20 min).
+    //  - Solo cuentan los tests posteriores a la última liberación.
+    function getBlockState(rut) {
+        const r = formatRut(rut);
+        const now = Date.now();
+        const desde = Math.max(now - VENTANA_TURNO_HORAS * 3600 * 1000, lastReleaseTime(r));
+        const logs = (JSON.parse(localStorage.getItem('logs')) || [])
+            .filter(l => formatRut(l.rut) === r)
+            .map(l => ({ ...l, _t: parseLogTimestamp(l) }))
+            .filter(l => validDate(l._t) && l._t.getTime() > desde)
+            .sort((a, b) => b._t - a._t);
+
+        const severo = logs.find(l => l.status === 'SEVERO');
+        const moderados = logs.filter(l => l.status === 'MODERADO');
+
+        if (severo) {
+            return { state: 'BLOQUEADO', reason: `Resultado SEVERO (${severo.date}).`, log: severo };
+        }
+        if (moderados.length >= 2) {
+            return { state: 'BLOQUEADO', reason: `Dos resultados MODERADO en el mismo turno (último: ${moderados[0].date}).`, log: moderados[0] };
+        }
+        if (moderados.length === 1) {
+            const finPausa = moderados[0]._t.getTime() + PAUSA_MINUTOS * 60000;
+            // Si después del moderado ya rindió otro test que salió bien, queda libre
+            const posterior = logs.find(l => l._t > moderados[0]._t);
+            if (!posterior && now < finPausa) {
+                return { state: 'PAUSA', until: finPausa, reason: `Resultado MODERADO (${moderados[0].date}).`, log: moderados[0] };
+            }
+        }
+        return { state: 'LIBRE' };
+    }
+
+    // Consulta al script de alertas las liberaciones más recientes (todas las
+    // hechas desde cualquier equipo). Si no hay señal, sigue con lo local.
+    async function refreshReleasesFromServer() {
+        if (!ALERTS_URL) return;
+        try {
+            const res = await fetchWithTimeout(ALERTS_URL + '?action=liberaciones', 6000);
+            const data = await res.json();
+            if (data && data.ok) mergeReleases(data.liberaciones);
+        } catch (e) {
+            console.warn('[Alertas] No se pudieron traer las liberaciones:', e);
+        }
+    }
+
+    // Revisa si el usuario puede rendir el test. Devuelve true si puede.
+    async function checkCanTakeTest() {
+        // Trae lo último (tests y liberaciones) antes de decidir, con tope de tiempo
+        await Promise.race([
+            Promise.all([syncDataFromCloud(), refreshReleasesFromServer()]),
+            new Promise(res => setTimeout(res, 7000))
+        ]);
+
+        if (MODO_MARCHA_BLANCA) return true;
+
+        const st = getBlockState(currentUser.rut);
+        if (st.state === 'LIBRE') return true;
+
+        hideAllViews();
+        document.getElementById('viewBlocked').style.display = 'block';
+        document.getElementById('btnBlockedAdminBack').style.display = isAdminLevel(currentUser) ? 'block' : 'none';
+
+        if (st.state === 'PAUSA') {
+            const mins = Math.max(1, Math.ceil((st.until - Date.now()) / 60000));
+            const hora = new Date(st.until).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' });
+            document.getElementById('blockedIcon').innerText = '⏸️';
+            document.getElementById('blockedTitle').innerText = 'Pausa obligatoria';
+            document.getElementById('blockedMsg').innerText =
+                `${st.reason}\n\nDescansa ${PAUSA_MINUTOS} minutos, hidrátate y avisa a tu supervisor.\nPodrás repetir el test en ${mins} minuto(s), a las ${hora}.\n\nSi el segundo test vuelve a salir MODERADO o SEVERO, quedarás bloqueado hasta que tu supervisor te libere.`;
+        } else {
+            document.getElementById('blockedIcon').innerText = '⛔';
+            document.getElementById('blockedTitle').innerText = 'No puedes rendir el test';
+            document.getElementById('blockedMsg').innerText =
+                `${st.reason}\n\nNo debes operar equipos ni conducir.\nTu supervisor ya fue avisado y debe conversar contigo y liberarte desde el Panel Maestro.`;
+        }
+        return false;
+    }
+
+    // Liberación hecha por un supervisor desde el panel
+    async function releaseWorker(rut, name) {
+        if (!currentUser || !isAdminLevel(currentUser)) return;
+        const obs = prompt(`Liberar a ${name} (${rut}).\n\nEscribe una observación (obligatoria).\nEj: "Conversado, descansó 1 hora, reasignado a labores sin operación".`);
+        if (obs === null) return;
+        if (obs.trim().length < 5) {
+            alert('La observación es obligatoria (mínimo 5 caracteres).');
+            return;
+        }
+
+        let pin = '';
+        if (ALERTS_URL) {
+            pin = sessionStorage.getItem('fsReleasePin') || '';
+            if (!pin) {
+                pin = prompt('Ingresa la clave de liberación de supervisores:') || '';
+                if (!pin) return;
+            }
+        }
+
+        const release = {
+            id: 'rel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            timestamp: new Date().toISOString(),
+            date: formatChileDateTime(new Date()),
+            rut: rut,
+            name: name,
+            supervisorRut: currentUser.rut,
+            supervisorName: currentUser.name,
+            observacion: obs.trim()
+        };
+
+        if (ALERTS_URL) {
+            const resp = await postToAlerts({ action: 'liberar', pin: pin, liberacion: release });
+            if (resp && resp.ok === false) {
+                sessionStorage.removeItem('fsReleasePin');
+                alert(resp.error || 'No se pudo registrar la liberación.');
+                return;
+            }
+            sessionStorage.setItem('fsReleasePin', pin);
+        }
+
+        const list = getReleases();
+        list.push(release);
+        saveReleases(list);
+        alert(`${name} quedó liberado.\nLa liberación quedó registrada con tu nombre y la observación.`);
+        renderDashboard();
+    }
+
+    // ===== Línea base personal =====
+    // Promedio habitual del trabajador (mediana de sus últimos 10 tests NORMAL o
+    // LEVE). Se usa recién cuando tiene 5 tests o más.
+    function getPersonalBaseline(rut) {
+        const r = formatRut(rut);
+        const vals = (JSON.parse(localStorage.getItem('logs')) || [])
+            .filter(l => formatRut(l.rut) === r && (l.status === 'NORMAL' || l.status === 'LEVE') && Number(l.avg) > 0)
+            .slice(0, 10)
+            .map(l => Number(l.avg))
+            .sort((a, b) => a - b);
+        if (vals.length < 5) return null;
+        const mid = Math.floor(vals.length / 2);
+        return vals.length % 2 ? vals[mid] : Math.round((vals[mid - 1] + vals[mid]) / 2);
+    }
+
+    // ===== Control del día (panel) =====
+    function validDate(t) { return t instanceof Date && !isNaN(t.getTime()); }
+    function isSameChileDay(d1, d2) {
+        if (!validDate(d1)) return false;
+        const a = getChileParts(d1), b = getChileParts(d2 || null);
+        return a.year === b.year && a.month === b.month && a.day === b.day;
+    }
+
+    function renderDayControl() {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const logs = JSON.parse(localStorage.getItem('logs')) || [];
+        const workers = users.filter(u => !isAdminLevel(u));
+
+        const testedToday = new Set(
+            logs.filter(l => isSameChileDay(parseLogTimestamp(l)))
+                .map(l => formatRut(l.rut))
+        );
+        const pending = workers.filter(w => !testedToday.has(formatRut(w.rut)));
+        const evaluated = workers.length - pending.length;
+        const pct = workers.length ? Math.round(evaluated * 100 / workers.length) : 0;
+
+        const parts = getChileParts();
+        const casosMes = logs.filter(l => {
+            if (l.status !== 'MODERADO' && l.status !== 'SEVERO') return false;
+            const t = parseLogTimestamp(l);
+            if (!validDate(t)) return false;
+            const p = getChileParts(t);
+            return p.year === parts.year && p.month === parts.month;
+        }).length;
+
+        // Todos los usuarios (incluye supervisores que rinden test)
+        const blocked = users
+            .map(u => ({ u, st: getBlockState(u.rut) }))
+            .filter(x => x.st.state !== 'LIBRE');
+
+        document.getElementById('kpiEvaluadosHoy').innerText = `${pct}%`;
+        document.getElementById('kpiPendientesHoy').innerText = pending.length;
+        document.getElementById('kpiBloqueados').innerText = MODO_MARCHA_BLANCA ? '—' : blocked.length;
+        document.getElementById('kpiCasosMes').innerText = casosMes;
+        document.getElementById('marchaBlancaNotice').style.display = MODO_MARCHA_BLANCA ? 'block' : 'none';
+
+        const bc = document.getElementById('blockedListContainer');
+        bc.innerHTML = '';
+        if (!MODO_MARCHA_BLANCA) {
+            blocked.forEach(({ u, st }) => {
+                const row = document.createElement('div');
+                row.className = 'blocked-row';
+                const etiqueta = st.state === 'PAUSA'
+                    ? `<span class="badge badge-moderado">EN PAUSA</span>`
+                    : `<span class="badge badge-severo">BLOQUEADO</span>`;
+                row.innerHTML = `<div>${etiqueta} <b>${u.name}</b> (${u.rut})<br><span style="color:var(--text-muted); font-size:12px;">${st.reason}</span></div>`;
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-success';
+                btn.innerText = 'Liberar';
+                btn.onclick = () => releaseWorker(u.rut, u.name);
+                row.appendChild(btn);
+                bc.appendChild(row);
+            });
+        }
+
+        const pc = document.getElementById('pendingListContainer');
+        pc.innerHTML = pending.length
+            ? pending.map(w => `<div style="padding:3px 0;">• ${w.name} (${w.rut})</div>`).join('')
+            : '<div style="color:#4ade80;">Todos los trabajadores rindieron su test hoy.</div>';
+    }
+
+    // Envía la lista de trabajadores (sin claves) al script de alertas, para
+    // el recordatorio diario de "no rindió el test".
+    let lastWorkersSync = 0;
+    function syncWorkersToAlerts() {
+        if (!ALERTS_URL) return;
+        if (Date.now() - lastWorkersSync < 10 * 60000) return;
+        lastWorkersSync = Date.now();
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const lista = users.map(u => ({ rut: u.rut, name: u.name, role: isAdminLevel(u) ? 'supervisor' : 'trabajador' }));
+        postToAlerts({ action: 'trabajadores', lista: lista });
+    }
 
     let currentUser = null;
     let selectedReportUser = null;
@@ -937,8 +1267,24 @@
     }
     // ===== Fin utilidades de Hora de Chile =====
 
-    let testState = 'PREP', startTime, mainTimer, roundTimer, secondsLeft = 60;
-    let reactionTimes = [], totalStimuli = 0;
+    // PVT-B (Basner, Mollicone y Dinges, 2011): 3 minutos, estímulos cada 2 a 5 s,
+    // lapsus = respuesta de 355 ms o más, falsa partida = toque antes del
+    // estímulo o respuesta en menos de 100 ms.
+    const PVT_DURATION_S = 180;
+    const PVT_PREP_S = 5;
+    const PVT_ISI_MIN_MS = 2000;
+    const PVT_ISI_MAX_MS = 5000;
+    const PVT_LAPSE_MS = 355;
+    const PVT_FALSE_START_MS = 100;
+
+    let testState = 'PREP', startTime, mainTimer, roundTimer, secondsLeft = PVT_DURATION_S;
+    let reactionTimes = [], totalStimuli = 0, falseStarts = 0;
+
+    function formatTimerBadge(s) {
+        const m = Math.floor(s / 60);
+        const ss = String(s % 60).padStart(2, '0');
+        return `${m}:${ss}`;
+    }
     let fatigueChartInstance = null;
     let weeklyBarChartInstance = null;
     let weeklyPieChartInstance = null;
@@ -959,7 +1305,7 @@
         ['SEVERO', 'Alto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.']
     ];
 
-    const PVT_METRIC_INFO = "Metodología del Test: Test de Vigilancia Psicomotora (PVT - Psychomotor Vigilance Task) que evalúa sostenimiento de la atención visual y velocidad de respuesta neuromotora ante estímulos visuales aleatorios.";
+    const PVT_METRIC_INFO = "Metodología del Test: Test de Vigilancia Psicomotora breve (PVT-B, Basner y Dinges 2011): 3 minutos con estímulos visuales cada 2 a 5 segundos. Se registran lapsus (respuestas de 355 ms o más), falsas partidas (toques antes del estímulo o en menos de 100 ms) y tiempo de reacción promedio. La clasificación combina el PVT-B con la Escala de Somnolencia de Karolinska (KSS) y las horas de sueño. Es una herramienta de apoyo: no reemplaza el criterio del supervisor.";
 
     function getFormattedImageUrl(url) {
         if (!url || url === "Sin foto" || url.startsWith("Error")) return null;
@@ -1247,7 +1593,10 @@
                             ...cloudLog,
                             photo1: img1,
                             photo2: img2,
-                            causes: (match && match.causes) || cloudLog.causes
+                            causes: (match && match.causes) || cloudLog.causes,
+                            lapses: (match && match.lapses !== undefined) ? match.lapses : cloudLog.lapses,
+                            falseStarts: (match && match.falseStarts !== undefined) ? match.falseStarts : cloudLog.falseStarts,
+                            kss: (match && match.kss !== undefined) ? match.kss : cloudLog.kss
                         };
                     });
 
@@ -1417,20 +1766,6 @@
         setActiveInput('loginPass');
     }
 
-    function resetMasterCredentials() {
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        users = users.filter(u => formatRut(u.rut) !== MASTER_RUT);
-        users.unshift({
-            rut: MASTER_RUT,
-            pass: MASTER_DEFAULT_PASS,
-            name: MASTER_NAME,
-            role: 'superadmin'
-        });
-        localStorage.setItem('users', JSON.stringify(users));
-        renderQuickUserGrid();
-        alert(`Credenciales maestras restablecidas.\n\nRUT: ${MASTER_RUT}\nClave: ${MASTER_DEFAULT_PASS}`);
-    }
-
     function handleLogin(e) {
         e.preventDefault();
         const inputRut = formatRut(document.getElementById('loginRut').value);
@@ -1472,6 +1807,20 @@
 
         syncChileTimeFromNetwork(); // refresca la hora real de Chile antes de iniciar el test
 
+        document.getElementById('chkDeclaracion').checked = false;
+
+        // Antes de habilitar el test, se revisa si el trabajador está
+        // bloqueado o en pausa (con los datos más recientes de la nube).
+        const btnStart = document.getElementById('btnStartTest');
+        btnStart.disabled = true;
+        btnStart.innerText = 'Verificando estado...';
+        const userAtCheck = currentUser;
+        checkCanTakeTest().then(ok => {
+            if (currentUser !== userAtCheck) return;
+            btnStart.disabled = false;
+            btnStart.innerText = 'Iniciar Test PVT (3 minutos, Captura Automática)';
+        });
+
         const userRole = String(currentUser.role).trim().toLowerCase();
         if (userRole === 'admin' || userRole === 'supervisor' || userRole === 'superadmin') {
             document.getElementById('btnAdminBack').style.display = 'block';
@@ -1486,12 +1835,15 @@
         document.getElementById('viewAdmin').style.display = 'block';
         renderDashboard();
         startAutoSync();
+        refreshReleasesFromServer().then(() => { if (currentUser && isAdminLevel(currentUser)) renderDashboard(); });
     }
 
     function renderDashboard() {
         renderUsersTable();
         renderLogsTable();
         renderQuickUserGrid();
+        try { renderDayControl(); } catch (e) { console.error('[Control del día]', e); }
+        syncWorkersToAlerts();
 
         const unreadAlerts = getUnreadAlerts();
         const adminNotice = document.getElementById('adminAlertNotice');
@@ -2331,6 +2683,15 @@
     }
 
     async function startPhotoCountdownSequence() {
+        if (!currentUser) return;
+        if (!document.getElementById('chkDeclaracion').checked) {
+            alert('Antes de iniciar, marca la declaración: confirma que respondiste con la verdad.');
+            return;
+        }
+        if (!MODO_MARCHA_BLANCA && getBlockState(currentUser.rut).state !== 'LIBRE') {
+            checkCanTakeTest();
+            return;
+        }
         requestFullScreen();
         hideAllViews();
         const testScreen = document.getElementById('testScreen');
@@ -2360,25 +2721,28 @@
     }
 
     function startReactionTest() {
-        reactionTimes = []; 
+        reactionTimes = [];
         totalStimuli = 0;
-        secondsLeft = 60;
+        falseStarts = 0;
+        // 5 s de preparación + 3 min de test PVT-B
+        secondsLeft = PVT_DURATION_S + PVT_PREP_S;
 
-        document.getElementById('timerBadge').innerText = '60s';
-        document.getElementById('testInstruction').innerText = 'PREPÁRATE PARA EL TEST PVT...\nPresiona SOLO cuando la pantalla se ponga verde';
+        document.getElementById('timerBadge').innerText = formatTimerBadge(PVT_DURATION_S);
+        document.getElementById('testInstruction').innerText = 'PREPÁRATE PARA EL TEST PVT (3 MINUTOS)...\nPresiona SOLO cuando la pantalla se ponga verde';
         document.getElementById('targetBtn').innerText = 'PREPARADO';
 
         testState = 'PREP';
 
         mainTimer = setInterval(() => {
             secondsLeft--;
-            document.getElementById('timerBadge').innerText = secondsLeft + 's';
+            document.getElementById('timerBadge').innerText = formatTimerBadge(Math.min(secondsLeft, PVT_DURATION_S));
 
-            if (secondsLeft === 30) {
+            // Segunda foto a mitad del test (1:30)
+            if (secondsLeft === Math.floor(PVT_DURATION_S / 2)) {
                 photo2Data = captureSilentFrame();
             }
-            
-            if (secondsLeft === 55 && testState === 'PREP') {
+
+            if (secondsLeft === PVT_DURATION_S && testState === 'PREP') {
                 nextRound();
             }
 
@@ -2394,7 +2758,8 @@
         document.getElementById('testInstruction').innerText = 'ESPERA AL VERDE...';
         document.getElementById('targetBtn').innerText = 'ESPERA';
 
-        const delay = Math.floor(Math.random() * 2500) + 1500;
+        // Intervalo aleatorio entre estímulos: 2 a 5 segundos (PVT-B)
+        const delay = Math.floor(Math.random() * (PVT_ISI_MAX_MS - PVT_ISI_MIN_MS)) + PVT_ISI_MIN_MS;
         roundTimer = setTimeout(() => {
             testState = 'GREEN';
             totalStimuli++;
@@ -2408,41 +2773,23 @@
     function handleTestTap() {
         if (testState === 'PREP') return;
         if (testState === 'RED') {
+            // Toque antes del estímulo = falsa partida
+            falseStarts++;
             clearTimeout(roundTimer);
             nextRound();
         } else if (testState === 'GREEN') {
             const elapsed = Math.round(performance.now() - startTime);
-            reactionTimes.push(elapsed);
+            if (elapsed < PVT_FALSE_START_MS) {
+                // Respuesta imposiblemente rápida = anticipación (falsa partida)
+                falseStarts++;
+            } else {
+                reactionTimes.push(elapsed);
+            }
             nextRound();
         }
     }
 
     document.getElementById('testScreen').addEventListener('pointerdown', handleTestTap);
-
-    function sendAlertEmail(logData) {
-        if (EMAILJS_PUBLIC_KEY === "TU_PUBLIC_KEY_AQUI") return;
-        // Si no hay internet, la librería de EmailJS puede no haber cargado. Se
-        // evita que esto rompa el flujo de guardado del test.
-        if (typeof emailjs === 'undefined') {
-            console.warn('[Email] EmailJS no está disponible (sin conexión); la alerta se omite por ahora.');
-            return;
-        }
-
-        const templateParams = {
-            to_email: ALERT_EMAILS,
-            worker_name: logData.name,
-            worker_rut: logData.rut,
-            status: logData.status,
-            avg_reaction: logData.avg,
-            date: logData.date
-        };
-
-        try {
-            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
-        } catch (err) {
-            console.warn('[Email] No se pudo enviar la alerta por correo:', err);
-        }
-    }
 
     // Verifica si una foto (dataURL) capturada durante el test contiene un
     // rostro humano, usando la API nativa del navegador (Shape Detection API).
@@ -2485,6 +2832,9 @@
     async function endTest() {
         clearInterval(mainTimer);
         clearTimeout(roundTimer);
+        // Se mide el estímulo que quedó en verde ANTES de cualquier espera
+        const endedOnGreen = (testState === 'GREEN');
+        const pendingMs = endedOnGreen ? (performance.now() - startTime) : 0;
         testState = 'ENDED';
         stopSilentCamera();
         document.getElementById('testScreen').style.display = 'none';
@@ -2503,115 +2853,123 @@
             return;
         }
 
-        const responsesCount = reactionTimes.length;
-        const missedStimuli = totalStimuli - responsesCount;
+        // ===================== CLASIFICACIÓN F&S =====================
+        // Medición: PVT-B (lapsus >= 355 ms y falsas partidas).
+        // Clasificación en 4 niveles: cada factor entrega un nivel y el
+        // resultado final es el PEOR de ellos (no se promedian, para que un
+        // factor crítico nunca quede escondido por los demás).
+        // Los cortes son iniciales y deben calibrarse con datos de la obra.
+        const LEVELS = ['NORMAL', 'LEVE', 'MODERADO', 'SEVERO'];
 
+        // Si el test terminó con la pantalla en verde y ya pasaron 355 ms o más
+        // sin respuesta, ese estímulo cuenta como lapsus (posible microsueño).
+        // Si recién se había encendido, no se cuenta (no fue culpa del trabajador).
+        const pendingLapse = (endedOnGreen && pendingMs >= PVT_LAPSE_MS) ? 1 : 0;
+
+        const responsesCount = reactionTimes.length;
         let avg = 0;
         if (responsesCount > 0) {
             avg = Math.round(reactionTimes.reduce((a, b) => a + b, 0) / responsesCount);
         }
 
-        const laps = reactionTimes.filter(t => t > 500).length;
+        const lapses = reactionTimes.filter(t => t >= PVT_LAPSE_MS).length + pendingLapse;
+        const pvtErrors = lapses + falseStarts;
 
         const sleep = quizAnswers.sleep;
-        const alertness = parseInt(document.getElementById('qAlert').value);
+        const kss = parseInt(document.getElementById('qAlert').value);
         const pain = quizAnswers.pain;
         const meds = quizAnswers.meds;
         const stress = quizAnswers.stress;
 
-        let score = 0;
-
-        // EVALUACIÓN DE REACCIÓN Y OMISIONES (ESTÁNDAR PVT REAL)
-        if (responsesCount === 0 || missedStimuli >= 3 || avg >= 700) {
-            score += 6; 
-        } else if (avg >= 500) {
-            score += 4;
-        } else if (avg > 380) {
-            score += 3;
-        } else if (avg > 310) {
-            score += 1;
-        }
-
-        if (laps >= 2) score += 2;
-        if (missedStimuli > 0) score += (missedStimuli * 2);
-
-        // EVALUACIÓN CUESTIONARIO
-        if (sleep === 'poor') score += 3;
-        else if (sleep === 'medium') score += 1;
-
-        if (alertness >= 7) score += 2;
-        else if (alertness >= 6) score += 1;
-
-        if (pain === 'severe') score += 2;
-        else if (pain === 'mild') score += 1;
-
-        if (meds === 'meds') score += 2;
-
-        if (stress === 'high') score += 2;
-        else if (stress === 'medium') score += 1;
-
-        // Desglose de causas/factores de riesgo detectados, en lenguaje simple,
-        // para poder mostrarlo luego como anexo del informe cuando el resultado
-        // sea MODERADO o SEVERO.
         let causes = [];
 
+        // 1) PVT-B: lapsus + falsas partidas
+        let pvtLevel;
         if (responsesCount === 0) {
-            causes.push('Omisión total: el trabajador no respondió a ningún estímulo durante el test (posible microsueño).');
-        } else if (missedStimuli >= 3) {
-            causes.push(`Omisiones múltiples: ${missedStimuli} estímulos sin respuesta.`);
-        } else if (avg >= 700) {
-            causes.push(`Tiempo de reacción muy elevado: promedio de ${avg} ms.`);
-        } else if (avg >= 500) {
-            causes.push(`Tiempo de reacción elevado: promedio de ${avg} ms.`);
-        } else if (avg > 380) {
-            causes.push(`Tiempo de reacción por sobre lo óptimo: promedio de ${avg} ms.`);
-        } else if (avg > 310) {
-            causes.push(`Leve aumento del tiempo de reacción: promedio de ${avg} ms.`);
+            pvtLevel = 3;
+            causes.push(falseStarts > 0
+                ? `Sin respuestas válidas: ${falseStarts} toques antes del estímulo (test mal rendido o impulsividad).`
+                : 'Omisión total: el trabajador no respondió a ningún estímulo durante el test (posible microsueño).');
+        } else if (pvtErrors >= 8) {
+            pvtLevel = 3;
+        } else if (pvtErrors >= 5) {
+            pvtLevel = 2;
+        } else if (pvtErrors >= 3) {
+            pvtLevel = 1;
+        } else {
+            pvtLevel = 0;
+        }
+        if (responsesCount > 0 && pvtErrors >= 3) {
+            causes.push(`Test PVT-B con ${pvtErrors} errores: ${lapses} lapsus (respuestas de ${PVT_LAPSE_MS} ms o más) y ${falseStarts} falsa(s) partida(s).`);
         }
 
-        if (laps >= 2) causes.push(`Respuestas lentas repetidas: ${laps} reacciones sobre 500 ms durante el test.`);
-        if (missedStimuli > 0 && responsesCount > 0) causes.push(`${missedStimuli} estímulo(s) no respondido(s) (omisión parcial).`);
+        // Tiempo promedio muy alto: apoyo al PVT (sube como mínimo a LEVE)
+        if (responsesCount > 0 && avg >= 400) {
+            pvtLevel = Math.max(pvtLevel, 1);
+            causes.push(`Tiempo de reacción promedio elevado: ${avg} ms.`);
+        }
 
-        if (sleep === 'poor') causes.push('Calidad de sueño reportada: Deficiente/Mala.');
-        else if (sleep === 'medium') causes.push('Calidad de sueño reportada: Regular.');
+        // 2) Escala de Somnolencia de Karolinska (KSS)
+        let kssLevel = 0;
+        if (kss >= 8) kssLevel = 3;
+        else if (kss === 7) kssLevel = 2;
+        else if (kss === 6) kssLevel = 1;
+        if (kssLevel > 0) causes.push(`Somnolencia autorreportada (escala KSS 1-9): ${kss}.`);
 
-        if (alertness >= 7) causes.push(`Baja autopercepción de alerta (escala 1-9): ${alertness}.`);
-        else if (alertness >= 6) causes.push(`Autopercepción de alerta moderadamente baja (escala 1-9): ${alertness}.`);
+        // 3) Horas de sueño
+        let sleepLevel = 0;
+        if (sleep === 'poor') {
+            sleepLevel = 2;
+            causes.push('Horas de sueño reportadas: menos de 5 horas.');
+            // Poco sueño + PVT alterado = riesgo alto
+            if (pvtLevel >= 2) {
+                sleepLevel = 3;
+                causes.push('Menos de 5 horas de sueño junto con un PVT alterado.');
+            }
+        } else if (sleep === 'medium') {
+            sleepLevel = 1;
+            causes.push('Horas de sueño reportadas: 5 a 6 horas.');
+        }
 
-        if (pain === 'severe') causes.push('Dolor o malestar físico reportado: Severo.');
-        else if (pain === 'mild') causes.push('Dolor o malestar físico reportado: Leve.');
+        // 4) Otros factores (dolor, medicamentos, estrés): solo uno = LEVE;
+        //    dos o más juntos = MODERADO
+        let otherCount = 0;
+        if (pain === 'severe') { otherCount++; causes.push('Dolor o malestar físico intenso.'); }
+        else if (pain === 'mild') causes.push('Malestar físico leve (informativo).');
+        if (meds === 'meds') { otherCount++; causes.push('Consumo de medicamentos que pueden causar somnolencia.'); }
+        if (stress === 'high') { otherCount++; causes.push('Estrés o carga mental alta.'); }
+        else if (stress === 'medium') causes.push('Estrés moderado (informativo).');
+        const otherLevel = otherCount >= 2 ? 2 : (otherCount === 1 ? 1 : 0);
 
-        if (meds === 'meds') causes.push('Consumo reportado de medicamentos que pueden afectar el estado de alerta.');
+        // 5) Línea base personal: si el trabajador sale bastante más lento que
+        //    su propio promedio habitual, sube como mínimo a LEVE.
+        let baselineLevel = 0;
+        const baseline = getPersonalBaseline(currentUser.rut);
+        if (baseline && responsesCount > 0 && avg >= baseline * 1.25 && (avg - baseline) >= 60) {
+            baselineLevel = 1;
+            causes.push(`Reacción ${Math.round((avg / baseline - 1) * 100)}% más lenta que su promedio habitual (${baseline} ms).`);
+        }
 
-        if (stress === 'high') causes.push('Nivel de estrés reportado: Alto.');
-        else if (stress === 'medium') causes.push('Nivel de estrés reportado: Medio.');
+        const finalLevel = Math.max(pvtLevel, kssLevel, sleepLevel, otherLevel, baselineLevel);
 
         if (causes.length === 0) causes.push('Sin factores de riesgo relevantes detectados.');
+        causes.push(`Detalle PVT-B: ${responsesCount} respuestas, promedio ${avg} ms, ${lapses} lapsus, ${falseStarts} falsas partidas.`);
 
-        let status = 'NORMAL';
-        let badgeClass = 'badge-normal';
+        const status = LEVELS[finalLevel];
+        const badgeClass = getBadgeClass(status);
         let resultMsgText = '';
 
-        if (score <= 1) {
-            status = 'NORMAL';
-            badgeClass = 'badge-normal';
+        if (status === 'NORMAL') {
             resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nSin signos de fatiga; apto para laborar.`;
-        } else if (score <= 3) {
-            status = 'LEVE';
-            badgeClass = 'badge-leve';
+        } else if (status === 'LEVE') {
             resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nCansancio menor; requiere atención o monitoreo, apto para laborar.`;
-        } else if (score <= 5) {
-            status = 'MODERADO';
-            badgeClass = 'badge-moderado';
+        } else if (status === 'MODERADO') {
             resultMsgText = `Tiempo Promedio (PVT): ${avg} ms.\n\nAlerta disminuida; requiere pausa o supervisión antes de laborar.`;
         } else {
-            status = 'SEVERO';
-            badgeClass = 'badge-severo';
             resultMsgText = responsesCount === 0 
                 ? `Test Sin Respuesta (Omisión Total).\n\nAlto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.`
                 : `Tiempo Promedio (PVT): ${avg} ms.\n\nAlto riesgo de microsueños o fatiga crítica; impide la operación y exige descanso inmediato.`;
         }
-
         const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         const logs = JSON.parse(localStorage.getItem('logs')) || [];
         const now = new Date();
@@ -2629,6 +2987,11 @@
             avg: avg,
             status: status,
             causes: causes,
+            lapses: lapses,
+            falseStarts: falseStarts,
+            kss: kss,
+            testVersion: 'PVT-B 3min',
+            declaracion: true,
             photo1: photo1Data,
             photo2: photo2Data
         };
@@ -2671,9 +3034,30 @@
         // para que el informe y la auditoría conserven las fotografías.
         postToSheets("addLog", { log: newLog });
 
-        if (status === 'MODERADO' || status === 'SEVERO') {
-            sendAlertEmail(newLog);
+        // Registro en el script de alertas (correo/WhatsApp si es MODERADO o
+        // SEVERO). Se envía sin fotos para que sea liviano.
+        postToAlerts({
+            action: 'registrarTest',
+            log: {
+                id: newLog.id, timestamp: newLog.timestamp, date: newLog.date,
+                name: newLog.name, rut: newLog.rut, status: newLog.status, avg: newLog.avg,
+                lapses: lapses, falseStarts: falseStarts, kss: kss, causes: causes
+            }
+        });
+
+        // Mensaje de lo que sigue según el protocolo
+        let protocolo = '';
+        if (!MODO_MARCHA_BLANCA) {
+            const st = getBlockState(currentUser.rut);
+            if (st.state === 'BLOQUEADO') {
+                protocolo = '\n\n⛔ NO OPERES NI CONDUZCAS. Quedaste bloqueado hasta que tu supervisor converse contigo y te libere. Tu supervisor ya fue avisado.';
+            } else if (st.state === 'PAUSA') {
+                protocolo = `\n\n⏸️ Pausa obligatoria de ${PAUSA_MINUTOS} minutos: descansa, hidrátate y avisa a tu supervisor. Luego repite el test.`;
+            } else if (status === 'LEVE') {
+                protocolo = '\n\nPuedes trabajar. Si sientes sueño durante la jornada, avisa a tu supervisor.';
+            }
         }
+        resultMsgText += protocolo;
 
         document.getElementById('viewResult').style.display = 'flex';
         const badgeContainer = document.getElementById('statusBadgeContainer');
@@ -2703,6 +3087,7 @@
     function hideAllViews() {
         document.getElementById('viewLogin').style.display = 'none';
         document.getElementById('viewQuiz').style.display = 'none';
+        document.getElementById('viewBlocked').style.display = 'none';
         document.getElementById('viewResult').style.display = 'none';
         document.getElementById('viewAdmin').style.display = 'none';
     }

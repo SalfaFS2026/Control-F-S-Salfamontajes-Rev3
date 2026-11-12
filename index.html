@@ -735,6 +735,7 @@
             </div>
 
             <div class="panel-box">
+                <div id="cloudSyncStatus" class="muted-sm" style="margin-bottom:10px;"></div>
                 <div class="panel-box-head">
                     <h3 class="panel-title">Personal registrado</h3>
                     <input type="text" id="userSearch" placeholder="Buscar por nombre o RUT" class="inp-left inp-search" oninput="renderUsersTable()">
@@ -1665,7 +1666,9 @@
         });
         cal.updatedAt = new Date().toISOString();
         setCalendario(cal);
-        postToAlerts({ action: 'calendario', calendario: cal });
+        postToAlerts({ action: 'calendario', calendario: cal }).then(r => {
+            if (r && r.ok === false) setCloudStatus('calendario', false, r.error); else if (r) setCloudStatus('calendario', true);
+        });
         alert('Calendario de turnos guardado.');
         renderDashboard();
     }
@@ -1674,10 +1677,20 @@
         if (!ALERTS_URL) return;
         try {
             const data = await alertsRead('leerCalendario', 'calendario');
-            if (data && data.ok && data.calendario) {
-                const loc = getCalendario();
-                if (String(data.calendario.updatedAt || '') > String(loc.updatedAt || '')) setCalendario(data.calendario);
+            if (!data || !data.ok || !data.calendario) { setCloudStatus('calendario', false); return; }
+            const loc = getCalendario();
+            const srvAt = String(data.calendario.updatedAt || '');
+            const locAt = String(loc.updatedAt || '');
+            const locTieneFechas = TURNOS_CALENDARIO.some(t => loc[t]);
+            if (srvAt > locAt) {
+                setCalendario(data.calendario);
+            } else if (locTieneFechas && (locAt > srvAt || !srvAt) && currentUser && isAdminLevel(currentUser)) {
+                // Este equipo tiene un calendario más nuevo que la nube: se sube
+                if (!loc.updatedAt) { loc.updatedAt = new Date().toISOString(); setCalendario(loc); }
+                const r = await postToAlerts({ action: 'calendario', calendario: loc });
+                if (r && r.ok === false) { setCloudStatus('calendario', false, r.error); return; }
             }
+            setCloudStatus('calendario', true);
         } catch (e) {
             console.warn('[Calendario] No se pudo traer desde el servidor:', e);
         }
@@ -1710,11 +1723,15 @@
         const entry = { ...datos, updatedAt: new Date().toISOString() };
         m[formatRut(rut)] = entry;
         setPersonalMap(m);
-        postToAlerts({ action: 'personal', rut: formatRut(rut), datos: entry });
+        postToAlerts({ action: 'personal', rut: formatRut(rut), datos: entry }).then(r => {
+            if (r && r.ok === false) setCloudStatus('personal', false, r.error); else if (r) setCloudStatus('personal', true);
+        });
     }
 
+    // Une lo de la nube con lo de este equipo. Devuelve los RUT que en este
+    // equipo están más actualizados que en la nube (para subirlos).
     function mergePersonalFromServer(serverMap) {
-        if (!serverMap || typeof serverMap !== 'object') return;
+        if (!serverMap || typeof serverMap !== 'object') return [];
         const m = getPersonalMap();
         Object.keys(serverMap).forEach(k => {
             const srv = serverMap[k];
@@ -1722,16 +1739,55 @@
             if (!loc || String(srv.updatedAt || '') > String(loc.updatedAt || '')) m[k] = srv;
         });
         setPersonalMap(m);
+        return Object.keys(m).filter(k => {
+            const srv = serverMap[k];
+            return !srv || String(m[k].updatedAt || '') > String(srv.updatedAt || '');
+        });
     }
 
     async function refreshPersonalFromServer() {
         if (!ALERTS_URL) return;
         try {
             const data = await alertsRead('leerPersonal', 'personal');
-            if (data && data.ok) mergePersonalFromServer(data.personal);
+            if (!data || !data.ok) { setCloudStatus('personal', false); return; }
+            const pendientes = mergePersonalFromServer(data.personal);
+            // Un supervisor sube lo que configuró en este equipo y aún no está en la nube
+            if (currentUser && isAdminLevel(currentUser) && pendientes.length) {
+                const m = getPersonalMap();
+                for (const k of pendientes) {
+                    const entry = { ...m[k], updatedAt: m[k].updatedAt || new Date().toISOString() };
+                    m[k] = entry;
+                    const r = await postToAlerts({ action: 'personal', rut: k, datos: entry });
+                    if (r && r.ok === false) { setCloudStatus('personal', false, r.error); setPersonalMap(m); return; }
+                }
+                setPersonalMap(m);
+            }
+            setCloudStatus('personal', true);
         } catch (e) {
-            console.warn('[Personal] No se pudo traer cargo/jornada desde el servidor:', e);
+            console.warn('[Personal] No se pudo sincronizar cargo/turno:', e);
+            setCloudStatus('personal', false);
         }
+    }
+
+    // Trae (y sube si corresponde) turnos, cargos, calendario y liberaciones
+    async function refreshAlertsData() {
+        await Promise.all([refreshReleasesFromServer(), refreshPersonalFromServer(), refreshCalendarioFromServer()]);
+        if (currentUser && isAdminLevel(currentUser) && document.getElementById('viewAdmin').style.display !== 'none') renderDashboard();
+    }
+
+    // Estado de la sincronización con la nube (se muestra en la pestaña Personal)
+    const cloudStatus = {};
+    function setCloudStatus(key, ok, msg) {
+        cloudStatus[key] = { ok, msg: msg || '', at: new Date() };
+        const el = document.getElementById('cloudSyncStatus');
+        if (!el) return;
+        const vals = Object.values(cloudStatus);
+        const bad = vals.find(v => !v.ok);
+        if (!ALERTS_URL) { el.innerText = ''; return; }
+        el.innerText = bad
+            ? `⚠️ No se pudo sincronizar con la nube${bad.msg ? ': ' + bad.msg : ''}. Revisa la señal y presiona Sincronizar.`
+            : `☁️ Turnos, cargos y calendario sincronizados con la nube (${new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}).`;
+        el.style.color = bad ? '#facc15' : '#4ade80';
     }
 
     // Fecha de hoy en Chile como 'YYYY-MM-DD'
@@ -2640,6 +2696,7 @@
         }
 
         await syncDataFromCloud();
+        await refreshAlertsData();
 
         if (btn) {
             btn.innerText = "✅ Actualizado";
@@ -2652,9 +2709,12 @@
 
     function startAutoSync() {
         if (!syncInterval) {
+            let ticks = 0;
             syncInterval = setInterval(() => {
                 if (currentUser && isAdminLevel(currentUser)) {
                     syncDataFromCloud();
+                    // Cada 1 minuto también turnos, cargos, calendario y liberaciones
+                    if (++ticks % 4 === 0) refreshAlertsData();
                 }
             }, 15000);
         }
@@ -2895,8 +2955,7 @@
         document.getElementById('tabBtnFicha').style.display = isSuperAdmin(currentUser) ? '' : 'none';
         if (currentAdminTab === 'ficha' && !isSuperAdmin(currentUser)) currentAdminTab = 'hoy';
         showAdminTab(currentAdminTab || 'hoy');
-        Promise.all([refreshReleasesFromServer(), refreshPersonalFromServer(), refreshCalendarioFromServer()])
-            .then(() => { if (currentUser && isAdminLevel(currentUser)) renderDashboard(); });
+        refreshAlertsData();
     }
 
     function renderDashboard() {

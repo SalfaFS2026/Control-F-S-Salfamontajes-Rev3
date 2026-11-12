@@ -10,7 +10,7 @@
 // que los dispositivos descarguen la versión nueva la próxima vez que
 // tengan señal, en vez de quedarse con la copia vieja guardada.
 
-const CACHE_NAME = 'fs-salfamontajes-v11';
+const CACHE_NAME = 'fs-salfamontajes-v12';
 
 // Recursos que se guardan de entrada para que el login, el cuestionario y
 // el test funcionen offline desde el primer momento.

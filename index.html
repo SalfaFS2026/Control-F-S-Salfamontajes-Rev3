@@ -540,7 +540,8 @@
         </div>
 
         <div id="quizCalibNotice" style="display:none; font-size:13px; color:#facc15; background: rgba(250,204,21,0.1); border:1px solid #ca8a04; border-radius:10px; padding:10px 12px; margin-bottom:10px;">
-            Este celular aún no está calibrado. Puedes rendir el test igual; pídele a tu supervisor que lo calibre (toma 45 segundos).
+            <div id="quizCalibText">📱 Este celular aún no está calibrado. Calíbralo ahora (45 segundos) para que el test mida bien. Hazlo con calma y concentrado.</div>
+            <button type="button" class="btn btn-info" style="margin:10px 0 0; padding:12px; font-size:15px;" onclick="startCalibration()">Calibrar este celular ahora</button>
         </div>
 
         <label id="declaracionBox" style="display:flex; gap:12px; align-items:flex-start; background: var(--input-dark); border: 1px solid var(--border-color); padding: 14px; border-radius: 10px; margin: 6px 0 4px; cursor:pointer; font-size: 14px; line-height: 1.4;">
@@ -888,7 +889,7 @@
                 </table>
 
                 <h2>7. Calibración de equipos</h2>
-                <p>Cada celular o tablet tiene un pequeño retraso propio de pantalla. Un supervisor descansado calibra cada equipo una vez (45 segundos); la app compara su resultado con la referencia de una persona descansada (250 ms) y descuenta la diferencia en todos los tests de ese equipo. La corrección tiene un tope de 120 ms para que nunca pueda esconder fatiga real, y se repite cada 60 días o si se borran los datos del navegador. Si un equipo no está calibrado, la app no descuenta nada (es decir, queda del lado más exigente).</p>
+                <p>Cada celular o tablet tiene un pequeño retraso propio de pantalla. Cada equipo se calibra una vez (45 segundos): la app compara el resultado con la referencia de una persona descansada (250 ms) y descuenta la diferencia en todos los tests de ese equipo. Si el equipo no está calibrado, el trabajador puede calibrarlo él mismo antes de su test; en ese caso la corrección tiene un tope de 90 ms, y si la calibra un supervisor, de 120 ms, para que nunca pueda esconder fatiga real. Si las respuestas son demasiado lentas, la app no calibra. Un equipo ya calibrado solo lo puede recalibrar un supervisor. La calibración se repite cada 60 días o si se borran los datos del navegador. Si un equipo no está calibrado, la app no descuenta nada (queda del lado más exigente).</p>
 
                 <h2>8. Registro y control</h2>
                 <ul>
@@ -1942,8 +1943,11 @@
     }
 
     function startCalibration() {
-        if (!currentUser || !isAdminLevel(currentUser)) return;
-        const ok = confirm('CALIBRAR ESTE EQUIPO\n\nDebe hacerlo una persona DESCANSADA (idealmente el supervisor), sin apuro y concentrada.\n\nSon 45 segundos: toca la pantalla apenas se ponga verde.\n\nLa calibración mide el retraso propio de la pantalla de este celular para descontarlo en los tests.\n\n¿Comenzar?');
+        if (!currentUser) return;
+        // Un trabajador puede calibrar solo si el equipo no está calibrado o
+        // la calibración venció. Recalibrar un equipo ya calibrado: supervisor.
+        if (!isAdminLevel(currentUser) && calibStatus().ok) return;
+        const ok = confirm('CALIBRAR ESTE EQUIPO\n\nHazlo DESCANSADO, sin apuro y concentrado.\n\nSon 45 segundos: toca la pantalla apenas se ponga verde.\n\nLa calibración mide el retraso propio de la pantalla de este celular para descontarlo en los tests. Si respondes lento a propósito, la app lo detecta y no calibra.\n\n¿Comenzar?');
         if (!ok) return;
         testMode = 'calib';
         requestFullScreen();
@@ -1964,7 +1968,7 @@
         document.getElementById('testScreen').style.display = 'none';
 
         const valid = reactionTimesRaw.filter(t => t >= PVT_FALSE_START_MS && t <= 800).sort((a, b) => a - b);
-        const back = () => { hideAllViews(); showAdminDashboard(); };
+        const back = () => { hideAllViews(); if (isAdminLevel(currentUser)) showAdminDashboard(); else showQuiz(); };
 
         if (valid.length < CALIB_MIN_VALID) {
             alert(`No se pudo calibrar: hubo solo ${valid.length} respuestas válidas (se necesitan ${CALIB_MIN_VALID}). Repite la calibración tocando apenas aparezca el verde.`);
@@ -1977,8 +1981,11 @@
         const mid = Math.floor(valid.length / 2);
         const median = valid.length % 2 ? valid[mid] : Math.round((valid[mid - 1] + valid[mid]) / 2);
         const offset = median - CALIB_REFERENCE_MS;
+        // Si calibra un trabajador (no supervisor), el tope es menor para que
+        // una calibración hecha con sueño no pueda esconder fatiga.
+        const maxOffset = isAdminLevel(currentUser) ? CALIB_MAX_OFFSET_MS : CALIB_SELF_MAX_OFFSET_MS;
 
-        if (offset > CALIB_MAX_OFFSET_MS) {
+        if (offset > maxOffset) {
             alert(`No se pudo calibrar: las respuestas fueron muy lentas (mediana ${median} ms). Debe calibrar una persona descansada y concentrada. Si el problema sigue, este celular puede ser demasiado lento para el test.`);
             return back();
         }
@@ -1989,7 +1996,7 @@
             samples: valid.length,
             timestamp: new Date().toISOString(),
             date: formatChileDateTime(new Date()),
-            by: currentUser.name,
+            by: currentUser.name + (isAdminLevel(currentUser) ? '' : ' (trabajador)'),
             byRut: currentUser.rut,
             deviceId: getDeviceId()
         };
@@ -2292,6 +2299,7 @@
     const CALIB_DURATION_S = 45;
     const CALIB_REFERENCE_MS = 250;
     const CALIB_MAX_OFFSET_MS = 120;
+    const CALIB_SELF_MAX_OFFSET_MS = 90;
     const CALIB_MIN_VALID = 8;
     const CALIB_VIGENCIA_DIAS = 60;
     let testMode = 'test'; // 'test' o 'calib'

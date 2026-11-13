@@ -210,9 +210,18 @@
         .pending-notice { display:none; background: rgba(250,204,21,0.12); border:1px solid #ca8a04; color:#fde68a; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:14px; line-height:1.45; }
         .app-version { font-size: 11px; color: var(--text-muted); opacity: 0.8; margin-top: 4px; }
         .app-version-foot { text-align:center; margin: 14px 0 6px; }
-        .cd-title { font-size: 26px; font-weight: 900; letter-spacing: 1px; opacity: 0.95; }
-        .cd-num { font-size: 140px; font-weight: 900; line-height: 1.1; margin: 10px 0; animation: cdPop .9s ease-out; text-shadow: 0 6px 30px rgba(0,0,0,0.35); }
-        .cd-hint { font-size: 20px; font-weight: 600; opacity: 0.9; }
+        .cd-title { font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #e2e8f0; }
+        .cd-ring { position: relative; width: 200px; height: 200px; margin: 18px auto 26px; }
+        .cd-ring svg { position:absolute; inset:0; width:100%; height:100%; transform: rotate(-90deg); }
+        .cd-track { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 8; }
+        .cd-prog { fill: none; stroke: #38bdf8; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 327; stroke-dashoffset: 0; animation: cdRing 1s linear forwards; filter: drop-shadow(0 0 8px rgba(56,189,248,0.6)); }
+        .cd-num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size: 110px; font-weight: 900; color: #ffffff; animation: cdPop .9s ease-out; }
+        .cd-steps { display:flex; flex-direction:column; gap: 14px; align-items: stretch; max-width: 420px; margin: 0 auto; }
+        .cd-step { display:flex; align-items:center; gap: 16px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 18px; font-size: 22px; font-weight: 600; text-align:left; color:#f1f5f9; }
+        .cd-ico { flex: 0 0 46px; height: 46px; display:flex; align-items:center; justify-content:center; }
+        .cd-ico-cross { font-size: 44px; font-weight: 300; color: #ffffff; line-height: 1; }
+        .cd-ico-circle { border-radius: 50%; width: 40px; height: 40px; flex: 0 0 40px; background: radial-gradient(circle at 35% 35%, #fff7b0, #facc15 60%); box-shadow: 0 0 14px rgba(250,204,21,0.7); }
+        @keyframes cdRing { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 327; } }
         @keyframes cdPop { 0% { transform: scale(1.8); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.85; } }
         .bg-wait { background-color: #0b1220; color: white; }
         .stim-area { position: relative; width: 260px; height: 260px; display:flex; align-items:center; justify-content:center; }
@@ -221,7 +230,8 @@
         .stim-circle span { font-size: 54px; font-weight: 900; color: #1f2937; font-variant-numeric: tabular-nums; }
         .stim-feedback { font-size: 54px; font-weight: 900; color: #fde047; font-variant-numeric: tabular-nums; }
         .stim-feedback.early { color: #f87171; font-size: 38px; }
-        .stim-hint { position: absolute; bottom: 9vh; left: 0; right: 0; text-align: center; font-size: 17px; color: rgba(255,255,255,0.65); padding: 0 20px; }
+        .stim-hint { position: absolute; top: 9vh; left: 0; right: 0; margin: 0 auto; max-width: 480px; text-align: center; font-size: 22px; font-weight: 600; line-height: 1.4; color: #e2e8f0; padding: 12px 20px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 14px; width: calc(100% - 40px); box-sizing: border-box; }
+        .stim-hint b { color: #facc15; }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -853,7 +863,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.6 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.7 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -2372,7 +2382,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.6 · 13-11-2026';
+    const APP_VERSION = '5.7 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -3988,7 +3998,7 @@
     function runCountdown(onDone) {
         const ts = document.getElementById('testScreen');
         ts.style.display = 'flex';
-        ts.className = 'bg-red';
+        ts.className = 'bg-wait';
         document.getElementById('timerBadge').style.display = 'none';
         document.getElementById('targetBtn').style.display = 'none';
         document.getElementById('stimArea').style.display = 'none';
@@ -3998,7 +4008,16 @@
         const instr = document.getElementById('testInstruction');
         let n = 3;
         const show = () => {
-            instr.innerHTML = `<div class="cd-title">VAMOS A COMENZAR</div><div class="cd-num" key="${n}">${n}</div><div class="cd-hint">Mira la cruz <b>+</b> y toca apenas aparezca el <b>círculo</b></div>`;
+            instr.innerHTML = `
+                <div class="cd-title">VAMOS A COMENZAR</div>
+                <div class="cd-ring">
+                    <svg viewBox="0 0 120 120"><circle class="cd-track" cx="60" cy="60" r="52"/><circle class="cd-prog" cx="60" cy="60" r="52"/></svg>
+                    <div class="cd-num">${n}</div>
+                </div>
+                <div class="cd-steps">
+                    <div class="cd-step"><span class="cd-ico cd-ico-cross">+</span><span>Mira la <b>cruz</b></span></div>
+                    <div class="cd-step"><span class="cd-ico cd-ico-circle"></span><span>Toca apenas aparezca el <b>círculo</b></span></div>
+                </div>`;
         };
         show();
         countdownTimer = setInterval(() => {

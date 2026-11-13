@@ -4017,13 +4017,21 @@
             document.getElementById('targetBtn').innerText = '¡PRESIONA!';
             startTime = performance.now();
             // Momento más cercano a cuando el verde aparece en pantalla
-            requestAnimationFrame(ts => { if (testState === 'GREEN') startTime = ts; });
+            // (solo si la hora del cuadro es coherente; algunos navegadores usan otra escala)
+            const tSet = startTime;
+            requestAnimationFrame(ts => {
+                if (testState === 'GREEN' && startTime === tSet && ts >= tSet - 50 && ts - tSet < 100) startTime = ts;
+            });
         }, delay);
     }
 
     function handleTestTap(ev) {
         if (testState === 'PREP' || testState === 'ENDED') return;
-        const tapTime = (ev && typeof ev.timeStamp === 'number' && ev.timeStamp > 0) ? ev.timeStamp : performance.now();
+        // Hora del toque: se usa la del evento solo si está en la misma escala que
+        // el reloj de la página (en algunos celulares/iPhone viene en otra escala).
+        const nowT = performance.now();
+        const evT = (ev && typeof ev.timeStamp === 'number') ? ev.timeStamp : NaN;
+        const tapTime = (isFinite(evT) && evT <= nowT + 5 && nowT - evT < 200) ? evT : nowT;
         if (testState === 'RED') {
             // Toque antes del estímulo = falsa partida
             falseStarts++;

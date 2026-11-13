@@ -221,6 +221,22 @@
         .cd-ico { flex: 0 0 46px; height: 46px; display:flex; align-items:center; justify-content:center; }
         .cd-ico-cross { font-size: 44px; font-weight: 300; color: #ffffff; line-height: 1; }
         .cd-ico-circle { border-radius: 50%; width: 40px; height: 40px; flex: 0 0 40px; background: radial-gradient(circle at 35% 35%, #fff7b0, #facc15 60%); box-shadow: 0 0 14px rgba(250,204,21,0.7); }
+        .btn-demo { background: linear-gradient(180deg, #8b5cf6, #6d28d9); color: #fff; }
+        .demo-badge { position: absolute; top: 2.5vh; left: 50%; transform: translateX(-50%); background: #6d28d9; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 1px; padding: 6px 14px; border-radius: 999px; white-space: nowrap; z-index: 5; }
+        .demo-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+        .demo-stat { background: var(--input-dark); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 4px; text-align: center; }
+        .demo-stat b { display: block; font-size: 22px; color: #fff; }
+        .demo-stat span { font-size: 11px; color: #94a3b8; }
+        .demo-bars { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 4px; }
+        .demo-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #cbd5e1; }
+        .demo-bar .n { width: 22px; text-align: right; color: #64748b; }
+        .demo-bar .track { flex: 1; height: 14px; background: rgba(255,255,255,0.05); border-radius: 4px; position: relative; overflow: hidden; }
+        .demo-bar .fill { height: 100%; border-radius: 4px; }
+        .demo-bar .v { width: 92px; }
+        .demo-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+        .demo-table td { padding: 5px 6px; border-bottom: 1px solid var(--border-color); color: #cbd5e1; }
+        .demo-level { text-align: center; font-size: 26px; font-weight: 900; padding: 12px; border-radius: 12px; margin-top: 12px; color: #0b1220; }
+        .demo-h { font-weight: 800; color: #fff; margin: 16px 0 4px; font-size: 14px; }
         .btn-ready { margin: 30px auto 0; display:block; box-sizing: border-box; width: 100%; max-width: 420px; padding: 22px 20px; font-size: 22px; font-weight: 900; color: #0b1220; background: linear-gradient(180deg, #fde047, #facc15); border: none; border-radius: 16px; box-shadow: 0 10px 30px -8px rgba(250,204,21,0.7); cursor: pointer; animation: readyPulse 1.6s ease-in-out infinite; }
         .btn-ready:active { transform: scale(0.97); }
         @keyframes readyPulse { 0%,100% { box-shadow: 0 10px 30px -8px rgba(250,204,21,0.7); } 50% { box-shadow: 0 10px 44px -4px rgba(250,204,21,0.95); } }
@@ -620,6 +636,20 @@
         <button class="btn btn-secondary" onclick="logout()">Cerrar Sesión</button>
     </div>
 
+    <div id="viewDemo" class="modal" style="display:none;">
+        <div class="modal-content result-card" style="max-width: 480px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                <h2 style="margin:0; text-align:left;">Resultado de la demostración</h2>
+                <button type="button" class="btn-danger" onclick="closeDemo()" aria-label="Cerrar" style="width:36px; height:36px; min-width:36px; padding:0; font-size:18px; border-radius:8px; flex-shrink:0;">✕</button>
+            </div>
+            <div id="demoBody"></div>
+            <div style="display:flex; gap:10px; margin-top:16px;">
+                <button class="btn btn-demo" style="flex:1; margin:0;" onclick="closeDemo(); startDemo();">Repetir</button>
+                <button class="btn btn-secondary" style="flex:1; margin:0;" onclick="closeDemo()">Volver al panel</button>
+            </div>
+        </div>
+    </div>
+
     <div id="viewResult" class="modal">
         <div class="modal-content result-card" id="resultCard" style="max-width: 440px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
@@ -647,6 +677,7 @@
             </div>
             <div class="admin-header-actions">
                 <button class="btn btn-sm" onclick="showQuiz()">Rendir Test</button>
+                <button class="btn btn-sm btn-demo" id="btnDemo" onclick="startDemo()" style="display:none;">▶ Demostración</button>
                 <button class="btn btn-sm btn-secondary" onclick="forceManualSync(event)">🔄 Sincronizar</button>
                 <button class="btn btn-sm btn-secondary" onclick="logout()">Salir</button>
             </div>
@@ -857,6 +888,7 @@
             <div class="panel-box toolbar">
                 <div class="muted-sm">Solo tú ves esta pestaña. Puedes descargarla en PDF para la postulación o para prevención.</div>
                 <button class="btn btn-pdf" onclick="printFicha()">Descargar PDF / Imprimir</button>
+                <button class="btn btn-sm btn-demo" onclick="startDemo()">▶ Demostración del test (30 s)</button>
             </div>
             <div id="fichaContent" class="ficha">
                 <div class="ficha-head">
@@ -866,7 +898,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.8 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.9 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -1155,6 +1187,7 @@
     <canvas id="hiddenCameraCanvas" style="display:none;" width="320" height="240"></canvas>
 
     <div class="timer-badge" id="timerBadge" style="display:none;">1:30</div>
+    <div class="demo-badge" id="demoBadge" style="display:none;">DEMOSTRACIÓN · no se guarda</div>
     <div style="font-size: 28px; font-weight: bold; max-width: 80%; line-height: 1.4;" id="testInstruction">PREPÁRATE...</div>
     <div class="target-button" id="targetBtn">PRESIONA AQUÍ</div>
     <div id="stimArea" class="stim-area" style="display:none;">
@@ -2060,6 +2093,81 @@
         runCountdown(() => startReactionTest());
     }
 
+    // ===================== MODO DEMOSTRACIÓN =====================
+    // Solo para el superadministrador: test corto (30 s) para mostrar la
+    // metodología. No pide cuestionario ni cámara, no se guarda en la
+    // planilla, no envía alertas ni cuenta en estadísticas o línea base.
+    function startDemo() {
+        if (!currentUser || !isSuperAdmin(currentUser)) return;
+        testMode = 'demo';
+        photo1Data = null; photo2Data = null;
+        requestFullScreen();
+        hideAllViews();
+        runCountdown(() => startReactionTest());
+    }
+
+    function closeDemo() {
+        document.getElementById('viewDemo').style.display = 'none';
+        hideAllViews();
+        showAdminDashboard();
+    }
+
+    function finishDemo() {
+        clearInterval(mainTimer);
+        clearTimeout(roundTimer);
+        const endedOnGreen = (testState === 'GREEN');
+        const pendingMs = endedOnGreen ? Math.round(performance.now() - startTime - getDeviceOffset()) : 0;
+        if (stimRaf) { cancelAnimationFrame(stimRaf); stimRaf = null; }
+        releaseWakeLock();
+        testState = 'ENDED';
+        testMode = 'test';
+        document.getElementById('testScreen').style.display = 'none';
+        document.getElementById('demoBadge').style.display = 'none';
+
+        const log = trialLog.slice();
+        if (endedOnGreen && pendingMs >= PVT_LAPSE_MS) log.push({ k: 'pending', t: pendingMs });
+        const n = reactionTimes.length;
+        const avg = n ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / n) : 0;
+        const lapses = log.filter(x => x.k === 'lapse' || x.k === 'pending').length;
+        const errs = lapses + falseStarts;
+        const lvl = n === 0 ? 3 : errs >= 8 ? 3 : errs >= 5 ? 2 : errs >= 2 ? 1 : 0;
+        const LV = [['NORMAL', '#4ade80'], ['LEVE', '#facc15'], ['MODERADO', '#fb923c'], ['SEVERO', '#f87171']];
+
+        const maxT = Math.max(600, ...log.filter(x => x.t).map(x => x.t));
+        const bars = log.map((x, i) => {
+            let color, label, w;
+            if (x.k === 'ok') { color = '#4ade80'; label = x.t + ' ms'; w = x.t / maxT; }
+            else if (x.k === 'lapse') { color = '#fb923c'; label = x.t + ' ms · lapsus'; w = x.t / maxT; }
+            else if (x.k === 'pending') { color = '#fb923c'; label = '+' + x.t + ' ms · sin respuesta'; w = x.t / maxT; }
+            else { color = '#f87171'; label = 'muy pronto'; w = 0.06; }
+            return `<div class="demo-bar"><span class="n">${i + 1}</span><div class="track"><div class="fill" style="width:${Math.min(100, Math.round(w * 100))}%; background:${color};"></div></div><span class="v">${label}</span></div>`;
+        }).join('') || '<div class="muted-sm">No hubo estímulos.</div>';
+
+        document.getElementById('demoBody').innerHTML = `
+            <div class="demo-stats">
+                <div class="demo-stat"><b>${n}</b><span>respuestas</span></div>
+                <div class="demo-stat"><b>${n ? avg : '–'}</b><span>promedio ms</span></div>
+                <div class="demo-stat"><b>${lapses}</b><span>lapsus</span></div>
+                <div class="demo-stat"><b>${falseStarts}</b><span>falsas partidas</span></div>
+            </div>
+            <div class="demo-h">Cada estímulo</div>
+            <div class="demo-bars">${bars}</div>
+            <div class="muted-sm">Verde: respuesta normal · Naranjo: lapsus (${PVT_LAPSE_MS} ms o más, posible microsueño) · Rojo: tocó antes del círculo.</div>
+            <div class="demo-level" style="background:${LV[lvl][1]};">PVT: ${LV[lvl][0]} <span style="font-size:14px; font-weight:700;">(${errs} error${errs === 1 ? '' : 'es'})</span></div>
+            <div class="demo-h">Cómo clasifica el test real (90 s)</div>
+            <table class="demo-table">
+                <tr><td><b>Errores PVT</b> (lapsus + falsas partidas)</td><td>0–1 Normal · 2–4 Leve · 5–7 Moderado · 8+ Severo</td></tr>
+                <tr><td><b>Somnolencia KSS</b> (1 a 9)</td><td>6 Leve · 7 Moderado · 8–9 Severo</td></tr>
+                <tr><td><b>Horas de sueño</b></td><td>5–6 h Leve · menos de 5 h Moderado (Severo si además el PVT sale alterado)</td></tr>
+                <tr><td><b>Dolor, medicamentos, estrés</b></td><td>1 factor Leve · 2 o más Moderado</td></tr>
+                <tr><td><b>Línea base personal</b></td><td>25% más lento que su promedio habitual: Leve</td></tr>
+            </table>
+            <div class="muted-sm" style="margin-top:8px;">El resultado final es el <b>peor</b> de todos los factores. Moderado: pausa y nuevo test. Severo: no puede conducir ni operar y se avisa al supervisor.</div>
+            <div class="muted-sm" style="margin-top:8px; color:#c4b5fd;">Demostración: no se guardó, no se enviaron alertas y no cuenta en las estadísticas.</div>`;
+        hideAllViews();
+        document.getElementById('viewDemo').style.display = 'flex';
+    }
+
     function finishCalibration() {
         clearInterval(mainTimer);
         clearTimeout(roundTimer);
@@ -2385,7 +2493,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.8 · 13-11-2026';
+    const APP_VERSION = '5.9 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -2403,6 +2511,8 @@
     // todos los tests de ese equipo. Tope de 120 ms para que nunca pueda
     // esconder fatiga real.
     const CALIB_DURATION_S = 45;
+    const DEMO_DURATION_S = 30;   // modo demostración (solo superadministrador)
+    let trialLog = [];
     const CALIB_REFERENCE_MS = 250;
     const CALIB_MAX_OFFSET_MS = 120;
     const CALIB_SELF_MAX_OFFSET_MS = 90;
@@ -3077,6 +3187,7 @@
         startAutoSync();
         document.getElementById('adminWho').innerText = `${currentUser.name} · ${roleLabel(currentUser.role)}`;
         document.getElementById('tabBtnFicha').style.display = isSuperAdmin(currentUser) ? '' : 'none';
+        document.getElementById('btnDemo').style.display = isSuperAdmin(currentUser) ? '' : 'none';
         if (currentAdminTab === 'ficha' && !isSuperAdmin(currentUser)) currentAdminTab = 'hoy';
         showAdminTab(currentAdminTab || 'hoy');
         refreshAlertsData();
@@ -4006,12 +4117,13 @@
         document.getElementById('targetBtn').style.display = 'none';
         document.getElementById('stimArea').style.display = 'none';
         document.getElementById('stimHint').style.display = 'none';
+        document.getElementById('demoBadge').style.display = testMode === 'demo' ? 'block' : 'none';
         testState = 'PREP';
         acquireWakeLock();
         const instr = document.getElementById('testInstruction');
         // Pantalla de instrucciones: el test parte cuando el trabajador toca "Estoy listo"
         instr.innerHTML = `
-            <div class="cd-title">${testMode === 'calib' ? 'CALIBRACIÓN DEL EQUIPO' : 'TEST DE REACCIÓN'}</div>
+            <div class="cd-title">${testMode === 'calib' ? 'CALIBRACIÓN DEL EQUIPO' : (testMode === 'demo' ? 'DEMOSTRACIÓN · 30 s' : 'TEST DE REACCIÓN')}</div>${testMode === 'demo' ? '<div style="font-size:15px; color:#c4b5fd; margin-top:8px;">Prueba corta para mostrar la metodología. No se guarda ni envía alertas.</div>' : ''}
             <div class="cd-steps" style="margin-top:22px;">
                 <div class="cd-step"><span class="cd-ico cd-ico-cross">+</span><span>Mira la <b>cruz</b> en el centro</span></div>
                 <div class="cd-step"><span class="cd-ico cd-ico-circle"></span><span>Toca la pantalla apenas aparezca el <b>círculo</b></span></div>
@@ -4037,7 +4149,8 @@
         reactionTimesRaw = [];
         totalStimuli = 0;
         falseStarts = 0;
-        const dur = testMode === 'calib' ? CALIB_DURATION_S : PVT_DURATION_S;
+        trialLog = [];
+        const dur = testMode === 'calib' ? CALIB_DURATION_S : (testMode === 'demo' ? DEMO_DURATION_S : PVT_DURATION_S);
         secondsLeft = dur;
         testStartedAt = performance.now();
         testDurationMs = dur * 1000;
@@ -4048,7 +4161,9 @@
         mainTimer = setInterval(() => {
             secondsLeft--;
             if (secondsLeft <= 0) {
-                if (testMode === 'calib') finishCalibration(); else endTest();
+                if (testMode === 'calib') finishCalibration();
+                else if (testMode === 'demo') finishDemo();
+                else endTest();
             }
         }, 1000);
     }
@@ -4086,7 +4201,7 @@
 
         // Segunda foto: pasada la mitad del test, al comienzo de una espera en
         // rojo (así no atrasa ninguna respuesta). Luego se apaga la cámara.
-        if (testMode !== 'calib' && !photo2Data && mediaStream &&
+        if (testMode === 'test' && !photo2Data && mediaStream &&
             performance.now() - testStartedAt >= testDurationMs / 2) {
             setTimeout(() => {
                 if (testState === 'RED' && !photo2Data) {
@@ -4138,6 +4253,7 @@
         if (testState === 'RED') {
             // Toque antes del estímulo = falsa partida
             falseStarts++;
+            trialLog.push({ k: 'early' });
             clearTimeout(roundTimer);
             showFeedback('¡Muy pronto!', true);
         } else if (testState === 'GREEN') {
@@ -4146,6 +4262,7 @@
             if (raw < PVT_FALSE_START_MS) {
                 // Respuesta imposiblemente rápida = anticipación (falsa partida)
                 falseStarts++;
+                trialLog.push({ k: 'fast', t: raw });
                 showFeedback('¡Muy pronto!', true);
             } else {
                 reactionTimesRaw.push(raw);
@@ -4153,6 +4270,7 @@
                 // descuenta el retraso del equipo.
                 const corr = testMode === 'calib' ? raw : Math.max(PVT_FALSE_START_MS, raw - getDeviceOffset());
                 reactionTimes.push(corr);
+                trialLog.push({ k: corr >= PVT_LAPSE_MS ? 'lapse' : 'ok', t: corr });
                 showFeedback(corr + ' ms', false);
             }
         }
@@ -4186,9 +4304,10 @@
         if (stimRaf) { cancelAnimationFrame(stimRaf); stimRaf = null; }
         if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
         testState = 'ENDED';
-        const wasCalib = testMode === 'calib';
+        const wasCalib = testMode === 'calib' || testMode === 'demo';
         testMode = 'test';
         stopSilentCamera();
+        document.getElementById('demoBadge').style.display = 'none';
         releaseWakeLock();
         document.getElementById('testScreen').style.display = 'none';
         pendingAbortMsg = msg;

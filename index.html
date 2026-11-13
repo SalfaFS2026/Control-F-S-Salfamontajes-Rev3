@@ -219,6 +219,13 @@
         .cd-steps { display:flex; flex-direction:column; gap: 14px; align-items: stretch; max-width: 420px; margin: 0 auto; }
         .cd-step { display:flex; align-items:center; gap: 16px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 18px; font-size: 22px; font-weight: 600; text-align:left; color:#f1f5f9; }
         .cd-ico { flex: 0 0 46px; height: 46px; display:flex; align-items:center; justify-content:center; }
+        @media (max-height: 760px) {
+            .cd-steps { gap: 8px; margin-top: 12px !important; }
+            .cd-step { font-size: 18px; padding: 9px 14px; gap: 12px; }
+            .cd-ico { flex-basis: 38px; height: 38px; }
+            .cd-title { font-size: 20px; }
+            .btn-ready { margin-top: 16px !important; padding: 16px 14px !important; font-size: 19px !important; }
+        }
         .cd-ico-cross { font-size: 44px; font-weight: 300; color: #ffffff; line-height: 1; }
         .cd-ico-circle { border-radius: 50%; width: 40px; height: 40px; flex: 0 0 40px; background: radial-gradient(circle at 35% 35%, #fff7b0, #facc15 60%); box-shadow: 0 0 14px rgba(250,204,21,0.7); }
         .btn-demo { background: linear-gradient(180deg, #8b5cf6, #6d28d9); color: #fff; }
@@ -898,7 +905,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.9 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.9.1 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -2493,7 +2500,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.9 · 13-11-2026';
+    const APP_VERSION = '5.9.1 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -4128,6 +4135,7 @@
                 <div class="cd-step"><span class="cd-ico cd-ico-cross">+</span><span>Mira la <b>cruz</b> en el centro</span></div>
                 <div class="cd-step"><span class="cd-ico cd-ico-circle"></span><span>Toca la pantalla apenas aparezca el <b>círculo</b></span></div>
                 <div class="cd-step"><span class="cd-ico" style="font-size:30px;">⚠️</span><span>No toques antes: cuenta como error</span></div>
+                <div class="cd-step"><span class="cd-ico" style="font-size:30px;">🔕</span><span>Activa <b>No molestar</b> en tu celular antes de empezar</span></div>
             </div>
             <button type="button" id="btnReady" class="btn-ready">Toca aquí cuando estés listo</button>`;
         const btn = document.getElementById('btnReady');

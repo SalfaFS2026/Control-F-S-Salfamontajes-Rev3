@@ -207,6 +207,7 @@
         .tab-btn.active { color:#fff; border-bottom-color: var(--salfa-red); background: linear-gradient(180deg, transparent, rgba(227,27,35,0.12)); border-radius: 8px 8px 0 0; }
         .user-card { transition: transform .08s; }
         .user-card:active { transform: scale(0.97); }
+        .pending-notice { display:none; background: rgba(250,204,21,0.12); border:1px solid #ca8a04; color:#fde68a; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:14px; line-height:1.45; }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -539,6 +540,7 @@
             </div>
         </div>
 
+        <div class="pending-notice"></div>
         <div id="quizCalibNotice" style="display:none; font-size:13px; color:#facc15; background: rgba(250,204,21,0.1); border:1px solid #ca8a04; border-radius:10px; padding:10px 12px; margin-bottom:10px;">
             <div id="quizCalibText">📱 Este celular aún no está calibrado. Calíbralo ahora (45 segundos) para que el test mida bien. Hazlo con calma y concentrado.</div>
             <button type="button" class="btn btn-info" style="margin:10px 0 0; padding:12px; font-size:15px;" onclick="startCalibration()">Calibrar este celular ahora</button>
@@ -597,6 +599,7 @@
                 <h2 style="margin: 0; text-align: left;">Resultado de tu evaluación F&S</h2>
                 <button type="button" class="btn-danger" onclick="closeResultModal()" aria-label="Cerrar" style="width: 36px; height: 36px; min-width: 36px; padding: 0; font-size: 18px; border-radius: 8px; flex-shrink: 0;">✕</button>
             </div>
+            <div class="pending-notice"></div>
             <div id="resultIcon" class="result-icon">✅</div>
             <div id="statusBadgeContainer" style="text-align: center; margin: 6px 0 12px;"></div>
             <div id="noDriveBanner" style="display:none; background:#E31B23; color:#fff; font-weight:900; font-size:19px; line-height:1.35; text-align:center; padding:14px 16px; border-radius:12px; margin: 10px 0 4px; letter-spacing:0.3px;">⛔ POR NINGÚN MOTIVO PUEDES CONDUCIR NI OPERAR EQUIPOS</div>
@@ -632,6 +635,7 @@
 
         <!-- ===== PESTAÑA HOY ===== -->
         <div class="tab-panel" id="tab-hoy">
+            <div class="pending-notice"></div>
             <div id="calibBox" class="panel-box" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
                 <div>
                     <div style="font-weight:700; color:#ffffff;">📱 Este equipo</div>
@@ -1220,55 +1224,115 @@
     // Envía una acción al backend. Si falla (sin internet, error de red, servidor
     // caído, etc.) la deja encolada para reintentarla más adelante, en vez de
     // perderla en silencio.
-    function postToSheets(action, payload) {
-        const auth = getSession();
-        return fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({ action, auth, ...payload })
-        }).catch(err => {
-            console.warn(`[Sync] Sin conexión al enviar "${action}". Se reintentará automáticamente cuando vuelva la señal.`, err);
-            const queue = getPendingQueue();
-            queue.push({
-                qid: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                action,
-                auth,
-                payload
-            });
-            setPendingQueue(queue);
-        });
+    // Acciones que nunca se deben perder (si fallan quedan pendientes)
+    const MUST_DELIVER = ['addLog', 'addConsent'];
+
+    // Lee la respuesta de la planilla. Devuelve {ok, message}.
+    async function readSheetResponse(res) {
+        try {
+            const d = await res.json();
+            if (d && (d.status === 'success' || d.status === 'ok')) return { ok: true };
+            return { ok: false, message: (d && (d.message || d.status)) || 'Respuesta inesperada' };
+        } catch (e) {
+            // Programa antiguo sin respuesta JSON: se considera recibido
+            return { ok: res.ok, message: res.ok ? '' : 'HTTP ' + res.status };
+        }
     }
 
-    // Reintenta enviar todo lo que quedó pendiente por falta de señal. Se llama
-    // al recuperar conexión y también periódicamente, por si el dispositivo
-    // recupera señal celular sin disparar el evento "online" del navegador.
+    function enqueuePending(action, auth, payload, lastError) {
+        const queue = getPendingQueue();
+        queue.push({
+            qid: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            action, auth, payload,
+            lastError: lastError || '',
+            createdAt: new Date().toISOString()
+        });
+        setPendingQueue(queue);
+        renderPendingNotice();
+    }
+
+    async function postToSheets(action, payload) {
+        const auth = getSession();
+        try {
+            const res = await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action, auth, ...payload })
+            });
+            const r = await readSheetResponse(res.clone());
+            if (!r.ok) {
+                console.warn(`[Sync] La planilla rechazó "${action}": ${r.message}`);
+                if (MUST_DELIVER.includes(action)) enqueuePending(action, auth, payload, r.message);
+            }
+            return res;
+        } catch (err) {
+            console.warn(`[Sync] Sin conexión al enviar "${action}". Se reintentará automáticamente cuando vuelva la señal.`, err);
+            enqueuePending(action, auth, payload, 'Sin señal');
+        }
+    }
+
+    // Reintenta enviar todo lo que quedó pendiente (sin señal o rechazado).
+    // Se llama al recuperar conexión y también cada 20 segundos.
     async function flushPendingQueue() {
         if (isFlushingQueue) return;
         if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
 
         const queue = getPendingQueue();
-        if (queue.length === 0) return;
+        if (queue.length === 0) { renderPendingNotice(); return; }
 
         isFlushingQueue = true;
         const remaining = [];
 
         for (const item of queue) {
             try {
-                await fetch(SCRIPT_URL, {
+                let res = await fetch(SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({ action: item.action, auth: item.auth || getSession(), ...item.payload })
                 });
-                console.log(`[Sync] Reenviado correctamente tras recuperar señal: ${item.action}`);
+                let r = await readSheetResponse(res);
+                // Si la sesión guardada ya no sirve (clave cambiada), se intenta con la actual
+                if (!r.ok && getSession() && JSON.stringify(item.auth) !== JSON.stringify(getSession())) {
+                    res = await fetch(SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: item.action, auth: getSession(), ...item.payload })
+                    });
+                    r = await readSheetResponse(res);
+                }
+                if (r.ok) {
+                    console.log(`[Sync] Reenviado correctamente: ${item.action}`);
+                } else {
+                    item.lastError = r.message;
+                    item.attempts = (item.attempts || 0) + 1;
+                    remaining.push(item);
+                }
             } catch (err) {
+                item.lastError = 'Sin señal';
                 remaining.push(item);
             }
         }
 
         setPendingQueue(remaining);
         isFlushingQueue = false;
+        renderPendingNotice();
 
         if (remaining.length < queue.length) {
             syncDataFromCloud();
         }
+    }
+
+    // Aviso visible de tests pendientes de enviar en este equipo
+    function renderPendingNotice() {
+        const q = getPendingQueue().filter(i => i.action === 'addLog');
+        const html = q.length === 0 ? '' : (() => {
+            const err = q.map(i => i.lastError).filter(e => e && e !== 'Sin señal');
+            const motivo = err.length
+                ? `La planilla no lo aceptó: <b>${String(err[err.length - 1]).replace(/\.$/, "")}</b>. Avisa a tu supervisor.`
+                : 'Falta señal. Se envía solo apenas haya internet, <b>con la app abierta</b>.';
+            return `⏳ <b>${q.length} test${q.length > 1 ? 's' : ''} pendiente${q.length > 1 ? 's' : ''} de enviar</b> desde este celular. ${motivo}`;
+        })();
+        document.querySelectorAll('.pending-notice').forEach(el => {
+            el.innerHTML = html;
+            el.style.display = html ? 'block' : 'none';
+        });
     }
 
     window.addEventListener('online', flushPendingQueue);
@@ -2931,6 +2995,7 @@
 
         document.getElementById('chkDeclaracion').checked = false;
         document.getElementById('quizCalibNotice').style.display = calibStatus().ok ? 'none' : 'block';
+        renderPendingNotice();
         updateKssLabel(document.getElementById('qAlert').value);
 
         // Antes de habilitar el test, se revisa si el trabajador está

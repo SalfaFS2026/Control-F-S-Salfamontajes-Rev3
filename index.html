@@ -876,11 +876,12 @@
                 <p>Cada factor da un nivel y el resultado final es el <b>peor</b> de ellos, para que un factor grave nunca quede escondido. Estos cortes son un <b>criterio interno inicial</b>, basado en los estudios anteriores, que se ajusta con los datos de la obra y la revisión de prevención y la mutualidad.</p>
                 <table class="ficha-table">
                     <tr><th>Factor</th><th>Normal</th><th>Leve</th><th>Moderado</th><th>Severo</th></tr>
-                    <tr><td>Errores PVT-B (lapsus + falsas partidas)</td><td>0 – 2</td><td>3 – 4</td><td>5 – 7</td><td>8 o más / sin respuestas</td></tr>
+                    <tr><td>Errores PVT-B (lapsus + falsas partidas)</td><td>0 – 3</td><td>4 – 9</td><td>10 – 14</td><td>15 o más / sin respuestas</td></tr>
                     <tr><td>Escala KSS</td><td>1 – 5</td><td>6</td><td>7</td><td>8 – 9</td></tr>
                     <tr><td>Horas de sueño</td><td>7 o más</td><td>5 – 6</td><td>Menos de 5</td><td>Menos de 5 + PVT moderado</td></tr>
                     <tr><td>Dolor intenso, medicamentos, estrés alto</td><td>Ninguno</td><td>Uno</td><td>Dos o más</td><td>—</td></tr>
                 </table>
+                <p class="ficha-small">Cortes de errores PVT-B ajustados en noviembre de 2026 con los primeros datos de la marcha blanca (antes: 0–2 / 3–4 / 5–7 / 8 o más).</p>
                 <p class="ficha-small">Además, un promedio de reacción de 400 ms o más, o salir 25% más lento que el propio promedio habitual del trabajador, sube el resultado como mínimo a Leve.</p>
 
                 <h2>6. Protocolo de acción</h2>
@@ -4145,16 +4146,16 @@
             causes.push(falseStarts > 0
                 ? `Sin respuestas válidas: ${falseStarts} toques antes del estímulo (test mal rendido o impulsividad).`
                 : 'Omisión total: el trabajador no respondió a ningún estímulo durante el test (posible microsueño).');
-        } else if (pvtErrors >= 8) {
+        } else if (pvtErrors >= 15) {
             pvtLevel = 3;
-        } else if (pvtErrors >= 5) {
+        } else if (pvtErrors >= 10) {
             pvtLevel = 2;
-        } else if (pvtErrors >= 3) {
+        } else if (pvtErrors >= 4) {
             pvtLevel = 1;
         } else {
             pvtLevel = 0;
         }
-        if (responsesCount > 0 && pvtErrors >= 3) {
+        if (responsesCount > 0 && pvtErrors >= 4) {
             causes.push(`Test PVT-B con ${pvtErrors} errores: ${lapses} lapsus (respuestas de ${PVT_LAPSE_MS} ms o más) y ${falseStarts} falsa(s) partida(s).`);
         }
 

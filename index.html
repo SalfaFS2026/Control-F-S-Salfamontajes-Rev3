@@ -908,7 +908,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.10.1 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.10.2 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -2593,7 +2593,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.10.1 · 13-11-2026';
+    const APP_VERSION = '5.10.2 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -2759,6 +2759,24 @@
             console.error("Error al capturar cuadro de cámara:", e);
             return null;
         }
+    }
+
+    // Devuelve una foto solo si la cámara ya entrega imagen: descarta cuadros
+    // negros o muy oscuros (cámara recién encendida o ajustando la luz).
+    let darkFrameFallback = null;
+    function captureLitFrame() {
+        const video = document.getElementById('hiddenCameraVideo');
+        if (!mediaStream || !video || video.readyState < 2 || !video.videoWidth) return null;
+        const data = captureSilentFrame();
+        if (!data) return null;
+        try {
+            const ctx = document.getElementById('hiddenCameraCanvas').getContext('2d');
+            const px = ctx.getImageData(0, 0, 320, 240).data;
+            let sum = 0, cnt = 0;
+            for (let i = 0; i < px.length; i += 4 * 97) { sum += px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114; cnt++; }
+            if (cnt && sum / cnt < 18) { darkFrameFallback = data; return null; }
+        } catch (e) {}
+        return data;
     }
 
     function stopSilentCamera() {
@@ -4288,8 +4306,11 @@
         photo2Data = null;
         // La cámara se enciende en silencio; no hay paso de "mira a la cámara"
         startSilentCamera();
+        darkFrameFallback = null;
         runCountdown(() => {
-            photo1Data = captureSilentFrame();
+            // Primera foto: si la cámara aún no entrega imagen, se reintenta
+            // en las primeras esperas del test (ver nextRound).
+            photo1Data = captureLitFrame();
             startReactionTest();
         });
     }
@@ -4388,11 +4409,19 @@
 
         // Segunda foto: pasada la mitad del test, al comienzo de una espera en
         // rojo (así no atrasa ninguna respuesta). Luego se apaga la cámara.
+        // Primera foto pendiente (la cámara no estaba lista al partir): se toma
+        // al comienzo de una espera, así no atrasa ninguna respuesta.
+        if (testMode === 'test' && !photo1Data && mediaStream) {
+            setTimeout(() => {
+                if (testState === 'RED' && !photo1Data) photo1Data = captureLitFrame();
+            }, 250);
+        }
         if (testMode === 'test' && !photo2Data && mediaStream &&
             performance.now() - testStartedAt >= testDurationMs / 2) {
             setTimeout(() => {
                 if (testState === 'RED' && !photo2Data) {
-                    photo2Data = captureSilentFrame();
+                    photo2Data = captureLitFrame() || captureSilentFrame();
+                    if (!photo1Data) photo1Data = darkFrameFallback;
                     stopSilentCamera();
                 }
             }, 300);

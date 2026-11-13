@@ -210,6 +210,10 @@
         .pending-notice { display:none; background: rgba(250,204,21,0.12); border:1px solid #ca8a04; color:#fde68a; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:14px; line-height:1.45; }
         .app-version { font-size: 11px; color: var(--text-muted); opacity: 0.8; margin-top: 4px; }
         .app-version-foot { text-align:center; margin: 14px 0 6px; }
+        .cd-title { font-size: 26px; font-weight: 900; letter-spacing: 1px; opacity: 0.95; }
+        .cd-num { font-size: 140px; font-weight: 900; line-height: 1.1; margin: 10px 0; animation: cdPop .9s ease-out; text-shadow: 0 6px 30px rgba(0,0,0,0.35); }
+        .cd-hint { font-size: 20px; font-weight: 600; opacity: 0.9; }
+        @keyframes cdPop { 0% { transform: scale(1.8); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.85; } }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -488,7 +492,7 @@
         <div class="steps">
             <div class="step active"><span>1</span>Preguntas</div>
             <div class="step-line"></div>
-            <div class="step"><span>2</span>Test 90 s</div>
+            <div class="step"><span>2</span>Test</div>
             <div class="step-line"></div>
             <div class="step"><span>3</span>Resultado</div>
         </div>
@@ -544,7 +548,7 @@
 
         <div class="pending-notice"></div>
         <div id="quizCalibNotice" style="display:none; font-size:13px; color:#facc15; background: rgba(250,204,21,0.1); border:1px solid #ca8a04; border-radius:10px; padding:10px 12px; margin-bottom:10px;">
-            <div id="quizCalibText">📱 Este celular aún no está calibrado. Calíbralo ahora (45 segundos) para que el test mida bien. Hazlo con calma y concentrado.</div>
+            <div id="quizCalibText">📱 Este celular aún no está calibrado. Calíbralo ahora para que el test mida bien. Hazlo con calma y concentrado.</div>
             <button type="button" class="btn btn-info" style="margin:10px 0 0; padding:12px; font-size:15px;" onclick="startCalibration()">Calibrar este celular ahora</button>
         </div>
 
@@ -553,7 +557,7 @@
             <span>Declaro que respondí con la verdad y que, si me siento con sueño o cansado durante la jornada, avisaré a mi supervisor.</span>
         </label>
 
-        <button class="btn" id="btnStartTest" onclick="startPhotoCountdownSequence()">Iniciar Test PVT (90 segundos, Captura Automática)</button>
+        <button class="btn" id="btnStartTest" onclick="startPhotoCountdownSequence()">▶ Iniciar Test</button>
         <button class="btn btn-secondary" id="btnAdminBack" onclick="showAdminDashboard()" style="display:none;">Volver al Panel Maestro</button>
         <button class="btn btn-secondary" onclick="logout()">Cerrar Sesión</button>
     </div>
@@ -841,7 +845,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.4 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.5 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -1596,8 +1600,12 @@
     // LEVE). Se usa recién cuando tiene 5 tests o más.
     function getPersonalBaseline(rut) {
         const r = formatRut(rut);
+        // Solo tests hechos en ESTE equipo y con la misma duración: un celular,
+        // un computador con mouse o un test más largo dan tiempos distintos.
+        const dev = getDeviceId();
         const vals = (JSON.parse(localStorage.getItem('logs')) || [])
-            .filter(l => formatRut(l.rut) === r && (l.status === 'NORMAL' || l.status === 'LEVE') && Number(l.avg) > 0)
+            .filter(l => formatRut(l.rut) === r && (l.status === 'NORMAL' || l.status === 'LEVE') && Number(l.avg) > 0
+                && l.deviceId === dev && String(l.testVersion || '').includes('90s'))
             .slice(0, 10)
             .map(l => Number(l.avg))
             .sort((a, b) => a - b);
@@ -2015,22 +2023,18 @@
         // Un trabajador puede calibrar solo si el equipo no está calibrado o
         // la calibración venció. Recalibrar un equipo ya calibrado: supervisor.
         if (!isAdminLevel(currentUser) && calibStatus().ok) return;
-        const ok = confirm('CALIBRAR ESTE EQUIPO\n\nHazlo DESCANSADO, sin apuro y concentrado.\n\nSon 45 segundos: toca la pantalla apenas se ponga verde.\n\nLa calibración mide el retraso propio de la pantalla de este celular para descontarlo en los tests. Si respondes lento a propósito, la app lo detecta y no calibra.\n\n¿Comenzar?');
+        const ok = confirm('CALIBRAR ESTE EQUIPO\n\nHazlo DESCANSADO, sin apuro y concentrado.\n\nToca la pantalla apenas se ponga verde.\n\nLa calibración mide el retraso propio de la pantalla de este celular para descontarlo en los tests. Si respondes lento a propósito, la app lo detecta y no calibra.\n\n¿Comenzar?');
         if (!ok) return;
         testMode = 'calib';
         requestFullScreen();
         hideAllViews();
-        const ts = document.getElementById('testScreen');
-        ts.style.display = 'flex';
-        ts.className = 'bg-prep';
-        document.getElementById('timerBadge').style.display = 'none';
-        document.getElementById('targetBtn').style.display = 'flex';
-        startReactionTest();
+        runCountdown(() => startReactionTest());
     }
 
     function finishCalibration() {
         clearInterval(mainTimer);
         clearTimeout(roundTimer);
+        releaseWakeLock();
         testState = 'ENDED';
         testMode = 'test';
         document.getElementById('testScreen').style.display = 'none';
@@ -2350,7 +2354,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.4 · 13-11-2026';
+    const APP_VERSION = '5.5 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -2374,6 +2378,7 @@
     const CALIB_MIN_VALID = 8;
     const CALIB_VIGENCIA_DIAS = 60;
     let testMode = 'test'; // 'test' o 'calib'
+    let countdownTimer = null, testStartedAt = 0, testDurationMs = 0, pendingAbortMsg = null;
     let reactionTimesRaw = [];
 
     function getDeviceCalib() {
@@ -2740,6 +2745,11 @@
                             photo1: img1,
                             photo2: img2,
                             causes: (match && match.causes) || cloudLog.causes,
+                            deviceId: match ? match.deviceId : undefined,
+                            deviceOffset: match ? match.deviceOffset : undefined,
+                            testVersion: match ? match.testVersion : undefined,
+                            rawAvg: match ? match.rawAvg : undefined,
+                            puesto: match ? match.puesto : undefined,
                             lapses: (match && match.lapses !== undefined) ? match.lapses : cloudLog.lapses,
                             falseStarts: (match && match.falseStarts !== undefined) ? match.falseStarts : cloudLog.falseStarts,
                             kss: (match && match.kss !== undefined) ? match.kss : cloudLog.kss
@@ -3014,7 +3024,7 @@
         checkCanTakeTest().then(ok => {
             if (currentUser !== userAtCheck) return;
             btnStart.disabled = false;
-            btnStart.innerText = 'Iniciar Test PVT (90 segundos, Captura Automática)';
+            btnStart.innerText = '▶ Iniciar Test';
         });
 
         const userRole = String(currentUser.role).trim().toLowerCase();
@@ -3943,29 +3953,38 @@
         testMode = 'test';
         requestFullScreen();
         hideAllViews();
-        const testScreen = document.getElementById('testScreen');
-        testScreen.style.display = 'flex';
-        testScreen.className = 'bg-prep';
+        photo1Data = null;
+        photo2Data = null;
+        // La cámara se enciende en silencio; no hay paso de "mira a la cámara"
+        startSilentCamera();
+        runCountdown(() => {
+            photo1Data = captureSilentFrame();
+            startReactionTest();
+        });
+    }
 
+    // Cuenta regresiva en pantalla roja: "Vamos a comenzar... 3, 2, 1"
+    function runCountdown(onDone) {
+        const ts = document.getElementById('testScreen');
+        ts.style.display = 'flex';
+        ts.className = 'bg-red';
         document.getElementById('timerBadge').style.display = 'none';
         document.getElementById('targetBtn').style.display = 'none';
-
-        await startSilentCamera();
-
-        let count = 5;
-        document.getElementById('testInstruction').innerText = `📸 MIRA A LA CÁMARA FRONTAL\n\n${count}`;
-
-        const countdownInterval = setInterval(() => {
-            count--;
-            if (count > 0) {
-                document.getElementById('testInstruction').innerText = `📸 MIRA A LA CÁMARA FRONTAL\n\n${count}`;
-            } else {
-                clearInterval(countdownInterval);
-                photo1Data = captureSilentFrame();
-                document.getElementById('timerBadge').style.display = 'none'; // sin reloj en pantalla
-                document.getElementById('targetBtn').style.display = 'flex';
-                startReactionTest();
-            }
+        testState = 'PREP';
+        acquireWakeLock();
+        const instr = document.getElementById('testInstruction');
+        let n = 3;
+        const show = () => {
+            instr.innerHTML = `<div class="cd-title">VAMOS A COMENZAR</div><div class="cd-num" key="${n}">${n}</div><div class="cd-hint">Toca la pantalla apenas se ponga <b>VERDE</b></div>`;
+        };
+        show();
+        countdownTimer = setInterval(() => {
+            n--;
+            if (n > 0) { show(); return; }
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            document.getElementById('targetBtn').style.display = 'flex';
+            onDone();
         }, 1000);
     }
 
@@ -3975,30 +3994,15 @@
         totalStimuli = 0;
         falseStarts = 0;
         const dur = testMode === 'calib' ? CALIB_DURATION_S : PVT_DURATION_S;
-        // 5 s de preparación + duración del test
-        secondsLeft = dur + PVT_PREP_S;
+        secondsLeft = dur;
+        testStartedAt = performance.now();
+        testDurationMs = dur * 1000;
 
-        document.getElementById('timerBadge').innerText = formatTimerBadge(dur);
-        document.getElementById('testInstruction').innerText = testMode === 'calib'
-            ? 'CALIBRACIÓN DEL EQUIPO (45 SEGUNDOS)\nPresiona apenas la pantalla se ponga verde'
-            : 'PREPÁRATE PARA EL TEST PVT (90 SEGUNDOS)...\nPresiona SOLO cuando la pantalla se ponga verde';
-        document.getElementById('targetBtn').innerText = 'PREPARADO';
-
-        testState = 'PREP';
+        // El test parte de inmediato (la cuenta regresiva ya fue la preparación)
+        nextRound();
 
         mainTimer = setInterval(() => {
             secondsLeft--;
-            document.getElementById('timerBadge').innerText = formatTimerBadge(Math.min(secondsLeft, dur));
-
-            // Segunda foto a mitad del test (1:30)
-            if (testMode !== 'calib' && secondsLeft === Math.floor(PVT_DURATION_S / 2)) {
-                photo2Data = captureSilentFrame();
-            }
-
-            if (secondsLeft === dur && testState === 'PREP') {
-                nextRound();
-            }
-
             if (secondsLeft <= 0) {
                 if (testMode === 'calib') finishCalibration(); else endTest();
             }
@@ -4012,6 +4016,18 @@
         el.className = 'bg-red';
         document.getElementById('testInstruction').innerText = 'ESPERA AL VERDE...';
         document.getElementById('targetBtn').innerText = 'ESPERA';
+
+        // Segunda foto: pasada la mitad del test, al comienzo de una espera en
+        // rojo (así no atrasa ninguna respuesta). Luego se apaga la cámara.
+        if (testMode !== 'calib' && !photo2Data && mediaStream &&
+            performance.now() - testStartedAt >= testDurationMs / 2) {
+            setTimeout(() => {
+                if (testState === 'RED' && !photo2Data) {
+                    photo2Data = captureSilentFrame();
+                    stopSilentCamera();
+                }
+            }, 300);
+        }
 
         // Intervalo aleatorio entre estímulos: 2 a 5 segundos (PVT-B)
         const delay = Math.floor(Math.random() * (PVT_ISI_MAX_MS - PVT_ISI_MIN_MS)) + PVT_ISI_MIN_MS;
@@ -4033,6 +4049,11 @@
 
     function handleTestTap(ev) {
         if (testState === 'PREP' || testState === 'ENDED') return;
+        // Solo cuenta el primer dedo / el botón izquierdo del mouse
+        if (ev && ev.type === 'pointerdown') {
+            if (ev.isPrimary === false) return;
+            if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+        }
         // Hora del toque: se usa la del evento solo si está en la misma escala que
         // el reloj de la página (en algunos celulares/iPhone viene en otra escala).
         const nowT = performance.now();
@@ -4060,6 +4081,57 @@
     }
 
     document.getElementById('testScreen').addEventListener('pointerdown', handleTestTap);
+
+    // En computador también se puede responder con la barra espaciadora o Enter
+    document.addEventListener('keydown', (ev) => {
+        if (document.getElementById('testScreen').style.display !== 'flex') return;
+        if (ev.repeat) return;
+        if (ev.code === 'Space' || ev.key === ' ' || ev.key === 'Enter') {
+            ev.preventDefault();
+            handleTestTap(ev);
+        }
+    });
+
+    // Si el trabajador sale de la app durante el test (llamada, WhatsApp,
+    // bloqueo de pantalla), el test se anula: los tiempos ya no serían válidos.
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) return;
+        if (document.getElementById('testScreen').style.display !== 'flex') return;
+        if (testState === 'ENDED') return;
+        abortTest('Saliste de la app o se apagó la pantalla durante el test, así que se anuló. Debes repetirlo sin salir de la app.');
+    });
+
+    function abortTest(msg) {
+        clearInterval(mainTimer);
+        clearTimeout(roundTimer);
+        if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+        testState = 'ENDED';
+        const wasCalib = testMode === 'calib';
+        testMode = 'test';
+        stopSilentCamera();
+        releaseWakeLock();
+        document.getElementById('testScreen').style.display = 'none';
+        pendingAbortMsg = msg;
+        const showBack = () => {
+            if (wasCalib && isAdminLevel(currentUser)) showAdminDashboard(); else showQuiz();
+            if (pendingAbortMsg) { const m = pendingAbortMsg; pendingAbortMsg = null; setTimeout(() => alert(m), 300); }
+        };
+        if (document.hidden) {
+            document.addEventListener('visibilitychange', function once() {
+                if (!document.hidden) { document.removeEventListener('visibilitychange', once); showBack(); }
+            });
+        } else showBack();
+    }
+
+    // Mantiene la pantalla encendida durante el test
+    let wakeLock = null;
+    async function acquireWakeLock() {
+        try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { wakeLock = null; }
+    }
+    function releaseWakeLock() {
+        try { if (wakeLock) wakeLock.release(); } catch (e) {}
+        wakeLock = null;
+    }
 
     // Verifica si una foto (dataURL) capturada durante el test contiene un
     // rostro humano, usando la API nativa del navegador (Shape Detection API).
@@ -4102,6 +4174,7 @@
     async function endTest() {
         clearInterval(mainTimer);
         clearTimeout(roundTimer);
+        releaseWakeLock();
         // Se mide el estímulo que quedó en verde ANTES de cualquier espera
         const endedOnGreen = (testState === 'GREEN');
         const pendingMs = endedOnGreen ? (performance.now() - startTime) : 0;
@@ -4170,7 +4243,7 @@
             pvtLevel = 0;
         }
         if (responsesCount > 0 && pvtErrors >= 2) {
-            causes.push(`Test PVT-B con ${pvtErrors} errores: ${lapses} lapsus (respuestas de ${PVT_LAPSE_MS} ms o más) y ${falseStarts} falsa(s) partida(s).`);
+            causes.push(`Test PVT con ${pvtErrors} errores: ${lapses} lapsus (respuestas de ${PVT_LAPSE_MS} ms o más) y ${falseStarts} falsa(s) partida(s).`);
         }
 
         // Tiempo promedio muy alto: apoyo al PVT (sube como mínimo a LEVE)
@@ -4223,7 +4296,7 @@
         const finalLevel = Math.max(pvtLevel, kssLevel, sleepLevel, otherLevel, baselineLevel);
 
         if (causes.length === 0) causes.push('Sin factores de riesgo relevantes detectados.');
-        causes.push(`Detalle PVT-B: ${responsesCount} respuestas, promedio ${avg} ms, ${lapses} lapsus, ${falseStarts} falsas partidas.`);
+        causes.push(`Detalle PVT: ${responsesCount} respuestas, promedio ${avg} ms, ${lapses} lapsus, ${falseStarts} falsas partidas.`);
         causes.push(getDeviceOffset() > 0
             ? `Equipo calibrado: se descontaron ${getDeviceOffset()} ms de retraso de pantalla.`
             : 'Equipo sin calibrar: no se descontó retraso de pantalla.');

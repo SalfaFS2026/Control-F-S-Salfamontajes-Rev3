@@ -214,6 +214,14 @@
         .cd-num { font-size: 140px; font-weight: 900; line-height: 1.1; margin: 10px 0; animation: cdPop .9s ease-out; text-shadow: 0 6px 30px rgba(0,0,0,0.35); }
         .cd-hint { font-size: 20px; font-weight: 600; opacity: 0.9; }
         @keyframes cdPop { 0% { transform: scale(1.8); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.85; } }
+        .bg-wait { background-color: #0b1220; color: white; }
+        .stim-area { position: relative; width: 260px; height: 260px; display:flex; align-items:center; justify-content:center; }
+        .fix-cross { font-size: 90px; font-weight: 300; color: rgba(255,255,255,0.85); line-height: 1; user-select:none; }
+        .stim-circle { width: 230px; height: 230px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff7b0, #facc15 55%, #eab308); box-shadow: 0 0 60px rgba(250,204,21,0.75); display:flex; align-items:center; justify-content:center; }
+        .stim-circle span { font-size: 54px; font-weight: 900; color: #1f2937; font-variant-numeric: tabular-nums; }
+        .stim-feedback { font-size: 54px; font-weight: 900; color: #fde047; font-variant-numeric: tabular-nums; }
+        .stim-feedback.early { color: #f87171; font-size: 38px; }
+        .stim-hint { position: absolute; bottom: 9vh; left: 0; right: 0; text-align: center; font-size: 17px; color: rgba(255,255,255,0.65); padding: 0 20px; }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -845,7 +853,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.5 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.6 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -856,7 +864,7 @@
                 <ol>
                     <li>El trabajador entra con su RUT y clave desde su celular o desde un equipo de la obra.</li>
                     <li>Responde 5 preguntas: horas de sueño, somnolencia (escala KSS), malestar físico, medicamentos y estrés, y firma una declaración de que respondió con la verdad.</li>
-                    <li>Rinde el test de reacción PVT de 90 segundos (sin reloj en pantalla). Durante el test la app toma 2 fotos para confirmar que es la persona correcta.</li>
+                    <li>Rinde el test de reacción PVT de 90 segundos (sin reloj en pantalla): tras una cuenta regresiva, mira una cruz (+) en el centro y toca apenas aparece un círculo. Durante el test la app toma 2 fotos para confirmar que es la persona correcta.</li>
                     <li>La app entrega el resultado al instante: Normal, Leve, Moderado o Severo.</li>
                     <li>Si sale Moderado o Severo, se avisa por correo (y WhatsApp si está activo) a los supervisores y la app aplica el protocolo de pausa o bloqueo.</li>
                 </ol>
@@ -866,12 +874,14 @@
                 <p><b>PVT-B y versión de 90 segundos.</b> Basner, Mollicone y Dinges (2011) validaron una versión de 3 minutos con estímulos cada 2 a 5 segundos y lapsus desde 355 ms. La app usa esos mismos parámetros, pero con una duración de <b>90 segundos</b> por decisión de la obra, para que el control sea más rápido. Los autores consideraron que las versiones de 90 segundos son menos sensibles que la de 3 minutos; por eso la app compensa combinando el test con la escala KSS, las horas de sueño y la comparación con el promedio habitual de cada trabajador, y los resultados se revisan durante la marcha blanca.</p>
                 <p><b>Escala de Somnolencia de Karolinska (KSS).</b> Escala de 1 a 9 que mide cuánto sueño siente la persona en ese momento (Åkerstedt y Gillberg, 1990).</p>
                 <p><b>Referencia internacional.</b> El manual de gestión del riesgo de fatiga de la OACI (Doc 9966) nombra al PVT como prueba de rendimiento que cumple los criterios para medir fatiga, y a la escala KSS como medida subjetiva de somnolencia.</p>
+                <p><b>Diseño del estímulo.</b> Se usa un cambio de forma y brillo (cruz → círculo amarillo) en vez de un cambio de rojo a verde, para que el test funcione igual en personas con daltonismo rojo-verde (cerca del 8% de los hombres).</p>
                 <p><b>Uso en pantalla táctil.</b> NASA validó una versión táctil del PVT contra el equipo estándar y encontró resultados similares, siempre que se descuente el retraso propio de la pantalla. Por eso la app calibra cada equipo (punto 7).</p>
 
                 <h2>4. Parámetros de medición</h2>
                 <table class="ficha-table">
                     <tr><th>Parámetro</th><th>Valor en la app</th><th>Origen</th></tr>
                     <tr><td>Duración del test</td><td>90 segundos (sin reloj visible)</td><td>Decisión interna (PVT-B validado: 3 min)</td></tr>
+                    <tr><td>Estímulo</td><td>Pantalla oscura con cruz (+) de fijación; aparece un círculo amarillo con contador de milisegundos. Al responder se muestra el tiempo 0,5 s</td><td>PVT (contador y retroalimentación) / tests de reacción con punto de fijación</td></tr>
                     <tr><td>Tiempo entre estímulos</td><td>Al azar, 2 a 5 segundos</td><td>PVT-B</td></tr>
                     <tr><td>Lapsus</td><td>Respuesta de 355 ms o más</td><td>PVT-B</td></tr>
                     <tr><td>Falsa partida</td><td>Tocar antes del verde o en menos de 100 ms</td><td>PVT / PVT-B</td></tr>
@@ -1134,6 +1144,12 @@
     <div class="timer-badge" id="timerBadge" style="display:none;">1:30</div>
     <div style="font-size: 28px; font-weight: bold; max-width: 80%; line-height: 1.4;" id="testInstruction">PREPÁRATE...</div>
     <div class="target-button" id="targetBtn">PRESIONA AQUÍ</div>
+    <div id="stimArea" class="stim-area" style="display:none;">
+        <div id="fixCross" class="fix-cross">+</div>
+        <div id="stimCircle" class="stim-circle" style="display:none;"><span id="stimMs">0</span></div>
+        <div id="stimFeedback" class="stim-feedback" style="display:none;"></div>
+    </div>
+    <div id="stimHint" class="stim-hint" style="display:none;">Mira la cruz <b>+</b> y toca la pantalla apenas aparezca el <b>círculo</b></div>
 </div>
 
 <script>
@@ -2023,7 +2039,7 @@
         // Un trabajador puede calibrar solo si el equipo no está calibrado o
         // la calibración venció. Recalibrar un equipo ya calibrado: supervisor.
         if (!isAdminLevel(currentUser) && calibStatus().ok) return;
-        const ok = confirm('CALIBRAR ESTE EQUIPO\n\nHazlo DESCANSADO, sin apuro y concentrado.\n\nToca la pantalla apenas se ponga verde.\n\nLa calibración mide el retraso propio de la pantalla de este celular para descontarlo en los tests. Si respondes lento a propósito, la app lo detecta y no calibra.\n\n¿Comenzar?');
+        const ok = confirm('CALIBRAR ESTE EQUIPO\n\nHazlo DESCANSADO, sin apuro y concentrado.\n\nMira la cruz + y toca la pantalla apenas aparezca el círculo.\n\nLa calibración mide el retraso propio de la pantalla de este celular para descontarlo en los tests. Si respondes lento a propósito, la app lo detecta y no calibra.\n\n¿Comenzar?');
         if (!ok) return;
         testMode = 'calib';
         requestFullScreen();
@@ -2034,6 +2050,7 @@
     function finishCalibration() {
         clearInterval(mainTimer);
         clearTimeout(roundTimer);
+        if (stimRaf) { cancelAnimationFrame(stimRaf); stimRaf = null; }
         releaseWakeLock();
         testState = 'ENDED';
         testMode = 'test';
@@ -2070,7 +2087,8 @@
             date: formatChileDateTime(new Date()),
             by: currentUser.name + (isAdminLevel(currentUser) ? '' : ' (trabajador)'),
             byRut: currentUser.rut,
-            deviceId: getDeviceId()
+            deviceId: getDeviceId(),
+            stim: STIM_VERSION
         };
         localStorage.setItem('fsDeviceCalib', JSON.stringify(calib));
         alert(`Equipo calibrado.\n\nMediana: ${median} ms (${valid.length} respuestas).\nCorrección que se descontará: ${calib.offsetMs} ms.`);
@@ -2354,7 +2372,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.5 · 13-11-2026';
+    const APP_VERSION = '5.6 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -2393,14 +2411,17 @@
         return id;
     }
     // Retraso a descontar en este equipo (0 si no está calibrado o venció)
+    // Si cambia la pantalla del test, la calibración anterior deja de valer
+    const STIM_VERSION = 'cruz-circulo-v1';
     function getDeviceOffset() {
         const c = getDeviceCalib();
-        if (!c || !c.offsetMs) return 0;
+        if (!c || !c.offsetMs || c.stim !== STIM_VERSION) return 0;
         return Math.max(0, Math.min(CALIB_MAX_OFFSET_MS, Number(c.offsetMs) || 0));
     }
     function calibStatus() {
         const c = getDeviceCalib();
         if (!c) return { ok: false, text: 'Este equipo no está calibrado.' };
+        if (c.stim !== STIM_VERSION) return { ok: false, text: 'Cambió la pantalla del test: calibra este equipo de nuevo.', calib: c };
         const dias = Math.floor((Date.now() - new Date(c.timestamp).getTime()) / 86400000);
         if (dias > CALIB_VIGENCIA_DIAS) return { ok: false, text: `La calibración venció (hace ${dias} días). Calibra de nuevo.`, calib: c };
         return { ok: true, text: `Calibrado el ${c.date} por ${c.by}. Corrección: ${c.offsetMs} ms.`, calib: c };
@@ -3970,12 +3991,14 @@
         ts.className = 'bg-red';
         document.getElementById('timerBadge').style.display = 'none';
         document.getElementById('targetBtn').style.display = 'none';
+        document.getElementById('stimArea').style.display = 'none';
+        document.getElementById('stimHint').style.display = 'none';
         testState = 'PREP';
         acquireWakeLock();
         const instr = document.getElementById('testInstruction');
         let n = 3;
         const show = () => {
-            instr.innerHTML = `<div class="cd-title">VAMOS A COMENZAR</div><div class="cd-num" key="${n}">${n}</div><div class="cd-hint">Toca la pantalla apenas se ponga <b>VERDE</b></div>`;
+            instr.innerHTML = `<div class="cd-title">VAMOS A COMENZAR</div><div class="cd-num" key="${n}">${n}</div><div class="cd-hint">Mira la cruz <b>+</b> y toca apenas aparezca el <b>círculo</b></div>`;
         };
         show();
         countdownTimer = setInterval(() => {
@@ -3983,7 +4006,10 @@
             if (n > 0) { show(); return; }
             clearInterval(countdownTimer);
             countdownTimer = null;
-            document.getElementById('targetBtn').style.display = 'flex';
+            document.getElementById('targetBtn').style.display = 'none';
+            document.getElementById('testInstruction').innerHTML = '';
+            document.getElementById('stimArea').style.display = 'flex';
+            document.getElementById('stimHint').style.display = 'block';
             onDone();
         }, 1000);
     }
@@ -4009,13 +4035,36 @@
         }, 1000);
     }
 
+    // Estímulo tipo PVT: pantalla oscura con una cruz (+) en el centro; el
+    // estímulo es un círculo amarillo brillante con un contador de
+    // milisegundos. Al responder se muestra el tiempo medio segundo.
+    // (Cambio de forma y brillo: lo ve igual una persona daltónica.)
+    const FEEDBACK_MS = 500;
+    let stimRaf = null;
+
+    function showFixation() {
+        document.getElementById('fixCross').style.display = 'block';
+        document.getElementById('stimCircle').style.display = 'none';
+        document.getElementById('stimFeedback').style.display = 'none';
+    }
+    function showFeedback(text, early) {
+        if (stimRaf) { cancelAnimationFrame(stimRaf); stimRaf = null; }
+        const fb = document.getElementById('stimFeedback');
+        fb.className = 'stim-feedback' + (early ? ' early' : '');
+        fb.innerText = text;
+        document.getElementById('fixCross').style.display = 'none';
+        document.getElementById('stimCircle').style.display = 'none';
+        fb.style.display = 'block';
+        testState = 'FEEDBACK';
+        roundTimer = setTimeout(nextRound, FEEDBACK_MS);
+    }
+
     function nextRound() {
         if (secondsLeft <= 0) return;
         testState = 'RED';
         const el = document.getElementById('testScreen');
-        el.className = 'bg-red';
-        document.getElementById('testInstruction').innerText = 'ESPERA AL VERDE...';
-        document.getElementById('targetBtn').innerText = 'ESPERA';
+        el.className = 'bg-wait';
+        showFixation();
 
         // Segunda foto: pasada la mitad del test, al comienzo de una espera en
         // rojo (así no atrasa ninguna respuesta). Luego se apaga la cámara.
@@ -4034,10 +4083,18 @@
         roundTimer = setTimeout(() => {
             testState = 'GREEN';
             totalStimuli++;
-            el.className = 'bg-green';
-            document.getElementById('testInstruction').innerText = '¡TOCA AHORA!';
-            document.getElementById('targetBtn').innerText = '¡PRESIONA!';
+            document.getElementById('fixCross').style.display = 'none';
+            const ms = document.getElementById('stimMs');
+            ms.innerText = '0';
+            document.getElementById('stimCircle').style.display = 'flex';
             startTime = performance.now();
+            // Contador de milisegundos corriendo dentro del círculo
+            const tick = () => {
+                if (testState !== 'GREEN') return;
+                ms.innerText = String(Math.max(0, Math.round(performance.now() - startTime)));
+                stimRaf = requestAnimationFrame(tick);
+            };
+            stimRaf = requestAnimationFrame(tick);
             // Momento más cercano a cuando el verde aparece en pantalla
             // (solo si la hora del cuadro es coherente; algunos navegadores usan otra escala)
             const tSet = startTime;
@@ -4051,7 +4108,7 @@
         if (testState === 'PREP' || testState === 'ENDED') return;
         // Solo cuenta el primer dedo / el botón izquierdo del mouse
         if (ev && ev.type === 'pointerdown') {
-            if (ev.isPrimary === false) return;
+            if (ev.isPrimary === false && ev.pointerType === 'touch') return;
             if (ev.pointerType === 'mouse' && ev.button !== 0) return;
         }
         // Hora del toque: se usa la del evento solo si está en la misma escala que
@@ -4059,24 +4116,27 @@
         const nowT = performance.now();
         const evT = (ev && typeof ev.timeStamp === 'number') ? ev.timeStamp : NaN;
         const tapTime = (isFinite(evT) && evT <= nowT + 5 && nowT - evT < 200) ? evT : nowT;
+        if (testState === 'FEEDBACK') return; // mientras se muestra el tiempo no cuenta
         if (testState === 'RED') {
             // Toque antes del estímulo = falsa partida
             falseStarts++;
             clearTimeout(roundTimer);
-            nextRound();
+            showFeedback('¡Muy pronto!', true);
         } else if (testState === 'GREEN') {
             const raw = Math.round(tapTime - startTime);
+            testState = 'FEEDBACK';
             if (raw < PVT_FALSE_START_MS) {
                 // Respuesta imposiblemente rápida = anticipación (falsa partida)
                 falseStarts++;
+                showFeedback('¡Muy pronto!', true);
             } else {
                 reactionTimesRaw.push(raw);
                 // En calibración se guarda el tiempo tal cual; en el test se
                 // descuenta el retraso del equipo.
                 const corr = testMode === 'calib' ? raw : Math.max(PVT_FALSE_START_MS, raw - getDeviceOffset());
                 reactionTimes.push(corr);
+                showFeedback(corr + ' ms', false);
             }
-            nextRound();
         }
     }
 
@@ -4104,6 +4164,7 @@
     function abortTest(msg) {
         clearInterval(mainTimer);
         clearTimeout(roundTimer);
+        if (stimRaf) { cancelAnimationFrame(stimRaf); stimRaf = null; }
         if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
         testState = 'ENDED';
         const wasCalib = testMode === 'calib';
@@ -4179,6 +4240,7 @@
         const endedOnGreen = (testState === 'GREEN');
         const pendingMs = endedOnGreen ? (performance.now() - startTime) : 0;
         testState = 'ENDED';
+        if (stimRaf) { cancelAnimationFrame(stimRaf); stimRaf = null; }
         stopSilentCamera();
         document.getElementById('testScreen').style.display = 'none';
 

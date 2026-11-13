@@ -908,7 +908,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.10 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.10.1 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -2131,7 +2131,7 @@
     // Resumen de un test guardado (Historial): se arma desde las "causas",
     // que traen el detalle PVT y, desde la v5.10, cada tiempo y el cuestionario.
     const LEVEL_INFO = [['NORMAL', '#4ade80'], ['LEVE', '#facc15'], ['MODERADO', '#fb923c'], ['SEVERO', '#f87171']];
-    function testSummaryHTML(log) {
+    function testSummaryData(log) {
         const causes = Array.isArray(log.causes) ? log.causes : [];
         const find = pre => causes.find(c => String(c).indexOf(pre) === 0);
         const has = txt => causes.some(c => String(c).indexOf(txt) !== -1);
@@ -2183,10 +2183,6 @@
         const finalLvl = Math.max(0, LEVEL_INFO.findIndex(l => l[0] === log.status));
 
         const qPart = (re) => { const x = quizTxt.match(re); return x ? x[1] : null; };
-        const chip = (lvl) => lvl === null
-            ? '<span class="muted-sm">sin dato</span>'
-            : `<span class="lvl-chip" style="background:${LEVEL_INFO[lvl][1]};">${LEVEL_INFO[lvl][0]}</span>${lvl === finalLvl && lvl > 0 ? ' <span class="lvl-def">◀ define el resultado</span>' : ''}`;
-
         const rows = [
             ['Test de reacción (PVT)', errs !== null ? `${errs} error${errs === 1 ? '' : 'es'} (${lapses} lapsus + ${falses} muy pronto)${avg >= 400 ? ' · promedio alto' : ''}` : (avg ? `promedio ${avg} ms` : '-'), pvtLvl],
             ['Somnolencia KSS (1 a 9)', kss !== null ? String(kss) : (quiz ? '-' : 'sin dato'), kssLvl],
@@ -2194,7 +2190,14 @@
             ['Dolor, consumo, estrés', quiz ? ['dolor ' + (qPart(/dolor ([^·]+)/) || '-').trim(), (qPart(/consumo ([^·]+)/) || '-').trim(), 'estrés ' + (qPart(/estrés ([^·]+)/) || '-').trim()].join(' · ') : (others ? others + ' factor(es)' : 'sin dato'), quiz || others > 0 ? otherLvl : null],
             ['Comparado con su promedio habitual', baseLvl ? 'más lento de lo normal' : 'sin cambio relevante', baseLvl]
         ];
+        return { n, avg, lapses, falses, trials, rows, finalLvl };
+    }
 
+    function testSummaryHTML(log) {
+        const { n, avg, lapses, falses, trials, rows, finalLvl } = testSummaryData(log);
+        const chip = (lvl) => lvl === null
+            ? '<span class="muted-sm">sin dato</span>'
+            : `<span class="lvl-chip" style="background:${LEVEL_INFO[lvl][1]};">${LEVEL_INFO[lvl][0]}</span>${lvl === finalLvl && lvl > 0 ? ' <span class="lvl-def">◀ define el resultado</span>' : ''}`;
         return `
             <div class="demo-stats">
                 <div class="demo-stat"><b>${n !== null ? n : '–'}</b><span>respuestas</span></div>
@@ -2590,7 +2593,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.10 · 13-11-2026';
+    const APP_VERSION = '5.10.1 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -3519,6 +3522,87 @@
         }
     }
 
+    // Resumen del test en el PDF individual: números, barra por estímulo y factores
+    function addTestSummaryToPDF(doc, log, y) {
+        const d = testSummaryData(log);
+        const RGB = [[22, 163, 74], [202, 138, 4], [234, 88, 12], [220, 38, 38]];
+        const newPageIfNeeded = (h) => { if (y + h > 280) { doc.addPage(); y = 20; } };
+
+        y += 3;
+        doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.setTextColor(15, 23, 42);
+        doc.text('Resumen del test', 14, y);
+        y += 5;
+
+        // Cuatro recuadros con los números
+        const stats = [[d.n, 'respuestas'], [d.avg || '-', 'promedio ms'], [d.lapses, 'lapsus'], [d.falses, 'muy pronto']];
+        stats.forEach((st, i) => {
+            const x = 14 + i * 46;
+            doc.setDrawColor(203, 213, 225); doc.setFillColor(248, 250, 252);
+            doc.rect(x, y, 42, 14, 'FD');
+            doc.setFontSize(13); doc.setFont(undefined, 'bold'); doc.setTextColor(15, 23, 42);
+            doc.text(String(st[0] === null || st[0] === undefined ? '-' : st[0]), x + 21, y + 7, { align: 'center' });
+            doc.setFontSize(7); doc.setFont(undefined, 'normal'); doc.setTextColor(100);
+            doc.text(st[1], x + 21, y + 11.5, { align: 'center' });
+        });
+        y += 20;
+
+        // Barra por estímulo
+        doc.setFontSize(9); doc.setFont(undefined, 'bold'); doc.setTextColor(15, 23, 42);
+        doc.text('Cada estímulo', 14, y);
+        y += 4;
+        doc.setFont(undefined, 'normal');
+        if (d.trials && d.trials.length) {
+            const maxT = Math.max(600, ...d.trials.filter(x => x.t).map(x => x.t));
+            const rowH = d.trials.length > 24 ? 3.6 : 4.6;
+            d.trials.forEach((x, i) => {
+                newPageIfNeeded(rowH);
+                let col, label, w;
+                if (x.k === 'ok') { col = [22, 163, 74]; label = x.t + ' ms'; w = x.t / maxT; }
+                else if (x.k === 'lapse') { col = [234, 88, 12]; label = x.t + ' ms - lapsus'; w = x.t / maxT; }
+                else if (x.k === 'pending') { col = [234, 88, 12]; label = '+' + x.t + ' ms - sin respuesta'; w = x.t / maxT; }
+                else { col = [220, 38, 38]; label = 'muy pronto'; w = 0.05; }
+                doc.setFontSize(7); doc.setTextColor(120);
+                doc.text(String(i + 1), 20, y + rowH - 1.3, { align: 'right' });
+                doc.setFillColor(241, 245, 249); doc.rect(22, y + 0.4, 120, rowH - 1, 'F');
+                doc.setFillColor(col[0], col[1], col[2]); doc.rect(22, y + 0.4, Math.max(1.5, Math.min(1, w) * 120), rowH - 1, 'F');
+                doc.setTextColor(15, 23, 42);
+                doc.text(label, 145, y + rowH - 1.3);
+                y += rowH;
+            });
+            doc.setFontSize(7); doc.setTextColor(100);
+            doc.text(`Verde: respuesta normal - Naranjo: lapsus (${PVT_LAPSE_MS} ms o más) - Rojo: tocó antes del círculo.`, 14, y + 3);
+            y += 7;
+        } else {
+            doc.setFontSize(8); doc.setTextColor(100);
+            doc.text(d.trials ? 'No hubo estímulos.' : 'Test anterior a la versión 5.10: no se guardó el tiempo de cada estímulo.', 14, y + 3);
+            y += 7;
+        }
+
+        // Factores evaluados
+        newPageIfNeeded(40);
+        doc.autoTable({
+            startY: y,
+            head: [['Factor evaluado', 'Dato', 'Nivel']],
+            body: d.rows.map(r => [r[0], r[1], r[2] === null ? 'sin dato' : LEVEL_INFO[r[2]][0] + (r[2] === d.finalLvl && r[2] > 0 ? '  (define el resultado)' : '')]),
+            theme: 'grid',
+            headStyles: { fillColor: [15, 23, 42] },
+            styles: { fontSize: 8, cellPadding: 2 },
+            columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' }, 2: { cellWidth: 52 } },
+            didParseCell: (data) => {
+                if (data.section === 'body' && data.column.index === 2) {
+                    const lvl = d.rows[data.row.index][2];
+                    if (lvl !== null) { data.cell.styles.textColor = RGB[lvl]; data.cell.styles.fontStyle = 'bold'; }
+                }
+            }
+        });
+        y = doc.lastAutoTable.finalY + 4;
+        doc.setFontSize(8); doc.setTextColor(100);
+        doc.text('El resultado final es el peor de los factores.', 14, y);
+        y += 9;
+        newPageIfNeeded(50);
+        return y;
+    }
+
     // Agrega una hoja/página adicional al PDF con el detalle de causas y factores
     // de riesgo de cada evaluación MODERADA o SEVERA. Se usa tanto en el informe
     // general como en los informes individuales (evaluación única e histórico).
@@ -3538,7 +3622,7 @@
             l.name,
             l.rut,
             l.status,
-            (l.causes && l.causes.length ? l.causes.map(c => '• ' + c).join('\n') : 'Sin detalle de causas disponible para este registro.')
+            (l.causes && l.causes.length ? l.causes.filter(c => String(c).indexOf(TRIALS_PREFIX) !== 0 && String(c).indexOf(QUIZ_PREFIX) !== 0).map(c => '• ' + c).join('\n') : 'Sin detalle de causas disponible para este registro.')
         ]);
 
         doc.autoTable({
@@ -4084,6 +4168,8 @@
 
                 finalY += 24;
             }
+
+            finalY = addTestSummaryToPDF(doc, log, finalY);
 
             doc.setFontSize(10);
             doc.setFont(undefined, 'bold');

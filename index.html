@@ -208,6 +208,8 @@
         .user-card { transition: transform .08s; }
         .user-card:active { transform: scale(0.97); }
         .pending-notice { display:none; background: rgba(250,204,21,0.12); border:1px solid #ca8a04; color:#fde68a; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:14px; line-height:1.45; }
+        .app-version { font-size: 11px; color: var(--text-muted); opacity: 0.8; margin-top: 4px; }
+        .app-version-foot { text-align:center; margin: 14px 0 6px; }
         .btn-ghost { background: transparent !important; border: 1px solid var(--border-color); }
         .container { justify-content: flex-start; }
         .user-card-tag { font-size: 10px; color: #facc15; font-weight: 700; margin-top: 3px; }
@@ -486,7 +488,7 @@
         <div class="steps">
             <div class="step active"><span>1</span>Preguntas</div>
             <div class="step-line"></div>
-            <div class="step"><span>2</span>Test 3 min</div>
+            <div class="step"><span>2</span>Test 90 s</div>
             <div class="step-line"></div>
             <div class="step"><span>3</span>Resultado</div>
         </div>
@@ -551,7 +553,7 @@
             <span>Declaro que respondí con la verdad y que, si me siento con sueño o cansado durante la jornada, avisaré a mi supervisor.</span>
         </label>
 
-        <button class="btn" id="btnStartTest" onclick="startPhotoCountdownSequence()">Iniciar Test PVT (3 minutos, Captura Automática)</button>
+        <button class="btn" id="btnStartTest" onclick="startPhotoCountdownSequence()">Iniciar Test PVT (90 segundos, Captura Automática)</button>
         <button class="btn btn-secondary" id="btnAdminBack" onclick="showAdminDashboard()" style="display:none;">Volver al Panel Maestro</button>
         <button class="btn btn-secondary" onclick="logout()">Cerrar Sesión</button>
     </div>
@@ -616,6 +618,7 @@
             <div>
                 <h2 style="margin:0; text-align: left;">Panel Maestro F&S</h2>
                 <div id="adminWho" class="admin-who"></div>
+                <div class="app-version"></div>
             </div>
             <div class="admin-header-actions">
                 <button class="btn btn-sm" onclick="showQuiz()">Rendir Test</button>
@@ -838,7 +841,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td>5 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.4 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -849,14 +852,14 @@
                 <ol>
                     <li>El trabajador entra con su RUT y clave desde su celular o desde un equipo de la obra.</li>
                     <li>Responde 5 preguntas: horas de sueño, somnolencia (escala KSS), malestar físico, medicamentos y estrés, y firma una declaración de que respondió con la verdad.</li>
-                    <li>Rinde el test de reacción PVT-B de 3 minutos. Durante el test la app toma 2 fotos para confirmar que es la persona correcta.</li>
+                    <li>Rinde el test de reacción PVT de 90 segundos (sin reloj en pantalla). Durante el test la app toma 2 fotos para confirmar que es la persona correcta.</li>
                     <li>La app entrega el resultado al instante: Normal, Leve, Moderado o Severo.</li>
                     <li>Si sale Moderado o Severo, se avisa por correo (y WhatsApp si está activo) a los supervisores y la app aplica el protocolo de pausa o bloqueo.</li>
                 </ol>
 
                 <h2>3. Fundamento del test</h2>
                 <p><b>PVT (Psychomotor Vigilance Task).</b> Test de reacción simple creado por David Dinges (Universidad de Pennsylvania) y publicado en 1985. Mide qué tan rápido responde una persona a un estímulo que aparece en momentos al azar. Con falta de sueño aumentan los "lapsus" (respuestas muy lentas o microsueños), y eso es lo que el test detecta. NASA financió su versión breve para los astronautas de la Estación Espacial, y también lo usan organismos de transporte y aerolíneas.</p>
-                <p><b>PVT-B (versión de 3 minutos).</b> Basner, Mollicone y Dinges (2011) validaron una versión de 3 minutos con estímulos cada 2 a 5 segundos y lapsus desde 355 ms. Versiones más cortas (90 segundos o 2 minutos) se consideraron poco sensibles, por eso la app usa 3 minutos.</p>
+                <p><b>PVT-B y versión de 90 segundos.</b> Basner, Mollicone y Dinges (2011) validaron una versión de 3 minutos con estímulos cada 2 a 5 segundos y lapsus desde 355 ms. La app usa esos mismos parámetros, pero con una duración de <b>90 segundos</b> por decisión de la obra, para que el control sea más rápido. Los autores consideraron que las versiones de 90 segundos son menos sensibles que la de 3 minutos; por eso la app compensa combinando el test con la escala KSS, las horas de sueño y la comparación con el promedio habitual de cada trabajador, y los resultados se revisan durante la marcha blanca.</p>
                 <p><b>Escala de Somnolencia de Karolinska (KSS).</b> Escala de 1 a 9 que mide cuánto sueño siente la persona en ese momento (Åkerstedt y Gillberg, 1990).</p>
                 <p><b>Referencia internacional.</b> El manual de gestión del riesgo de fatiga de la OACI (Doc 9966) nombra al PVT como prueba de rendimiento que cumple los criterios para medir fatiga, y a la escala KSS como medida subjetiva de somnolencia.</p>
                 <p><b>Uso en pantalla táctil.</b> NASA validó una versión táctil del PVT contra el equipo estándar y encontró resultados similares, siempre que se descuente el retraso propio de la pantalla. Por eso la app calibra cada equipo (punto 7).</p>
@@ -864,7 +867,7 @@
                 <h2>4. Parámetros de medición</h2>
                 <table class="ficha-table">
                     <tr><th>Parámetro</th><th>Valor en la app</th><th>Origen</th></tr>
-                    <tr><td>Duración del test</td><td>3 minutos</td><td>PVT-B</td></tr>
+                    <tr><td>Duración del test</td><td>90 segundos (sin reloj visible)</td><td>Decisión interna (PVT-B validado: 3 min)</td></tr>
                     <tr><td>Tiempo entre estímulos</td><td>Al azar, 2 a 5 segundos</td><td>PVT-B</td></tr>
                     <tr><td>Lapsus</td><td>Respuesta de 355 ms o más</td><td>PVT-B</td></tr>
                     <tr><td>Falsa partida</td><td>Tocar antes del verde o en menos de 100 ms</td><td>PVT / PVT-B</td></tr>
@@ -876,12 +879,12 @@
                 <p>Cada factor da un nivel y el resultado final es el <b>peor</b> de ellos, para que un factor grave nunca quede escondido. Estos cortes son un <b>criterio interno inicial</b>, basado en los estudios anteriores, que se ajusta con los datos de la obra y la revisión de prevención y la mutualidad.</p>
                 <table class="ficha-table">
                     <tr><th>Factor</th><th>Normal</th><th>Leve</th><th>Moderado</th><th>Severo</th></tr>
-                    <tr><td>Errores PVT-B (lapsus + falsas partidas)</td><td>0 – 3</td><td>4 – 9</td><td>10 – 14</td><td>15 o más / sin respuestas</td></tr>
+                    <tr><td>Errores PVT-B (lapsus + falsas partidas)</td><td>0 – 1</td><td>2 – 4</td><td>5 – 7</td><td>8 o más / sin respuestas</td></tr>
                     <tr><td>Escala KSS</td><td>1 – 5</td><td>6</td><td>7</td><td>8 – 9</td></tr>
                     <tr><td>Horas de sueño</td><td>7 o más</td><td>5 – 6</td><td>Menos de 5</td><td>Menos de 5 + PVT moderado</td></tr>
                     <tr><td>Dolor intenso, medicamentos, estrés alto</td><td>Ninguno</td><td>Uno</td><td>Dos o más</td><td>—</td></tr>
                 </table>
-                <p class="ficha-small">Cortes de errores PVT-B ajustados en noviembre de 2026 con los primeros datos de la marcha blanca (antes: 0–2 / 3–4 / 5–7 / 8 o más).</p>
+                <p class="ficha-small">Cortes de errores ajustados en noviembre de 2026 con los primeros datos de la marcha blanca y proporcionales al test de 90 segundos (en 3 minutos equivalían a 0–3 / 4–9 / 10–14 / 15 o más).</p>
                 <p class="ficha-small">Además, un promedio de reacción de 400 ms o más, o salir 25% más lento que el propio promedio habitual del trabajador, sube el resultado como mínimo a Leve.</p>
 
                 <h2>6. Protocolo de acción</h2>
@@ -1124,7 +1127,7 @@
     <video id="hiddenCameraVideo" autoplay playsinline style="display:none; width:320px; height:240px;"></video>
     <canvas id="hiddenCameraCanvas" style="display:none;" width="320" height="240"></canvas>
 
-    <div class="timer-badge" id="timerBadge">3:00</div>
+    <div class="timer-badge" id="timerBadge" style="display:none;">1:30</div>
     <div style="font-size: 28px; font-weight: bold; max-width: 80%; line-height: 1.4;" id="testInstruction">PREPÁRATE...</div>
     <div class="target-button" id="targetBtn">PRESIONA AQUÍ</div>
 </div>
@@ -2020,7 +2023,7 @@
         const ts = document.getElementById('testScreen');
         ts.style.display = 'flex';
         ts.className = 'bg-prep';
-        document.getElementById('timerBadge').style.display = 'block';
+        document.getElementById('timerBadge').style.display = 'none';
         document.getElementById('targetBtn').style.display = 'flex';
         startReactionTest();
     }
@@ -2341,10 +2344,13 @@
     }
     // ===== Fin utilidades de Hora de Chile =====
 
-    // PVT-B (Basner, Mollicone y Dinges, 2011): 3 minutos, estímulos cada 2 a 5 s,
+    // PVT breve (basado en PVT-B, Basner, Mollicone y Dinges, 2011): 90 segundos
+    // por decisión interna (el PVT-B validado dura 3 min), estímulos cada 2 a 5 s,
     // lapsus = respuesta de 355 ms o más, falsa partida = toque antes del
     // estímulo o respuesta en menos de 100 ms.
-    const PVT_DURATION_S = 180;
+    const PVT_DURATION_S = 90;
+    // Versión visible de la app (cambiar en cada publicación)
+    const APP_VERSION = '5.4 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -2420,7 +2426,7 @@
         ['SEVERO', 'Alto riesgo de microsueños o fatiga crítica. Por ningún motivo puede conducir ni operar equipos: descanso inmediato y liberación por supervisor.']
     ];
 
-    const PVT_METRIC_INFO = "Metodología del Test: Test de Vigilancia Psicomotora breve (PVT-B, Basner y Dinges 2011): 3 minutos con estímulos visuales cada 2 a 5 segundos. Se registran lapsus (respuestas de 355 ms o más), falsas partidas (toques antes del estímulo o en menos de 100 ms) y tiempo de reacción promedio. La clasificación combina el PVT-B con la Escala de Somnolencia de Karolinska (KSS) y las horas de sueño. Es una herramienta de apoyo: no reemplaza el criterio del supervisor.";
+    const PVT_METRIC_INFO = "Metodología del Test: Test de Vigilancia Psicomotora breve basado en el PVT-B (Basner y Dinges 2011), en versión de 90 segundos con estímulos visuales cada 2 a 5 segundos. Se registran lapsus (respuestas de 355 ms o más), falsas partidas (toques antes del estímulo o en menos de 100 ms) y tiempo de reacción promedio. La clasificación combina el test con la Escala de Somnolencia de Karolinska (KSS) y las horas de sueño. Es una herramienta de apoyo: no reemplaza el criterio del supervisor.";
 
     function getFormattedImageUrl(url) {
         if (!url || url === "Sin foto" || url.startsWith("Error")) return null;
@@ -3008,7 +3014,7 @@
         checkCanTakeTest().then(ok => {
             if (currentUser !== userAtCheck) return;
             btnStart.disabled = false;
-            btnStart.innerText = 'Iniciar Test PVT (3 minutos, Captura Automática)';
+            btnStart.innerText = 'Iniciar Test PVT (90 segundos, Captura Automática)';
         });
 
         const userRole = String(currentUser.role).trim().toLowerCase();
@@ -3956,7 +3962,7 @@
             } else {
                 clearInterval(countdownInterval);
                 photo1Data = captureSilentFrame();
-                document.getElementById('timerBadge').style.display = 'block';
+                document.getElementById('timerBadge').style.display = 'none'; // sin reloj en pantalla
                 document.getElementById('targetBtn').style.display = 'flex';
                 startReactionTest();
             }
@@ -3975,7 +3981,7 @@
         document.getElementById('timerBadge').innerText = formatTimerBadge(dur);
         document.getElementById('testInstruction').innerText = testMode === 'calib'
             ? 'CALIBRACIÓN DEL EQUIPO (45 SEGUNDOS)\nPresiona apenas la pantalla se ponga verde'
-            : 'PREPÁRATE PARA EL TEST PVT (3 MINUTOS)...\nPresiona SOLO cuando la pantalla se ponga verde';
+            : 'PREPÁRATE PARA EL TEST PVT (90 SEGUNDOS)...\nPresiona SOLO cuando la pantalla se ponga verde';
         document.getElementById('targetBtn').innerText = 'PREPARADO';
 
         testState = 'PREP';
@@ -4154,16 +4160,16 @@
             causes.push(falseStarts > 0
                 ? `Sin respuestas válidas: ${falseStarts} toques antes del estímulo (test mal rendido o impulsividad).`
                 : 'Omisión total: el trabajador no respondió a ningún estímulo durante el test (posible microsueño).');
-        } else if (pvtErrors >= 15) {
+        } else if (pvtErrors >= 8) {
             pvtLevel = 3;
-        } else if (pvtErrors >= 10) {
+        } else if (pvtErrors >= 5) {
             pvtLevel = 2;
-        } else if (pvtErrors >= 4) {
+        } else if (pvtErrors >= 2) {
             pvtLevel = 1;
         } else {
             pvtLevel = 0;
         }
-        if (responsesCount > 0 && pvtErrors >= 4) {
+        if (responsesCount > 0 && pvtErrors >= 2) {
             causes.push(`Test PVT-B con ${pvtErrors} errores: ${lapses} lapsus (respuestas de ${PVT_LAPSE_MS} ms o más) y ${falseStarts} falsa(s) partida(s).`);
         }
 
@@ -4258,7 +4264,7 @@
             lapses: lapses,
             falseStarts: falseStarts,
             kss: kss,
-            testVersion: 'PVT-B 3min',
+            testVersion: 'PVT 90s · app ' + APP_VERSION,
             deviceId: getDeviceId(),
             deviceOffset: getDeviceOffset(),
             rawAvg: reactionTimesRaw.length ? Math.round(reactionTimesRaw.reduce((a, b) => a + b, 0) / reactionTimesRaw.length) : 0,
@@ -4390,6 +4396,11 @@
     }
 
     forceInitMaster();
+</script>
+<div class="app-version app-version-foot"></div>
+<script>
+    // Muestra la versión de la app en todas las pantallas
+    document.querySelectorAll('.app-version').forEach(el => { el.innerText = 'App F&S · versión ' + APP_VERSION; });
 </script>
 </body>
 </html>

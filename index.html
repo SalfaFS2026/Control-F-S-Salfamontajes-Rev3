@@ -243,6 +243,9 @@
         .demo-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
         .demo-table td { padding: 5px 6px; border-bottom: 1px solid var(--border-color); color: #cbd5e1; }
         .demo-level { text-align: center; font-size: 26px; font-weight: 900; padding: 12px; border-radius: 12px; margin-top: 12px; color: #0b1220; }
+        .lvl-chip { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; color: #0b1220; }
+        .lvl-def { display: block; font-size: 11px; color: #f8fafc; margin-top: 3px; }
+        .report-summary { margin-top: 10px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 10px; }
         .demo-h { font-weight: 800; color: #fff; margin: 16px 0 4px; font-size: 14px; }
         .btn-ready { margin: 30px auto 0; display:block; box-sizing: border-box; width: 100%; max-width: 420px; padding: 22px 20px; font-size: 22px; font-weight: 900; color: #0b1220; background: linear-gradient(180deg, #fde047, #facc15); border: none; border-radius: 16px; box-shadow: 0 10px 30px -8px rgba(250,204,21,0.7); cursor: pointer; animation: readyPulse 1.6s ease-in-out infinite; }
         .btn-ready:active { transform: scale(0.97); }
@@ -905,7 +908,7 @@
                         <tr><td>Herramienta</td><td>App web F&amp;S Salfamontajes (test psicomotor PVT-B + encuesta)</td></tr>
                         <tr><td>Proyecto</td><td>Ventiladores, Chuquicamata – Contrato CC-146</td></tr>
                         <tr><td>Responsable</td><td>Diego Moreno Merino, Jefe de Maquinaria y Servicios</td></tr>
-                        <tr><td>Versión</td><td id="fichaVersion">5.9.1 – noviembre 2026</td></tr>
+                        <tr><td>Versión</td><td id="fichaVersion">5.10 – noviembre 2026</td></tr>
                     </table>
                 </div>
 
@@ -2113,6 +2116,101 @@
         runCountdown(() => startReactionTest());
     }
 
+    function trialBarsHTML(log) {
+        const maxT = Math.max(600, ...log.filter(x => x.t).map(x => x.t));
+        return log.map((x, i) => {
+            let color, label, w;
+            if (x.k === 'ok') { color = '#4ade80'; label = x.t + ' ms'; w = x.t / maxT; }
+            else if (x.k === 'lapse') { color = '#fb923c'; label = x.t + ' ms · lapsus'; w = x.t / maxT; }
+            else if (x.k === 'pending') { color = '#fb923c'; label = '+' + x.t + ' ms · sin respuesta'; w = x.t / maxT; }
+            else { color = '#f87171'; label = 'muy pronto'; w = 0.06; }
+            return `<div class="demo-bar"><span class="n">${i + 1}</span><div class="track"><div class="fill" style="width:${Math.min(100, Math.round(w * 100))}%; background:${color};"></div></div><span class="v">${label}</span></div>`;
+        }).join('') || '<div class="muted-sm">No hubo estímulos.</div>';
+    }
+
+    // Resumen de un test guardado (Historial): se arma desde las "causas",
+    // que traen el detalle PVT y, desde la v5.10, cada tiempo y el cuestionario.
+    const LEVEL_INFO = [['NORMAL', '#4ade80'], ['LEVE', '#facc15'], ['MODERADO', '#fb923c'], ['SEVERO', '#f87171']];
+    function testSummaryHTML(log) {
+        const causes = Array.isArray(log.causes) ? log.causes : [];
+        const find = pre => causes.find(c => String(c).indexOf(pre) === 0);
+        const has = txt => causes.some(c => String(c).indexOf(txt) !== -1);
+
+        // Tiempos por estímulo
+        let trials = null;
+        const tl = find(TRIALS_PREFIX);
+        if (tl) {
+            const body = tl.slice(TRIALS_PREFIX.length).trim();
+            trials = body === 'sin estímulos' ? [] : body.split(',').map(v => v.trim()).filter(Boolean).map(v => {
+                if (v === 'X') return { k: 'early' };
+                if (v[0] === '+') return { k: 'pending', t: parseInt(v.slice(1)) || 0 };
+                const t = parseInt(v) || 0;
+                return { k: t >= PVT_LAPSE_MS ? 'lapse' : 'ok', t };
+            });
+        }
+
+        // Conteos PVT
+        let n = null, lapses = null, falses = null;
+        const det = find('Detalle PVT:');
+        const m = det && det.match(/(\d+) respuestas.*?(\d+) lapsus, (\d+) falsas/);
+        if (m) { n = +m[1]; lapses = +m[2]; falses = +m[3]; }
+        else if (trials) {
+            n = trials.filter(x => x.k === 'ok' || x.k === 'lapse').length;
+            lapses = trials.filter(x => x.k === 'lapse' || x.k === 'pending').length;
+            falses = trials.filter(x => x.k === 'early').length;
+        } else if (log.lapses !== undefined && log.falseStarts !== undefined) {
+            lapses = +log.lapses; falses = +log.falseStarts;
+        }
+        const avg = +log.avg || 0;
+
+        // Nivel de cada factor
+        const errs = (lapses !== null && falses !== null) ? lapses + falses : null;
+        let pvtLvl = null;
+        if (n === 0) pvtLvl = 3;
+        else if (errs !== null) pvtLvl = errs >= 8 ? 3 : errs >= 5 ? 2 : errs >= 2 ? 1 : 0;
+        if (avg >= 400) pvtLvl = Math.max(pvtLvl || 0, 1);
+
+        const quiz = find(QUIZ_PREFIX);
+        const quizTxt = quiz ? quiz.slice(QUIZ_PREFIX.length) : '';
+        const kssM = (quizTxt.match(/KSS (\d)/) || [])[1] || (log.kss !== undefined && log.kss !== '' ? log.kss : null) || ((causes.join(' ').match(/KSS 1-9\): (\d)/) || [])[1]);
+        const kss = kssM !== null && kssM !== undefined ? parseInt(kssM) : null;
+        const kssLvl = kss === null ? (quiz ? 0 : null) : (kss >= 8 ? 3 : kss === 7 ? 2 : kss === 6 ? 1 : 0);
+
+        const sleepLvl = has('junto con un PVT alterado') ? 3 : has('menos de 5 horas') ? 2 : has('5 a 6 horas') ? 1 : 0;
+        const others = ['Dolor o malestar físico intenso', 'Consumo de medicamentos', 'Estrés o carga mental alta'].filter(has).length;
+        const otherLvl = others >= 2 ? 2 : others;
+        const baseLvl = has('más lenta que su promedio habitual') ? 1 : 0;
+        const finalLvl = Math.max(0, LEVEL_INFO.findIndex(l => l[0] === log.status));
+
+        const qPart = (re) => { const x = quizTxt.match(re); return x ? x[1] : null; };
+        const chip = (lvl) => lvl === null
+            ? '<span class="muted-sm">sin dato</span>'
+            : `<span class="lvl-chip" style="background:${LEVEL_INFO[lvl][1]};">${LEVEL_INFO[lvl][0]}</span>${lvl === finalLvl && lvl > 0 ? ' <span class="lvl-def">◀ define el resultado</span>' : ''}`;
+
+        const rows = [
+            ['Test de reacción (PVT)', errs !== null ? `${errs} error${errs === 1 ? '' : 'es'} (${lapses} lapsus + ${falses} muy pronto)${avg >= 400 ? ' · promedio alto' : ''}` : (avg ? `promedio ${avg} ms` : '-'), pvtLvl],
+            ['Somnolencia KSS (1 a 9)', kss !== null ? String(kss) : (quiz ? '-' : 'sin dato'), kssLvl],
+            ['Horas de sueño', qPart(/sueño ([^·]+)/) || (sleepLvl >= 2 ? 'menos de 5 h' : sleepLvl === 1 ? '5 a 6 h' : (quiz ? '7 h o más' : 'sin dato')), quiz || sleepLvl > 0 ? sleepLvl : null],
+            ['Dolor, consumo, estrés', quiz ? ['dolor ' + (qPart(/dolor ([^·]+)/) || '-').trim(), (qPart(/consumo ([^·]+)/) || '-').trim(), 'estrés ' + (qPart(/estrés ([^·]+)/) || '-').trim()].join(' · ') : (others ? others + ' factor(es)' : 'sin dato'), quiz || others > 0 ? otherLvl : null],
+            ['Comparado con su promedio habitual', baseLvl ? 'más lento de lo normal' : 'sin cambio relevante', baseLvl]
+        ];
+
+        return `
+            <div class="demo-stats">
+                <div class="demo-stat"><b>${n !== null ? n : '–'}</b><span>respuestas</span></div>
+                <div class="demo-stat"><b>${avg || '–'}</b><span>promedio ms</span></div>
+                <div class="demo-stat"><b>${lapses !== null ? lapses : '–'}</b><span>lapsus</span></div>
+                <div class="demo-stat"><b>${falses !== null ? falses : '–'}</b><span>muy pronto</span></div>
+            </div>
+            <div class="demo-h">Cada estímulo</div>
+            ${trials ? `<div class="demo-bars">${trialBarsHTML(trials)}</div>
+            <div class="muted-sm">Verde: normal · Naranjo: lapsus (${PVT_LAPSE_MS} ms o más) · Rojo: tocó antes del círculo.</div>`
+            : '<div class="muted-sm">Este test es anterior a la versión 5.10: no se guardó el tiempo de cada estímulo.</div>'}
+            <div class="demo-h">Factores evaluados</div>
+            <table class="demo-table">${rows.map(r => `<tr><td><b>${r[0]}</b><br><span class="muted-sm">${r[1]}</span></td><td style="text-align:right; white-space:nowrap;">${chip(r[2])}</td></tr>`).join('')}</table>
+            <div class="muted-sm" style="margin-top:8px;">El resultado final es el <b>peor</b> de los factores.</div>`;
+    }
+
     function closeDemo() {
         document.getElementById('viewDemo').style.display = 'none';
         hideAllViews();
@@ -2140,15 +2238,7 @@
         const lvl = n === 0 ? 3 : errs >= 8 ? 3 : errs >= 5 ? 2 : errs >= 2 ? 1 : 0;
         const LV = [['NORMAL', '#4ade80'], ['LEVE', '#facc15'], ['MODERADO', '#fb923c'], ['SEVERO', '#f87171']];
 
-        const maxT = Math.max(600, ...log.filter(x => x.t).map(x => x.t));
-        const bars = log.map((x, i) => {
-            let color, label, w;
-            if (x.k === 'ok') { color = '#4ade80'; label = x.t + ' ms'; w = x.t / maxT; }
-            else if (x.k === 'lapse') { color = '#fb923c'; label = x.t + ' ms · lapsus'; w = x.t / maxT; }
-            else if (x.k === 'pending') { color = '#fb923c'; label = '+' + x.t + ' ms · sin respuesta'; w = x.t / maxT; }
-            else { color = '#f87171'; label = 'muy pronto'; w = 0.06; }
-            return `<div class="demo-bar"><span class="n">${i + 1}</span><div class="track"><div class="fill" style="width:${Math.min(100, Math.round(w * 100))}%; background:${color};"></div></div><span class="v">${label}</span></div>`;
-        }).join('') || '<div class="muted-sm">No hubo estímulos.</div>';
+        const bars = trialBarsHTML(log);
 
         document.getElementById('demoBody').innerHTML = `
             <div class="demo-stats">
@@ -2500,7 +2590,7 @@
     // estímulo o respuesta en menos de 100 ms.
     const PVT_DURATION_S = 90;
     // Versión visible de la app (cambiar en cada publicación)
-    const APP_VERSION = '5.9.1 · 13-11-2026';
+    const APP_VERSION = '5.10 · 13-11-2026';
     const PVT_PREP_S = 5;
     const PVT_ISI_MIN_MS = 2000;
     const PVT_ISI_MAX_MS = 5000;
@@ -2518,7 +2608,9 @@
     // todos los tests de ese equipo. Tope de 120 ms para que nunca pueda
     // esconder fatiga real.
     const CALIB_DURATION_S = 45;
-    const DEMO_DURATION_S = 30;   // modo demostración (solo superadministrador)
+    const DEMO_DURATION_S = 30;
+    const TRIALS_PREFIX = 'Tiempos por estímulo (ms): ';
+    const QUIZ_PREFIX = 'Cuestionario: ';   // modo demostración (solo superadministrador)
     let trialLog = [];
     const CALIB_REFERENCE_MS = 250;
     const CALIB_MAX_OFFSET_MS = 120;
@@ -3387,6 +3479,7 @@
             <p style="margin:5px 0;"><b>RUT:</b> ${log.rut}</p>
             <p style="margin:5px 0;"><b>Fecha/Hora:</b> ${log.date}</p>
             <p style="margin:5px 0;"><b>Tiempo Promedio Reacción (PVT):</b> ${log.avg} ms</p>
+            <div class="report-summary">${testSummaryHTML(log)}</div>
             <p style="margin:10px 0 5px 0; font-size:12px; color:var(--text-muted);"><b>Norma Técnica:</b> Test de Vigilancia Psicomotora (PVT).</p>
             ${(log.status === 'MODERADO' || log.status === 'SEVERO') ? `
                 <div style="margin-top:15px; padding:10px; background:rgba(227, 27, 35, 0.2); border:1px solid var(--salfa-red); border-radius:6px; color:#f87171; font-weight:bold; font-size:13px; text-align:center;">
@@ -3395,7 +3488,7 @@
                 <div style="margin-top:12px; padding:10px 14px; background:var(--input-dark); border:1px solid var(--border-color); border-radius:6px;">
                     <b style="font-size:13px; color:#f8fafc;">Causas / Factores de Riesgo Detectados:</b>
                     <ul style="margin:6px 0 0 0; padding-left:18px; font-size:13px; color:var(--text-muted);">
-                        ${(log.causes && log.causes.length ? log.causes : ['Sin detalle de causas disponible para este registro.']).map(c => `<li>${c}</li>`).join('')}
+                        ${(log.causes && log.causes.length ? log.causes.filter(c => String(c).indexOf(TRIALS_PREFIX) !== 0 && String(c).indexOf(QUIZ_PREFIX) !== 0) : ['Sin detalle de causas disponible para este registro.']).map(c => `<li>${c}</li>`).join('')}
                     </ul>
                 </div>
             ` : ''}
@@ -4508,6 +4601,18 @@
         causes.push(getDeviceOffset() > 0
             ? `Equipo calibrado: se descontaron ${getDeviceOffset()} ms de retraso de pantalla.`
             : 'Equipo sin calibrar: no se descontó retraso de pantalla.');
+        // Para el resumen por test (Historial): tiempo de cada estímulo y respuestas.
+        // X = tocó antes del círculo; +N = el test terminó con el círculo encendido N ms.
+        const trialCodes = trialLog.map(x => (x.k === 'early' || x.k === 'fast') ? 'X' : String(x.t));
+        if (pendingLapse) trialCodes.push('+' + Math.round(pendingMs - getDeviceOffset()));
+        causes.push(TRIALS_PREFIX + (trialCodes.length ? trialCodes.join(', ') : 'sin estímulos'));
+        causes.push(QUIZ_PREFIX + [
+            'sueño ' + ({ good: '7 h o más', medium: '5 a 6 h', poor: 'menos de 5 h' }[sleep] || '-'),
+            'KSS ' + kss,
+            'dolor ' + ({ none: 'no', mild: 'leve', severe: 'intenso' }[pain] || '-'),
+            'consumo ' + ({ none: 'ninguno', caffeine: 'café/energéticas', meds: 'medicamentos' }[meds] || '-'),
+            'estrés ' + ({ low: 'bajo', medium: 'moderado', high: 'alto' }[stress] || '-')
+        ].join(' · '));
 
         const status = LEVELS[finalLevel];
         const badgeClass = getBadgeClass(status);
